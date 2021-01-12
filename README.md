@@ -49,6 +49,7 @@ Running the Virtual Schema requires a Java Runtime version 11 or later.
 | [Exasol Virtual Schema JDBC][virtual-schema-common-jdbc]           | Common JDBC functions for Virtual Schemas adapters     | MIT License                       |
 | [Oracle JDBC Driver][oracle-jdbc-driver]                           | JDBC driver for Oracle database                        | Oracle Technology Network License |
 | [Exasol Error Reporting][exasol-error-reporting]                   | Creating unified error messages                        | MIT License                       |
+| [Exasol Database Fundamentals for Java][exasol-db-funtamentals]    | Base objects and ground rules for the Exasol database  | MIT License                       |
 
 ### Test Dependencies
 
@@ -61,7 +62,7 @@ Running the Virtual Schema requires a Java Runtime version 11 or later.
 | [Exasol Testcontainers][exasol-testcontainers]                     | Exasol extension for the Testcontainers framework      | MIT License                   |
 | [Test Database Builder][test-db-builder]                           | Fluent database interfaces for testing                 | MIT License                   |
 | [Exasol Hamcrest Result Set Matcher][exasol-hamcrest]              | Hamcrest result set matcher for testing                | MIT License                   |
-| [Exasol UDF Debugging][udf-debugging-java]                         | Debugging UDFs in testing                              | MIT License                   |
+| [EqualsVerifier][jqno-equals-verifier]                             | Testing `hashCode` and `equals` Java contract        | Apache-2.0 License            |
 
 
 ### Maven Plug-ins
@@ -83,11 +84,12 @@ Running the Virtual Schema requires a Java Runtime version 11 or later.
 [virtual-schema-common-jdbc]: https://github.com/exasol/virtual-schema-common-jdbc
 [oracle-jdbc-driver]: https://www.oracle.com/database/technologies/appdev/jdbc.html
 [exasol-error-reporting]: https://github.com/exasol/error-reporting-java/
+[exasol-db-funtamentals]: https://github.com/exasol/db-fundamentals-java/
 
 [exasol-testcontainers]: https://github.com/exasol/exasol-testcontainers
 [test-db-builder]: https://github.com/exasol/test-db-builder/
 [exasol-hamcrest]: https://github.com/exasol/hamcrest-resultset-matcher
-[udf-debugging-java]: https://github.com/exasol/udf-debugging-java
+[jqno-equals-verifier]: https://github.com/jqno/equalsverifier
 
 [maven-jacoco-plugin]: https://www.eclemma.org/jacoco/trunk/doc/maven.html
 [maven-surefire-plugin]: https://maven.apache.org/surefire/maven-surefire-plugin/

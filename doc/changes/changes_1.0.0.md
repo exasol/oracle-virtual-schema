@@ -17,7 +17,6 @@ Code name: Migration from the virtual-schemas repository
 * Added `org.hamcrest:hamcrest:2.2`
 * Added `org.junit.jupiter:junit-jupiter:5.7.0`
 * Added `org.mockito:mockito-junit-jupiter:3.6.28`
-* Added `junit:junit:4.13.1`
 * Added `nl.jqno.equalsverifier:equalsverifier:3.5`
 * Added `com.exasol:exasol-testcontainers:3.3.1`
 * Added `org.testcontainers:junit-jupiter:1.15.0`
