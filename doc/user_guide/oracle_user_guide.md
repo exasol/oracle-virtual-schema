@@ -203,7 +203,7 @@ Therefore we cannot include the MySQL JDBC driver, so in order to execute the in
 
 ### Starting Disabled Integration Test Locally
 
-1. Download a JDBC driver and the Orcal instant client from: 
+1. Download a JDBC driver and the Oracle instant client from: 
  - Oracle [`ojdbc8.jar`](https://www.oracle.com/database/technologies/appdev/jdbc-ucp-19c-downloads.html)
  - Oracle instant client [`instantclient-basic-linux.x64-12.1.0.2.0.zip`](https://www.oracle.com/database/technologies/instant-client/linux-x86-64-downloads.html).
  Please be aware that Exasol currently supports only mentioned version of the Oracle instant client.  
