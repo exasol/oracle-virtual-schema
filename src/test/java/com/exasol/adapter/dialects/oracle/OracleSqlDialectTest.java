@@ -122,8 +122,7 @@ class OracleSqlDialectTest {
                 CATALOG_NAME_PROPERTY, "MY_CATALOG")));
         final PropertyValidationException exception = assertThrows(PropertyValidationException.class,
                 sqlDialect::validateProperties);
-        MatcherAssert.assertThat(exception.getMessage(), containsString(
-                "The dialect ORACLE does not support CATALOG_NAME property. Please, do not set the \"CATALOG_NAME\" property."));
+        MatcherAssert.assertThat(exception.getMessage(), containsString("E-VS-COM-JDBC-13"));
     }
 
     @Test
