@@ -18,8 +18,6 @@ import com.exasol.adapter.sql.*;
 public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
     private boolean requiresSelectListAliasesForLimit = false;
     private static final String TIMESTAMP_FORMAT = "'YYYY-MM-DD HH24:MI:SS.FF3'";
-    private static final List<String> TYPE_NAMES_REQUIRING_CAST = List.of("TIMESTAMP", "INTERVAL", "BINARY_FLOAT",
-            "BINARY_DOUBLE");
     private final Set<AggregateFunction> aggregateFunctionsCast = EnumSet.noneOf(AggregateFunction.class);
     private final Set<ScalarFunction> scalarFunctionsCast = EnumSet.noneOf(ScalarFunction.class);
 
@@ -141,32 +139,6 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
         return String.join(", ", selectListElements);
     }
 
-    private boolean nodeRequiresCast(final SqlNode node) throws AdapterException {
-        if (node.getType() == SqlNodeType.COLUMN) {
-            return checkIfColumnRequiresCast((SqlColumn) node);
-        } else {
-            return false;
-        }
-    }
-
-    private boolean checkIfColumnRequiresCast(final SqlColumn node) throws AdapterException {
-        final String typeName = getTypeNameFromColumn(node);
-        if (typeName.equals("NUMBER")) {
-            if (node.getMetadata().getType().getExaDataType() == DataType.ExaDataType.VARCHAR) {
-                return true;
-            } else {
-                return checkIfNeedToCastNumberToDecimal(node);
-            }
-        } else {
-            for (final String typeRequiringCast : TYPE_NAMES_REQUIRING_CAST) {
-                if (typeName.startsWith(typeRequiringCast)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     /**
      * This method determines if a NUMBER column needs to be casted to the DECIMAL type specified in the
      * oracle_cast_number_to_decimal_with_precision_and_scale property. This is done by checking if the target type is
@@ -260,7 +232,7 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
 
     @Override
     public String visit(final SqlLiteralExactnumeric literal) {
-        final String literalString = literal.getValue().toString();
+        final String literalString = literal.getValue();
         return getLiteralString(literalString, literal.hasParent(), literal.getParent());
     }
 
