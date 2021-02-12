@@ -79,6 +79,7 @@ Running the Virtual Schema requires a Java Runtime version 11 or later.
 | [Maven Dependency Plugin][maven-dependency-plugin]                 | Accessing to test dependencies                         | Apache License 2.0            |
 | [Artifact Reference Checker Plugin][artifact-ref-checker-plugin]   | Check if artifact is referenced with correct version   | MIT License                   |
 | [Project Keeper Maven Plugin][project-keeper-maven-plugin]         | Checking project structure                             | MIT License                   |
+| [Error Code Crawler Plugin][error-code-crawler-plugin]             | Analyzing used error messages                          | MIT License                   |
 | [Sonatype OSS Index Maven Plugin][sonatype-oss-index-maven-plugin] | Checking dependencies vulnerability                    | ASL2                          |
 
 [virtual-schema-common-jdbc]: https://github.com/exasol/virtual-schema-common-jdbc
@@ -101,6 +102,7 @@ Running the Virtual Schema requires a Java Runtime version 11 or later.
 [artifact-ref-checker-plugin]: https://github.com/exasol/artifact-reference-checker-maven-plugin
 [maven-dependency-plugin]: https://maven.apache.org/plugins/maven-dependency-plugin/
 [project-keeper-maven-plugin]: https://github.com/exasol/project-keeper-maven-plugin
+[error-code-crawler-plugin]: https://github.com/exasol/error-code-crawler-maven-plugin
 [sonatype-oss-index-maven-plugin]: https://sonatype.github.io/ossindex-maven/maven-plugin/
 
 [virtual-schemas-user-guide]: https://docs.exasol.com/database_concepts/virtual_schemas.htm

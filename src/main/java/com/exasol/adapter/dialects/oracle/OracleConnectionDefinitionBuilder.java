@@ -6,6 +6,7 @@ import static com.exasol.adapter.dialects.oracle.OracleProperties.ORACLE_IMPORT_
 import com.exasol.ExaConnectionInformation;
 import com.exasol.adapter.AdapterProperties;
 import com.exasol.adapter.jdbc.BaseConnectionDefinitionBuilder;
+import com.exasol.errorreporting.ExaError;
 
 /**
  * This class implements an Oracle-specific connection definition builder.
@@ -25,9 +26,11 @@ public class OracleConnectionDefinitionBuilder extends BaseConnectionDefinitionB
         if (properties.containsKey(ORACLE_CONNECTION_NAME_PROPERTY)) {
             return buildOracleConnectionDefinitionFromOracleConnectionOnly(properties);
         } else {
-            throw new IllegalArgumentException("If you enable IMPORT FROM ORA with property \"" + ORACLE_IMPORT_PROPERTY
-                    + "\" you also need to provide the name of an Oracle connection with \""
-                    + ORACLE_CONNECTION_NAME_PROPERTY + "\".");
+            throw new IllegalArgumentException(ExaError.messageBuilder("E-VS-ORA-3")
+                    .message("If you enable IMPORT FROM ORA with property {{OracleImportProperty}} "
+                            + "you also need to provide the name of an Oracle connection with {{OracleConnectionNameProperty}}.")
+                    .parameter("OracleImportProperty", ORACLE_IMPORT_PROPERTY)
+                    .parameter("OracleConnectionNameProperty", ORACLE_CONNECTION_NAME_PROPERTY).toString());
         }
     }
 

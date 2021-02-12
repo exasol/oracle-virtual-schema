@@ -5,14 +5,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
 import java.sql.Types;
-import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.exasol.adapter.AdapterProperties;
 import com.exasol.adapter.dialects.BaseIdentifierConverter;
-import com.exasol.adapter.jdbc.JdbcTypeDescription;
+import com.exasol.adapter.jdbc.JDBCTypeDescription;
 import com.exasol.adapter.metadata.DataType;
 
 class OracleColumnMetadataReaderTest {
@@ -28,16 +27,16 @@ class OracleColumnMetadataReaderTest {
                 BaseIdentifierConverter.createDefault());
     }
 
-    private JdbcTypeDescription createTypeDescriptionForNumeric(final int precision, final int scale) {
+    private JDBCTypeDescription createTypeDescriptionForNumeric(final int precision, final int scale) {
         final int octetLength = 10;
-        return new JdbcTypeDescription(Types.NUMERIC, scale, precision, octetLength, "NUMERIC");
+        return new JDBCTypeDescription(Types.NUMERIC, scale, precision, octetLength, "NUMERIC");
     }
 
     @Test
     void testMapColumnTypeWithMagicScale() {
         final int precision = 10;
         final int scale = OracleColumnMetadataReader.ORACLE_MAGIC_NUMBER_SCALE;
-        final JdbcTypeDescription typeDescription = createTypeDescriptionForNumeric(precision, scale);
+        final JDBCTypeDescription typeDescription = createTypeDescriptionForNumeric(precision, scale);
         assertThat(this.columnMetadataReader.mapJdbcType(typeDescription),
                 equalTo(createMaximumSizeVarChar(DataType.ExaCharset.UTF8)));
     }
@@ -46,7 +45,7 @@ class OracleColumnMetadataReaderTest {
     void testMapNumericColumnTypeWithMaximumDecimalPrecision() {
         final int precision = DataType.MAX_EXASOL_DECIMAL_PRECISION;
         final int scale = 0;
-        final JdbcTypeDescription typeDescription = createTypeDescriptionForNumeric(precision, scale);
+        final JDBCTypeDescription typeDescription = createTypeDescriptionForNumeric(precision, scale);
         assertThat(this.columnMetadataReader.mapJdbcType(typeDescription),
                 equalTo(DataType.createDecimal(precision, scale)));
     }
@@ -55,14 +54,8 @@ class OracleColumnMetadataReaderTest {
     void testMapColumnTypeWithZeroPrecision() {
         final int precision = 0;
         final int scale = 0;
-        final JdbcTypeDescription typeDescription = createTypeDescriptionForNumeric(precision, scale);
+        final JDBCTypeDescription typeDescription = createTypeDescriptionForNumeric(precision, scale);
         assertThat(this.columnMetadataReader.mapJdbcType(typeDescription),
                 equalTo(DataType.createDecimal(DataType.MAX_EXASOL_DECIMAL_PRECISION, scale)));
-    }
-
-    private OracleColumnMetadataReader createParameterizedColumnMetadataReader(
-            final Map<String, String> rawProperties) {
-        return new OracleColumnMetadataReader(null, new AdapterProperties(rawProperties),
-                BaseIdentifierConverter.createDefault());
     }
 }

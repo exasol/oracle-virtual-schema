@@ -2,9 +2,8 @@ package com.exasol.adapter.dialects.oracle;
 
 import java.sql.SQLException;
 
-import com.exasol.adapter.dialects.AbstractQueryRewriter;
 import com.exasol.adapter.dialects.SqlDialect;
-import com.exasol.adapter.jdbc.ConnectionDefinitionBuilder;
+import com.exasol.adapter.dialects.rewriting.AbstractQueryRewriter;
 import com.exasol.adapter.jdbc.RemoteMetadataReader;
 
 /**
@@ -18,12 +17,7 @@ public class OracleQueryRewriter extends AbstractQueryRewriter {
      * @param remoteMetadataReader reader for metadata from the remote data source
      */
     public OracleQueryRewriter(final SqlDialect dialect, final RemoteMetadataReader remoteMetadataReader) {
-        super(dialect, remoteMetadataReader);
-    }
-
-    @Override
-    protected ConnectionDefinitionBuilder createConnectionDefinitionBuilder() {
-        return new OracleConnectionDefinitionBuilder();
+        super(dialect, remoteMetadataReader, new OracleConnectionDefinitionBuilder());
     }
 
     @Override

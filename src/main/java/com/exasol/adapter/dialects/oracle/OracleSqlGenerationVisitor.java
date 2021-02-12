@@ -7,7 +7,9 @@ import java.util.*;
 
 import com.exasol.adapter.AdapterException;
 import com.exasol.adapter.dialects.*;
-import com.exasol.adapter.metadata.*;
+import com.exasol.adapter.dialects.rewriting.SqlGenerationContext;
+import com.exasol.adapter.dialects.rewriting.SqlGenerationVisitor;
+import com.exasol.adapter.metadata.DataType;
 import com.exasol.adapter.sql.*;
 
 /**
@@ -84,10 +86,8 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
             throws AdapterException {
         final StringBuilder builder = new StringBuilder();
         builder.append("SELECT ");
-        if (select.getSelectList().isRequestAnyColumn()) {
+        if (!select.getSelectList().hasExplicitColumnsList()) {
             return "1";
-        } else if (select.getSelectList().isSelectStar()) {
-            appendSelectStar(select, builder);
         } else {
             final int numberOfExpressions = select.getSelectList().getExpressions().size();
             builder.append(String.join(", ", buildAliases(numberOfExpressions)));
@@ -101,16 +101,6 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
         builder.append(" ) WHERE ROWNUM_SUB > ");
         builder.append(limit.getOffset());
         return builder.toString();
-    }
-
-    private void appendSelectStar(final SqlStatementSelect select, final StringBuilder builder) {
-        int numberOfColumns = 0;
-        final List<TableMetadata> tableMetadata = new ArrayList<>();
-        SqlGenerationHelper.addMetadata(select.getFromClause(), tableMetadata);
-        for (final TableMetadata tableMeta : tableMetadata) {
-            numberOfColumns += tableMeta.getColumns().size();
-        }
-        builder.append(String.join(", ", buildAliases(numberOfColumns)));
     }
 
     private List<String> buildAliases(final int numSelectListElements) {
@@ -133,7 +123,7 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
 
     @Override
     public String visit(final SqlSelectList selectList) throws AdapterException {
-        if (selectList.isRequestAnyColumn()) {
+        if (!selectList.hasExplicitColumnsList()) {
             return "1";
         } else {
             return getSqlSelectList(selectList);
@@ -142,45 +132,13 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
 
     private String getSqlSelectList(final SqlSelectList selectList) throws AdapterException {
         final List<String> selectListElements = new ArrayList<>();
-        if (selectList.isSelectStar()) {
-            getSelectStarList(selectList, selectListElements);
-        } else {
-            for (final SqlNode node : selectList.getExpressions()) {
-                selectListElements.add(node.accept(this));
-            }
+        for (final SqlNode node : selectList.getExpressions()) {
+            selectListElements.add(node.accept(this));
         }
         if (this.requiresSelectListAliasesForLimit) {
             addColumnAliases(selectListElements);
         }
         return String.join(", ", selectListElements);
-    }
-
-    private void getSelectStarList(final SqlSelectList selectList, final List<String> selectListElements)
-            throws AdapterException {
-        final SqlStatementSelect select = (SqlStatementSelect) selectList.getParent();
-        final boolean selectListRequiresCasts = isSelectListRequiresCasts(selectList, selectListElements, select);
-        if (!this.requiresSelectListAliasesForLimit && !selectListRequiresCasts) {
-            selectListElements.clear();
-            selectListElements.add("*");
-        }
-    }
-
-    private boolean isSelectListRequiresCasts(final SqlSelectList selectList, final List<String> selectListElements,
-            final SqlStatementSelect select) throws AdapterException {
-        boolean selectListRequiresCasts = false;
-        int columnId = 0;
-        final List<TableMetadata> tableMetadata = new ArrayList<>();
-        SqlGenerationHelper.addMetadata(select.getFromClause(), tableMetadata);
-        for (final TableMetadata tableMeta : tableMetadata) {
-            for (final ColumnMetadata columnMeta : tableMeta.getColumns()) {
-                final SqlColumn sqlColumn = new SqlColumn(columnId, columnMeta);
-                sqlColumn.setParent(selectList);
-                selectListRequiresCasts |= nodeRequiresCast(sqlColumn);
-                selectListElements.add(sqlColumn.accept(this));
-                ++columnId;
-            }
-        }
-        return selectListRequiresCasts;
     }
 
     private boolean nodeRequiresCast(final SqlNode node) throws AdapterException {
@@ -316,7 +274,7 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
 
     @Override
     public String visit(final SqlLiteralDouble literal) {
-        final String literalString = Double.toString(literal.getValue());
+        final String literalString = literal.getValue();
         return getLiteralString(literalString, literal.hasParent(), literal.getParent());
     }
 

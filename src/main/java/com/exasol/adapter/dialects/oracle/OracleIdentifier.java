@@ -3,6 +3,7 @@ package com.exasol.adapter.dialects.oracle;
 import java.util.Objects;
 
 import com.exasol.db.Identifier;
+import com.exasol.errorreporting.ExaError;
 
 /**
  * Represents an identifier in the Oracle database.
@@ -34,10 +35,11 @@ public class OracleIdentifier implements Identifier {
         if (validate(id)) {
             return new OracleIdentifier(id);
         } else {
-            throw new AssertionError("E-ID-3: Unable to create identifier \"" + id //
-                    + "\" because it contains illegal characters." //
-                    + " For information about valid identifiers, please refer to" //
-                    + " https://docs.oracle.com/cd/B19306_01/server.102/b14200/sql_elements008.htm");
+            throw new AssertionError(ExaError.messageBuilder("E-VS-ORA-2")
+                    .message("Unable to create identifier {{id}} because it contains illegal characters." //
+                            + " For information about valid identifiers, please refer to" //
+                            + " https://docs.oracle.com/cd/B19306_01/server.102/b14200/sql_elements008.htm")
+                    .parameter("id", id).toString());
         }
     }
 

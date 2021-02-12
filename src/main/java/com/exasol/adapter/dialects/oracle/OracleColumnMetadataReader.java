@@ -8,7 +8,7 @@ import java.sql.Types;
 import com.exasol.adapter.AdapterProperties;
 import com.exasol.adapter.dialects.IdentifierConverter;
 import com.exasol.adapter.jdbc.BaseColumnMetadataReader;
-import com.exasol.adapter.jdbc.JdbcTypeDescription;
+import com.exasol.adapter.jdbc.JDBCTypeDescription;
 import com.exasol.adapter.metadata.DataType;
 
 /**
@@ -36,7 +36,7 @@ public class OracleColumnMetadataReader extends BaseColumnMetadataReader {
     }
 
     @Override
-    public DataType mapJdbcType(final JdbcTypeDescription jdbcTypeDescription) {
+    public DataType mapJdbcType(final JDBCTypeDescription jdbcTypeDescription) {
         switch (jdbcTypeDescription.getJdbcType()) {
         case Types.DECIMAL:
         case Types.NUMERIC:
@@ -54,7 +54,7 @@ public class OracleColumnMetadataReader extends BaseColumnMetadataReader {
         }
     }
 
-    protected DataType mapNumericType(final JdbcTypeDescription jdbcTypeDescription) {
+    protected DataType mapNumericType(final JDBCTypeDescription jdbcTypeDescription) {
         final int decimalScale = jdbcTypeDescription.getDecimalScale();
         if (decimalScale == ORACLE_MAGIC_NUMBER_SCALE) {
             return workAroundNumberWithoutScaleAndPrecision();

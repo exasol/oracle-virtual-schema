@@ -1,6 +1,5 @@
 package com.exasol.adapter.dialects.oracle;
 
-import static com.exasol.adapter.dialects.VisitorAssertions.assertSqlNodeConvertedToAsterisk;
 import static com.exasol.adapter.dialects.VisitorAssertions.assertSqlNodeConvertedToOne;
 import static com.exasol.adapter.sql.AggregateFunction.*;
 import static com.exasol.adapter.sql.ScalarFunction.*;
@@ -25,7 +24,8 @@ import com.exasol.adapter.AdapterException;
 import com.exasol.adapter.AdapterProperties;
 import com.exasol.adapter.adapternotes.ColumnAdapterNotes;
 import com.exasol.adapter.adapternotes.ColumnAdapterNotesJsonConverter;
-import com.exasol.adapter.dialects.*;
+import com.exasol.adapter.dialects.SqlDialect;
+import com.exasol.adapter.dialects.rewriting.SqlGenerationContext;
 import com.exasol.adapter.metadata.*;
 import com.exasol.adapter.sql.*;
 import com.exasol.sql.SqlNormalizer;
@@ -79,20 +79,6 @@ class OracleSqlGenerationVisitorTest {
     }
 
     @Test
-    void testVisitSqlStatementSelectWithLimitSelectStar() throws AdapterException {
-        final SqlSelectList selectList = SqlSelectList.createSelectStarSelectList();
-        final TableMetadata tableMetadata = new TableMetadata("", "", Collections.emptyList(), "");
-        final SqlTable fromClause = new SqlTable("test_table_name", tableMetadata);
-        final SqlLimit limit = new SqlLimit(10, 3);
-        final SqlStatementSelect sqlStatementSelect = SqlStatementSelect.builder().selectList(selectList)
-                .fromClause(fromClause).limit(limit).build();
-        assertThat(this.visitor.visit(sqlStatementSelect),
-                equalTo("SELECT  FROM ( SELECT LIMIT_SUBSELECT.*, ROWNUM "
-                        + "ROWNUM_SUB FROM ( SELECT  FROM \"test_schema\".\"test_table_name\"  ) LIMIT_SUBSELECT WHERE "
-                        + "ROWNUM <= 13 ) WHERE ROWNUM_SUB > 3"));
-    }
-
-    @Test
     void testVisitSqlStatementSelectWithLimitRegularSelectList() throws AdapterException {
         final SqlSelectList selectList = SqlSelectList
                 .createRegularSelectList(Arrays.asList(new SqlLiteralBool(true), new SqlLiteralString("string")));
@@ -128,56 +114,6 @@ class OracleSqlGenerationVisitorTest {
     }
 
     @Test
-    void testVisitSqlSelectListSelectStar() throws AdapterException {
-        final SqlSelectList selectList = createSqlSelectStarListWithOneColumn(
-                "{\"jdbcDataType\":16, \"typeName\":\"BOOLEAN\"}", DataType.createBool());
-        assertSqlNodeConvertedToAsterisk(selectList, this.visitor);
-    }
-
-    @CsvSource({ "NUMBER", "INTERVAL", "BINARY_FLOAT", "BINARY_DOUBLE" })
-    @ParameterizedTest
-    void testVisitSqlSelectListSelectStarCastToChar(final String dataType) throws AdapterException {
-        final SqlSelectList selectList = createSqlSelectStarListWithOneColumn(
-                "{\"jdbcDataType\":2, \"typeName\":\"" + dataType + "\"}",
-                DataType.createVarChar(50, DataType.ExaCharset.UTF8));
-        assertThat(this.visitor.visit(selectList), equalTo("TO_CHAR(\"test_column\")"));
-    }
-
-    private SqlSelectList createSqlSelectStarListWithOneColumn(final String adapterNotes, final DataType dataType) {
-        final SqlSelectList selectList = SqlSelectList.createSelectStarSelectList();
-        final List<ColumnMetadata> columns = new ArrayList<>();
-        columns.add(ColumnMetadata.builder().name("test_column").adapterNotes(adapterNotes).type(dataType).build());
-        final TableMetadata tableMetadata = new TableMetadata("", "", columns, "");
-        final SqlTable fromClause = new SqlTable("", tableMetadata);
-        final SqlNode sqlStatementSelect = SqlStatementSelect.builder().selectList(selectList).fromClause(fromClause)
-                .build();
-        selectList.setParent(sqlStatementSelect);
-        return selectList;
-    }
-
-    @Test
-    void testVisitSqlSelectListSelectStarWithTimestamp() throws AdapterException {
-        final SqlSelectList selectList = createSqlSelectStarListWithOneColumn(
-                "{\"jdbcDataType\":2, \"typeName\":\"TIMESTAMP\"}",
-                DataType.createVarChar(50, DataType.ExaCharset.UTF8));
-        assertThat(this.visitor.visit(selectList), equalTo(
-                "TO_TIMESTAMP(TO_CHAR(\"test_column\", 'YYYY-MM-DD HH24:MI:SS.FF3'), 'YYYY-MM-DD HH24:MI:SS.FF3')"));
-    }
-
-    @Test
-    void testVisitSqlSelectListSelectStarNumberCastToDecimal() throws AdapterException {
-        final SqlSelectList selectList = SqlSelectList.createSelectStarSelectList();
-        final List<ColumnMetadata> columns = new ArrayList<>();
-        columns.add(ColumnMetadata.builder().name("test_column")
-                .adapterNotes("{\"jdbcDataType\":2, \"typeName\":\"NUMBER\"}").type(DataType.createDouble()).build());
-        final TableMetadata tableMetadata = new TableMetadata("", "", columns, "");
-        final SqlTable fromClause = new SqlTable("", tableMetadata);
-        final SqlNode select = SqlStatementSelect.builder().selectList(selectList).fromClause(fromClause).build();
-        selectList.setParent(select);
-        assertThat(this.visitor.visit(selectList), equalTo("CAST(\"test_column\" AS DECIMAL(0,0))"));
-    }
-
-    @Test
     void testVisitSqlSelectListRegularSelectList() throws AdapterException {
         final SqlSelectList selectList = SqlSelectList
                 .createRegularSelectList(Arrays.asList(new SqlLiteralBool(true), new SqlLiteralString("string")));
@@ -203,7 +139,7 @@ class OracleSqlGenerationVisitorTest {
 
     @Test
     void testVisitSqlLiteralExactnumericInSelectList() {
-        final SqlSelectList selectList = SqlSelectList.createSelectStarSelectList();
+        final SqlSelectList selectList = SqlSelectList.createAnyValueSelectList();
         final SqlLiteralExactnumeric literalExactnumeric = new SqlLiteralExactnumeric(new BigDecimal("5.9"));
         literalExactnumeric.setParent(selectList);
         assertThat(this.visitor.visit(literalExactnumeric), equalTo("TO_CHAR(5.9)"));
@@ -212,15 +148,15 @@ class OracleSqlGenerationVisitorTest {
     @Test
     void testVisitSqlLiteralDouble() {
         final SqlLiteralDouble literalDouble = new SqlLiteralDouble(10.6);
-        assertThat(this.visitor.visit(literalDouble), equalTo("10.6"));
+        assertThat(this.visitor.visit(literalDouble), equalTo("1.06E1"));
     }
 
     @Test
     void testVisitSqlLiteralDoubleInSelectList() {
-        final SqlSelectList selectList = SqlSelectList.createSelectStarSelectList();
+        final SqlSelectList selectList = SqlSelectList.createAnyValueSelectList();
         final SqlLiteralDouble literalDouble = new SqlLiteralDouble(10.6);
         literalDouble.setParent(selectList);
-        assertThat(this.visitor.visit(literalDouble), equalTo("TO_CHAR(10.6)"));
+        assertThat(this.visitor.visit(literalDouble), equalTo("TO_CHAR(1.06E1)"));
     }
 
     @Test
@@ -228,7 +164,7 @@ class OracleSqlGenerationVisitorTest {
         final SqlFunctionAggregateGroupConcat aggregateGroupConcat = SqlFunctionAggregateGroupConcat
                 .builder(new SqlLiteralDouble(10.5)).separator(new SqlLiteralString("'")).build();
         assertThat(this.visitor.visit(aggregateGroupConcat),
-                equalTo("LISTAGG(10.5, '''') WITHIN GROUP(ORDER BY 10.5)"));
+                equalTo("LISTAGG(1.05E1, '''') WITHIN GROUP(ORDER BY 1.05E1)"));
     }
 
     @Test
@@ -245,7 +181,7 @@ class OracleSqlGenerationVisitorTest {
                 .builder(new SqlLiteralDouble(10.5)).separator(new SqlLiteralString("'")).orderBy(orderBy)
                 .distinct(true).build();
         assertThat(this.visitor.visit(aggregateGroupConcat), equalTo(
-                "LISTAGG(10.5, '''') WITHIN GROUP(ORDER BY \"test_column\" DESC NULLS FIRST, \"test_column2\")"));
+                "LISTAGG(1.05E1, '''') WITHIN GROUP(ORDER BY \"test_column\" DESC NULLS FIRST, \"test_column2\")"));
     }
 
     @Test
@@ -263,7 +199,7 @@ class OracleSqlGenerationVisitorTest {
                 .build();
         final List<SqlNode> arguments = List.of(new SqlColumn(1, columnMetadata));
         final SqlFunctionAggregate sqlFunctionAggregate = new SqlFunctionAggregate(AVG, arguments, false);
-        final SqlNode selectList = SqlSelectList.createSelectStarSelectList();
+        final SqlNode selectList = SqlSelectList.createAnyValueSelectList();
         sqlFunctionAggregate.setParent(selectList);
         assertThat(this.visitor.visit(sqlFunctionAggregate), equalTo("CAST(AVG(\"test_column\") AS FLOAT)"));
     }
@@ -346,7 +282,7 @@ class OracleSqlGenerationVisitorTest {
 
     @Test
     void testVisitSqlFunctionScalarInSelectList() throws AdapterException {
-        final SqlSelectList selectList = SqlSelectList.createSelectStarSelectList();
+        final SqlSelectList selectList = SqlSelectList.createAnyValueSelectList();
         final List<SqlNode> arguments = List.of(new SqlLiteralString("test"), new SqlLiteralString(""));
         final SqlFunctionScalar sqlFunctionScalar = new SqlFunctionScalar(TANH, arguments);
         sqlFunctionScalar.setParent(selectList);
@@ -386,33 +322,12 @@ class OracleSqlGenerationVisitorTest {
         assertEquals(SqlNormalizer.normalizeSql(expectedSql), SqlNormalizer.normalizeSql(actualSql));
     }
 
-    @Test
-    void testSqlGeneratorWithSelectStarAndOffset() throws AdapterException {
-        SqlStatementSelect node = (SqlStatementSelect) getTestSqlNode();
-        node.getLimit().setOffset(5);
-        node = SqlStatementSelect.builder().selectList(SqlSelectList.createSelectStarSelectList())
-                .fromClause(node.getFromClause()).whereClause(node.getWhereClause()).groupBy(node.getGroupBy())
-                .having(node.getHaving()).orderBy(node.getOrderBy()).limit(node.getLimit()).build();
-        final String expectedSql = "SELECT c0, c1 FROM (" + //
-                "  SELECT LIMIT_SUBSELECT.*, ROWNUM ROWNUM_SUB FROM ( " + //
-                "    SELECT \"USER_ID\" AS c0, \"URL\" AS c1 " + //
-                "      FROM \"test_schema\".\"CLICKS\"" + //
-                "      WHERE 1 < \"USER_ID\"" + //
-                "      GROUP BY \"USER_ID\"" + //
-                "      HAVING 1 < COUNT(\"URL\")" + //
-                "      ORDER BY \"USER_ID\"" + //
-                "  ) LIMIT_SUBSELECT WHERE ROWNUM <= 15 " + //
-                ") WHERE ROWNUM_SUB > 5";
-        final String actualSql = this.visitor.visit(node);
-        assertEquals(SqlNormalizer.normalizeSql(expectedSql), SqlNormalizer.normalizeSql(actualSql));
-    }
-    
     private static SqlNode getTestSqlNode() {
-    	return new DialectTestData().getTestSqlNode();
+        return new DialectTestData().getTestSqlNode();
     }
-    
+
     private static class DialectTestData {
-    	private SqlNode getTestSqlNode() {
+        private SqlNode getTestSqlNode() {
             // SELECT USER_ID, count(URL) FROM CLICKS
             // WHERE 1 < USER_ID
             // GROUP BY USER_ID
@@ -421,9 +336,9 @@ class OracleSqlGenerationVisitorTest {
             // LIMIT 10;
             final TableMetadata clicksMeta = getClicksTableMetadata();
             final SqlTable fromClause = new SqlTable("CLICKS", clicksMeta);
-            final SqlSelectList selectList = SqlSelectList.createRegularSelectList(
-                    List.of(new SqlColumn(0, clicksMeta.getColumns().get(0)), new SqlFunctionAggregate(
-                            AggregateFunction.COUNT, List.of(new SqlColumn(1, clicksMeta.getColumns().get(1))), false)));
+            final SqlSelectList selectList = SqlSelectList.createRegularSelectList(List.of(
+                    new SqlColumn(0, clicksMeta.getColumns().get(0)), new SqlFunctionAggregate(AggregateFunction.COUNT,
+                            List.of(new SqlColumn(1, clicksMeta.getColumns().get(1))), false)));
             final SqlNode whereClause = new SqlPredicateLess(new SqlLiteralExactnumeric(BigDecimal.ONE),
                     new SqlColumn(0, clicksMeta.getColumns().get(0)));
             final SqlExpressionList groupBy = new SqlGroupBy(List.of(new SqlColumn(0, clicksMeta.getColumns().get(0))));
@@ -437,7 +352,7 @@ class OracleSqlGenerationVisitorTest {
                     .groupBy(groupBy).having(having).orderBy(orderBy).limit(limit).build();
         }
 
-    	private TableMetadata getClicksTableMetadata() {
+        private TableMetadata getClicksTableMetadata() {
             final ColumnAdapterNotesJsonConverter converter = ColumnAdapterNotesJsonConverter.getInstance();
             final List<ColumnMetadata> columns = new ArrayList<>();
             final ColumnAdapterNotes decimalAdapterNotes = ColumnAdapterNotes.builder() //
