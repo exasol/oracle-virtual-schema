@@ -22,7 +22,7 @@ class OracleConnectionDefinitionBuilderTest {
                 ORACLE_IMPORT_PROPERTY, "true", //
                 ORACLE_CONNECTION_NAME_PROPERTY, "ora_connection", //
                 CONNECTION_NAME_PROPERTY, "jdbc_connection"));
-        assertThat(connectionDefinitionBuilder.buildConnectionDefinition(properties, null),
+        assertThat(this.connectionDefinitionBuilder.buildConnectionDefinition(properties, null),
                 containsString("AT ora_connection"));
     }
 
@@ -32,7 +32,7 @@ class OracleConnectionDefinitionBuilderTest {
                 ORACLE_IMPORT_PROPERTY, "true", //
                 CONNECTION_NAME_PROPERTY, "ora_connection"));
         final IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> connectionDefinitionBuilder.buildConnectionDefinition(properties, null));
-        assertThat(exception.getMessage(), containsString("If you enable IMPORT FROM ORA with property"));
+                () -> this.connectionDefinitionBuilder.buildConnectionDefinition(properties, null));
+        assertThat(exception.getMessage(), containsString("E-VS-ORA-3"));
     }
 }

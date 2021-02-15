@@ -9,15 +9,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.sql.*;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.sql.Date;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -36,10 +33,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import com.exasol.bucketfs.Bucket;
 import com.exasol.bucketfs.BucketAccessException;
 import com.exasol.containers.ExasolContainer;
-import com.exasol.dbbuilder.dialects.exasol.AdapterScript;
-import com.exasol.dbbuilder.dialects.exasol.ConnectionDefinition;
-import com.exasol.dbbuilder.dialects.exasol.ExasolObjectFactory;
-import com.exasol.dbbuilder.dialects.exasol.ExasolSchema;
+import com.exasol.dbbuilder.dialects.exasol.*;
 
 /**
  * How to run `OracleSqlDialectIT`: See the documentation <a
@@ -96,19 +90,19 @@ class OracleSqlDialectIT {
                 .createConnectionDefinition(JDBC_CONNECTION_NAME, jdbcConnectionString, oracleUsername, oraclePassword);
         createOraConnection(exasolFactory, mappedPort, oracleUsername, oraclePassword);
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_JDBC).adapterScript(adapterScript)
-                .connectionDefinition(jdbcConnectionDefinition).dialectName("ORACLE")
-                .properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE)).build();
+                .connectionDefinition(jdbcConnectionDefinition).properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE))
+                .build();
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL).adapterScript(adapterScript)
-                .connectionDefinition(jdbcConnectionDefinition).dialectName("ORACLE")
-                .properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE)).properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE,
+                .connectionDefinition(jdbcConnectionDefinition).properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE))
+                .properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE,
                         "oracle_cast_number_to_decimal_with_precision_and_scale", "36,1"))
                 .build();
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_ORA).adapterScript(adapterScript)
-                .connectionDefinition(jdbcConnectionDefinition).dialectName("ORACLE").properties(Map.of("SCHEMA_NAME",
-                        SCHEMA_ORACLE, "IMPORT_FROM_ORA", "true", "ORA_CONNECTION_NAME", ORA_CONNECTION_NAME))
+                .connectionDefinition(jdbcConnectionDefinition).properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE,
+                        "IMPORT_FROM_ORA", "true", "ORA_CONNECTION_NAME", ORA_CONNECTION_NAME))
                 .build();
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_ORA_NUMBER_TO_DECIMAL).adapterScript(adapterScript)
-                .connectionDefinition(jdbcConnectionDefinition).dialectName("ORACLE")
+                .connectionDefinition(jdbcConnectionDefinition)
                 .properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE, "IMPORT_FROM_ORA", "true", "ORA_CONNECTION_NAME",
                         ORA_CONNECTION_NAME, "oracle_cast_number_to_decimal_with_precision_and_scale", "36,1"))
                 .build();
@@ -404,14 +398,6 @@ class OracleSqlDialectIT {
                             new BigDecimal("1234567890123456789012345678.9")),
                     () -> assertExpressionExecutionBigDecimalResult("SELECT C FROM " + qualifiedTableName,
                             new BigDecimal("1234567890123456789012345678901234.56")));
-        }
-
-        @ParameterizedTest
-        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORA_NUMBER_TO_DECIMAL })
-        void testSelectAllNumberColumnsExplainVirtual(final String virtualSchemaName) throws SQLException {
-            final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_NUMBER_HANDLING;
-            assertExplainVirtual("SELECT * FROM " + qualifiedTableName,
-                    "SELECT CAST(\"A\" AS DECIMAL(36,1)), CAST(\"B\" AS DECIMAL(36,1)), \"C\"");
         }
     }
 

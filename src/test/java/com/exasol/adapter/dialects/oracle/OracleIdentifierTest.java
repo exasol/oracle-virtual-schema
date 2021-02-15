@@ -1,5 +1,7 @@
 package com.exasol.adapter.dialects.oracle;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -19,7 +21,8 @@ class OracleIdentifierTest {
     @ParameterizedTest
     @ValueSource(strings = { "\"testtable\"", "test\"table" })
     void testCreateInvalidIdentifier(final String identifier) {
-        assertThrows(AssertionError.class, () -> OracleIdentifier.of(identifier));
+        final AssertionError assertionError = assertThrows(AssertionError.class, () -> OracleIdentifier.of(identifier));
+        assertThat(assertionError.getMessage(), containsString("E-VS-ORA-2"));
     }
 
     @Test

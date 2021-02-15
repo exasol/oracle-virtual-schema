@@ -1,0 +1,5 @@
+error-tags:
+  VS-ORA:
+    packages:
+      - com.exasol.adapter.dialects.oracle
+    highest-index: 1

@@ -19,11 +19,11 @@ public class OracleSqlDialectFactory implements SqlDialectFactory {
     public SqlDialect createSqlDialect(final ConnectionFactory connectionFactory, final AdapterProperties properties) {
         return new OracleSqlDialect(connectionFactory, properties);
     }
-    
+
     @Override
-	public String getSqlDialectVersion() {
-		final VersionCollector versionCollector = new VersionCollector(
-                "META-INF/maven/com.exasol/mysql-virtual-schema/pom.properties");
+    public String getSqlDialectVersion() {
+        final VersionCollector versionCollector = new VersionCollector(
+                "META-INF/maven/com.exasol/oracle-virtual-schema/pom.properties");
         return versionCollector.getVersionNumber();
-	}
+    }
 }

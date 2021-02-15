@@ -16,9 +16,13 @@ import java.util.stream.Collectors;
 import com.exasol.adapter.AdapterProperties;
 import com.exasol.adapter.capabilities.Capabilities;
 import com.exasol.adapter.dialects.*;
+import com.exasol.adapter.dialects.rewriting.ImportIntoTemporaryTableQueryRewriter;
+import com.exasol.adapter.dialects.rewriting.SqlGenerationContext;
 import com.exasol.adapter.jdbc.*;
 import com.exasol.adapter.metadata.DataType;
-import com.exasol.adapter.sql.*;
+import com.exasol.adapter.sql.AggregateFunction;
+import com.exasol.adapter.sql.ScalarFunction;
+import com.exasol.errorreporting.ExaError;
 
 /**
  * This class implements the Oracle SQL dialect.
@@ -109,7 +113,7 @@ public class OracleSqlDialect extends AbstractSqlDialect {
     }
 
     @Override
-    public SqlNodeVisitor<String> getSqlGenerationVisitor(final SqlGenerationContext context) {
+    public SqlGenerator getSqlGenerator(final SqlGenerationContext context) {
         return new OracleSqlGenerationVisitor(this, context);
     }
 
@@ -160,8 +164,9 @@ public class OracleSqlDialect extends AbstractSqlDialect {
         try {
             return new OracleMetadataReader(this.connectionFactory.getConnection(), this.properties);
         } catch (final SQLException exception) {
-            throw new RemoteMetadataReaderException(
-                    "Unable to create Oracle remote metadata reader. Caused by: " + exception.getMessage(), exception);
+            throw new RemoteMetadataReaderException(ExaError.messageBuilder("E-VS-ORA-1")
+                    .message("Unable to create Oracle remote metadata reader. Caused by: {{cause}}")
+                    .unquotedParameter("cause", exception.getMessage()).toString(), exception);
         }
     }
 
@@ -170,7 +175,7 @@ public class OracleSqlDialect extends AbstractSqlDialect {
         if (this.isImportFromOraEnabled()) {
             return new OracleQueryRewriter(this, createRemoteMetadataReader());
         }
-        return new ImportIntoQueryRewriter(this, createRemoteMetadataReader(), this.connectionFactory);
+        return new ImportIntoTemporaryTableQueryRewriter(this, createRemoteMetadataReader(), this.connectionFactory);
     }
 
     private boolean isImportFromOraEnabled() {

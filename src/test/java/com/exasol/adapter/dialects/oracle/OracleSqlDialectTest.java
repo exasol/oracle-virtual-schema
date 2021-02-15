@@ -14,7 +14,9 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,8 +33,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.exasol.adapter.AdapterProperties;
 import com.exasol.adapter.capabilities.Capabilities;
-import com.exasol.adapter.dialects.*;
+import com.exasol.adapter.dialects.PropertyValidationException;
+import com.exasol.adapter.dialects.SqlDialect;
+import com.exasol.adapter.dialects.rewriting.ImportIntoTemporaryTableQueryRewriter;
 import com.exasol.adapter.jdbc.ConnectionFactory;
+import com.exasol.adapter.jdbc.RemoteMetadataReaderException;
 
 @ExtendWith(MockitoExtension.class)
 class OracleSqlDialectTest {
@@ -78,6 +83,19 @@ class OracleSqlDialectTest {
                                 TO_TIMESTAMP, BIT_AND, BIT_TO_NUM, CASE, NULLIFZERO, ZEROIFNULL)));
     }
 
+    @Test
+    void testMetadataReaderClass() {
+        assertThat(this.dialect.createRemoteMetadataReader(), instanceOf(OracleMetadataReader.class));
+    }
+
+    @Test
+    void testCreateRemoteMetadataReaderConnectionFails() throws SQLException {
+        when(this.connectionFactoryMock.getConnection()).thenThrow(new SQLException());
+        final RemoteMetadataReaderException exception = assertThrows(RemoteMetadataReaderException.class,
+                this.dialect::createRemoteMetadataReader);
+        assertThat(exception.getMessage(), containsString("E-VS-ORA-1"));
+    }
+
     @CsvSource({ "FALSE, FALSE, JDBC", //
             "TRUE, FALSE, LOCAL", //
             "FALSE, TRUE, ORA" })
@@ -92,8 +110,7 @@ class OracleSqlDialectTest {
     @Test
     void testCheckOracleSpecificPropertyConsistencyInvalidDialect() {
         final SqlDialect sqlDialect = new OracleSqlDialect(null,
-                new AdapterProperties(Map.of(SQL_DIALECT_PROPERTY, "ORACLE", //
-                        CONNECTION_NAME_PROPERTY, "MY_CONN", //
+                new AdapterProperties(Map.of(CONNECTION_NAME_PROPERTY, "MY_CONN", //
                         "ORACLE_CAST_NUMBER_TO_DECIMAL_WITH_PRECISION_AND_SCALE", "MY_CONN")));
         assertThrows(PropertyValidationException.class, sqlDialect::validateProperties);
     }
@@ -101,19 +118,16 @@ class OracleSqlDialectTest {
     @Test
     void testValidateCatalogProperty() {
         final SqlDialect sqlDialect = new OracleSqlDialect(null, new AdapterProperties(Map.of( //
-                SQL_DIALECT_PROPERTY, "ORACLE", //
                 CONNECTION_NAME_PROPERTY, "MY_CONN", //
                 CATALOG_NAME_PROPERTY, "MY_CATALOG")));
         final PropertyValidationException exception = assertThrows(PropertyValidationException.class,
                 sqlDialect::validateProperties);
-        MatcherAssert.assertThat(exception.getMessage(), containsString(
-                "The dialect ORACLE does not support CATALOG_NAME property. Please, do not set the \"CATALOG_NAME\" property."));
+        MatcherAssert.assertThat(exception.getMessage(), containsString("E-VS-COM-JDBC-13"));
     }
 
     @Test
     void testValidateSchemaProperty() throws PropertyValidationException {
         final AdapterProperties adapterProperties = new AdapterProperties(Map.of( //
-                SQL_DIALECT_PROPERTY, "ORACLE", //
                 CONNECTION_NAME_PROPERTY, "MY_CONN", //
                 SCHEMA_NAME_PROPERTY, "MY_SCHEMA"));
         final SqlDialect sqlDialect = new OracleSqlDialect(null, adapterProperties);
@@ -135,7 +149,7 @@ class OracleSqlDialectTest {
 
     @Test
     void testQueryRewriterClassWhitImportInto() {
-        assertThat(this.dialect.createQueryRewriter(), instanceOf(ImportIntoQueryRewriter.class));
+        assertThat(this.dialect.createQueryRewriter(), instanceOf(ImportIntoTemporaryTableQueryRewriter.class));
     }
 
     @CsvSource({ "tableName, \"tableName\"", //

@@ -4,7 +4,6 @@ import static com.exasol.adapter.dialects.oracle.OracleProperties.ORACLE_CONNECT
 import static com.exasol.adapter.dialects.oracle.OracleProperties.ORACLE_IMPORT_PROPERTY;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.instanceOf;
 
 import java.sql.SQLException;
 import java.util.Map;
@@ -18,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.exasol.adapter.AdapterException;
 import com.exasol.adapter.AdapterProperties;
 import com.exasol.adapter.dialects.*;
+import com.exasol.adapter.dialects.rewriting.AbstractQueryRewriterTestBase;
 import com.exasol.adapter.jdbc.ConnectionFactory;
 import com.exasol.adapter.sql.TestSqlStatementFactory;
 
@@ -39,13 +39,5 @@ public class OracleQueryRewriterTest extends AbstractQueryRewriterTestBase {
         final QueryRewriter queryRewriter = new OracleQueryRewriter(dialect, null);
         assertThat(queryRewriter.rewrite(this.statement, EXA_METADATA, properties),
                 equalTo("IMPORT FROM ORA AT ora_connection STATEMENT 'SELECT TO_CHAR(1) FROM \"DUAL\"'"));
-    }
-
-    @Test
-    void testConnectionDefinitionBuilderClass() {
-        final SqlDialect dialect = new OracleSqlDialect(null, AdapterProperties.emptyProperties());
-        final OracleQueryRewriter queryRewriter = new OracleQueryRewriter(dialect, null);
-        assertThat(queryRewriter.createConnectionDefinitionBuilder(),
-                instanceOf(OracleConnectionDefinitionBuilder.class));
     }
 }

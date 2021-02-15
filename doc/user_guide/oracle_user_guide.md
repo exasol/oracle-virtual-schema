@@ -48,7 +48,7 @@ The SQL statement below creates the adapter script, defines the Java class that 
 ```sql
 CREATE JAVA ADAPTER SCRIPT ADAPTER.JDBC_ADAPTER AS
   %scriptclass com.exasol.adapter.RequestDispatcher;
-  %jar /buckets/<BFS service>/<bucket>/virtual-schema-dist-8.0.0-oracle-1.0.0.jar;
+  %jar /buckets/<BFS service>/<bucket>/virtual-schema-dist-9.0.1-oracle-2.0.0.jar;
   %jar /buckets/<BFS service>/<bucket>/ojdbc<JDBC driver version>.jar;
 /
 ;
@@ -80,7 +80,6 @@ Below you see how an Oracle Virtual Schema is created.
 CREATE VIRTUAL SCHEMA <virtual schema name>
     USING ADAPTER.JDBC_ADAPTER
     WITH
-    SQL_DIALECT     = 'ORACLE'
     CONNECTION_NAME = 'ORACLE_JDBC_CONNECTION'
     SCHEMA_NAME     = '<schema name>';
 ```
@@ -126,7 +125,6 @@ Assuming you already setup the JDBC connection `ORACLE_JDBC_CONNECTION` as shown
 CREATE VIRTUAL SCHEMA <virtual schema name>
     USING ADAPTER.JDBC_ADAPTER
     WITH
-    SQL_DIALECT     = 'ORACLE'
     CONNECTION_NAME = 'ORACLE_JDBC_CONNECTION'
     SCHEMA_NAME     = '<schema name>'
     IMPORT_FROM_ORA = 'true'
@@ -179,7 +177,6 @@ For example:
 CREATE VIRTUAL SCHEMA <virtual schema name>
     USING ADAPTER.JDBC_ADAPTER
     WITH
-    SQL_DIALECT     = 'ORACLE'
     CONNECTION_NAME = 'ORACLE_JDBC_CONNECTION'
     SCHEMA_NAME     = '<schema name>'
     IMPORT_FROM_ORA = 'true'
@@ -206,7 +203,7 @@ Therefore we cannot include the MySQL JDBC driver, so in order to execute the in
 
 ### Starting Disabled Integration Test Locally
 
-1. Download a JDBC driver and the Orcal instant client from: 
+1. Download a JDBC driver and the Oracle instant client from: 
  - Oracle [`ojdbc8.jar`](https://www.oracle.com/database/technologies/appdev/jdbc-ucp-19c-downloads.html)
  - Oracle instant client [`instantclient-basic-linux.x64-12.1.0.2.0.zip`](https://www.oracle.com/database/technologies/instant-client/linux-x86-64-downloads.html).
  Please be aware that Exasol currently supports only mentioned version of the Oracle instant client.  

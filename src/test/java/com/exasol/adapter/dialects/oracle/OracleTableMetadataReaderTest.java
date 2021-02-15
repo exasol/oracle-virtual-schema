@@ -1,14 +1,14 @@
 package com.exasol.adapter.dialects.oracle;
 
 import static com.exasol.adapter.jdbc.TableMetadataMockUtils.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -52,7 +52,7 @@ class OracleTableMetadataReaderTest {
         mockTableName(this.tablesMock, TABLE_A, TABLE_B, "BIN$TRASHED");
         mockTableWithColumnsOfType(this.tablesMock, this.columnMetadataReaderMock, TABLE_A, DataType.createBool());
         mockTableWithColumnsOfType(this.tablesMock, this.columnMetadataReaderMock, TABLE_B, DataType.createBool());
-        final List<String> tableNames = this.reader.mapTables(this.tablesMock, Optional.empty()) //
+        final List<String> tableNames = this.reader.mapTables(this.tablesMock, Collections.emptyList()) //
                 .stream() //
                 .map(TableMetadata::getName) //
                 .collect(Collectors.toList());
