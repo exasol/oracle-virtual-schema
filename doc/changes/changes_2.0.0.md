@@ -4,8 +4,7 @@ Code name: Removed `SQL_DIALECT` property
 
 ## Summary
 
-The `SQL_DIALECT` property used when executing a `CREATE VIRTUAL SCHEMA` from the Exasol database is obsolete from this
-version. Please, do not provide this property anymore.
+The `SQL_DIALECT` property used when executing a `CREATE VIRTUAL SCHEMA` from the Exasol database is obsolete from this version. Please, do not provide this property anymore.
 
 ## Features / Enhancements
 
