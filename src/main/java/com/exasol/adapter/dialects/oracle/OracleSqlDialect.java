@@ -54,7 +54,7 @@ public class OracleSqlDialect extends AbstractSqlDialect {
                         ADD_DAYS, ADD_HOURS, ADD_MINUTES, ADD_MONTHS, ADD_SECONDS, ADD_WEEKS, ADD_YEARS, CURRENT_DATE,
                         CURRENT_TIMESTAMP, DBTIMEZONE, LOCALTIMESTAMP, NUMTODSINTERVAL, NUMTOYMINTERVAL,
                         SESSIONTIMEZONE, SYSDATE, SYSTIMESTAMP, CAST, TO_CHAR, TO_DATE, TO_DSINTERVAL, TO_YMINTERVAL,
-                        TO_NUMBER, TO_TIMESTAMP, BIT_AND, BIT_TO_NUM, CASE, NULLIFZERO, ZEROIFNULL)
+                        TO_NUMBER, TO_TIMESTAMP, BIT_AND, BIT_TO_NUM, CASE, NULLIFZERO, ZEROIFNULL, INITCAP)
                 .build();
     }
 
@@ -98,7 +98,7 @@ public class OracleSqlDialect extends AbstractSqlDialect {
 
     DataType getOracleNumberTargetType() {
         if (this.properties.containsKey(ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY)) {
-            return getOracleNumberTypeFromProperty();
+            return this.getOracleNumberTypeFromProperty();
         } else {
             return DataType.createMaximumSizeVarChar(DataType.ExaCharset.UTF8);
         }
@@ -173,9 +173,9 @@ public class OracleSqlDialect extends AbstractSqlDialect {
     @Override
     protected QueryRewriter createQueryRewriter() {
         if (this.isImportFromOraEnabled()) {
-            return new OracleQueryRewriter(this, createRemoteMetadataReader());
+            return new OracleQueryRewriter(this, this.createRemoteMetadataReader());
         }
-        return new ImportIntoTemporaryTableQueryRewriter(this, createRemoteMetadataReader(), this.connectionFactory);
+        return new ImportIntoTemporaryTableQueryRewriter(this, this.createRemoteMetadataReader(), this.connectionFactory);
     }
 
     private boolean isImportFromOraEnabled() {
@@ -185,8 +185,8 @@ public class OracleSqlDialect extends AbstractSqlDialect {
     @Override
     public void validateProperties() throws PropertyValidationException {
         super.validateProperties();
-        checkImportPropertyConsistency(ORACLE_IMPORT_PROPERTY, ORACLE_CONNECTION_NAME_PROPERTY);
-        validateBooleanProperty(ORACLE_IMPORT_PROPERTY);
-        validateCastNumberToDecimalProperty(ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY);
+        this.checkImportPropertyConsistency(ORACLE_IMPORT_PROPERTY, ORACLE_CONNECTION_NAME_PROPERTY);
+        this.validateBooleanProperty(ORACLE_IMPORT_PROPERTY);
+        this.validateCastNumberToDecimalProperty(ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY);
     }
 }
