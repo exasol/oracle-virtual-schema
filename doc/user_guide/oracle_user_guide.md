@@ -18,20 +18,20 @@ Now register the driver in EXAOperation:
 
 You need to specify the following settings when adding the JDBC driver via EXAOperation.
 
-| Parameter | Value                                               |
-|-----------|-----------------------------------------------------|
-| Name      | `ORACLE`                                           |
-| Main      | `oracle.jdbc.driver.OracleDriver`               |
-| Prefix    | `jdbc:oracle:thin:`                               
-| Files     | `ojdbc<JDBC driver version>.jar`                |
+| Parameter | Value                             |
+|-----------|-----------------------------------|
+| Name      | `ORACLE`                          |
+| Main      | `oracle.jdbc.driver.OracleDriver` |
+| Prefix    | `jdbc:oracle:thin:`               |  
+| Files     | `ojdbc<JDBC driver version>.jar`  |
 
 
-## Uploading the JDBC Driver to EXAOperation
+## Uploading the JDBC Driver to BucketFS
 
 1. [Create a bucket in BucketFS](https://docs.exasol.com/administration/on-premise/bucketfs/create_new_bucket_in_bucketfs_service.htm)
 1. Upload the driver to BucketFS
 
-This step is necessary since the UDF container the adapter runs in has no access to the JDBC drivers installed via EXAOperation but it can access BucketFS.
+This step is necessary since the UDF container the adapter runs in has no access to the JDBC drivers installed via EXAOperation, but it can access BucketFS.
 
 ## Installing the Adapter Script
 
@@ -48,7 +48,7 @@ The SQL statement below creates the adapter script, defines the Java class that 
 ```sql
 CREATE JAVA ADAPTER SCRIPT ADAPTER.JDBC_ADAPTER AS
   %scriptclass com.exasol.adapter.RequestDispatcher;
-  %jar /buckets/<BFS service>/<bucket>/virtual-schema-dist-9.0.1-oracle-2.0.0.jar;
+  %jar /buckets/<BFS service>/<bucket>/virtual-schema-dist-9.0.1-oracle-2.0.1.jar;
   %jar /buckets/<BFS service>/<bucket>/ojdbc<JDBC driver version>.jar;
 /
 ;
@@ -86,7 +86,7 @@ CREATE VIRTUAL SCHEMA <virtual schema name>
 
 ## Using IMPORT FROM ORA Instead of IMPORT FROM JDBC
 
-Exasol provides the `IMPORT FROM ORA` command for loading data from Oracle. It is possible to create a virtual schema that uses `IMPORT FROM ORA` instead of JDBC to communicate with Oracle. Both options are indented to support the same features. `IMPORT FROM ORA` almost always offers better performance since it is implemented natively.
+Exasol provides the `IMPORT FROM ORA` command for loading data from Oracle. It is possible to create a virtual schema that uses `IMPORT FROM ORA` instead of JDBC to communicate with Oracle. Both options are intended to support the same features. `IMPORT FROM ORA` almost always offers better performance since it is implemented natively.
 
 This behavior is toggled by the Boolean `IMPORT_FROM_ORA` variable. Note that a JDBC connection to Oracle is still required to fetch metadata. In addition, a "direct" connection to the Oracle database is needed.
 
@@ -149,7 +149,7 @@ The Oracle dialect does not support all capabilities. A complete list can be fou
 | FLOAT \[(p)\]                                                                    | ✓         | DOUBLE                     |                                                                                                                                               |
 | INTERVAL DAY \[(day\_precision)\] TO SECOND \[(fractional\_seconds\_precision)\] | ✓         | VARCHAR(2000000)           |                                                                                                                                               |
 | INTERVAL YEAR \[(year\_precision)\] TO MONTH                                     | ✓         | VARCHAR(2000000)           |                                                                                                                                               |
-| LONG                                                                             | ✓         | VARCHAR(2000000)           | Casted to VARCHAR to prevent a loss of precision.                                                                                             |
+| LONG                                                                             | ✓         | VARCHAR(2000000)           |                                                                                              |
 | LONG RAW                                                                         | ×         |                            |                                                                                                                                               |
 | NCLOB                                                                            | ×         |                            |                                                                                                                                               |
 | NCHAR\[(size)\]                                                                  | ✓         | CHAR                       |                                                                                                                                               |
@@ -192,14 +192,14 @@ In the following matrix you find combinations of JDBC driver and dialect version
 
 | Virtual Schema Version | Oracle Version     | Driver Name               | Driver Version |
 |------------------------|--------------------|---------------------------|----------------|
-| 4.0.3                  | Oracle XE 11g      | ojdbc                     | 8              |
-| 4.0.3                  | Oracle XE 11g      | instantclient-basic-linux | x64-12.1.0.2.0 |
+| 2.0.0                  | Oracle XE 11g      | ojdbc                     | 8              |
+| 2.0.0                  | Oracle XE 11g      | instantclient-basic-linux | x64-12.1.0.2.0 |
 
 ## Executing Disabled Integration Tests
 
 The integration tests are disabled by default, but it is possible to execute them locally. 
 The reason for the tests being disabled is we can only deliver drivers where the license allows redistribution, and it's not the case with Oracle.
-Therefore we cannot include the MySQL JDBC driver, so in order to execute the integration tests you need to download them manually.
+Therefore we cannot include the Oracle JDBC driver, so in order to execute the integration tests you need to download them manually.
 
 ### Starting Disabled Integration Test Locally
 
