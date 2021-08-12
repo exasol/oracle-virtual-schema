@@ -48,7 +48,7 @@ The SQL statement below creates the adapter script, defines the Java class that 
 ```sql
 CREATE JAVA ADAPTER SCRIPT ADAPTER.JDBC_ADAPTER AS
   %scriptclass com.exasol.adapter.RequestDispatcher;
-  %jar /buckets/<BFS service>/<bucket>/virtual-schema-dist-9.0.1-oracle-2.0.1.jar;
+  %jar /buckets/<BFS service>/<bucket>/virtual-schema-dist-9.0.3-oracle-2.0.1.jar;
   %jar /buckets/<BFS service>/<bucket>/ojdbc<JDBC driver version>.jar;
 /
 ;
@@ -203,11 +203,9 @@ Therefore we cannot include the Oracle JDBC driver, so in order to execute the i
 
 ### Starting Disabled Integration Test Locally
 
-1. Download a JDBC driver and the Oracle instant client from: 
- - Oracle [`ojdbc8.jar`](https://www.oracle.com/database/technologies/appdev/jdbc-ucp-19c-downloads.html)
+1. Download the Oracle instant client from: 
  - Oracle instant client [`instantclient-basic-linux.x64-12.1.0.2.0.zip`](https://www.oracle.com/database/technologies/instant-client/linux-x86-64-downloads.html).
  Please be aware that Exasol currently supports only mentioned version of the Oracle instant client.  
-2. Temporarily put the files into `src/test/resources/integration/driver/oracle` directory.
-3. If the files' names are different (you renamed the file, or it has a different version number, for example) from the mentioned above, edit `src/test/resources/integration/driver/oracle/oracle.properties` and `settings.cfg` files.
-4. Run the tests from an IDE or temporarily add the integration test name into the `maven-failsafe-plugin`'s includes a section and execute `mvn verify` command.
-5. Remove the driver after the test and **do not upload it to the GitHub repository**.
+2. Temporarily put the file into `src/test/resources/integration/driver/oracle` directory.
+3. Run the tests from an IDE or temporarily add the integration test name into the `maven-failsafe-plugin`'s includes a section and execute `mvn verify` command.
+4. Remove the client after the test and **do not upload it to the GitHub repository**.

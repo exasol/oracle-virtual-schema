@@ -195,7 +195,7 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
         final AbstractSqlDialect dialect = (AbstractSqlDialect) getDialect();
         final String typeName = getTypeNameFromColumn(column);
         if (typeName.startsWith("INTERVAL") || typeName.equals("BINARY_FLOAT") || typeName.equals("BINARY_DOUBLE")) {
-            return createToChar(projectionString);
+            return castToChar(projectionString);
         } else if (typeName.startsWith("TIMESTAMP")
                 && (((OracleSqlDialect) dialect).getImportType() == ImportType.JDBC)) {
             return "TO_TIMESTAMP(TO_CHAR(" + projectionString + ", " + TIMESTAMP_FORMAT + "), " + TIMESTAMP_FORMAT
@@ -207,14 +207,14 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
         }
     }
 
-    public String createToChar(final String operand) {
+    public String castToChar(final String operand) {
         return "TO_CHAR(" + operand + ")";
     }
 
     private String getNumberProjectionString(final SqlColumn column, final String projectionString,
             final OracleSqlDialect dialect) {
         if (column.getMetadata().getType().getExaDataType() == DataType.ExaDataType.VARCHAR) {
-            return createToChar(projectionString);
+            return castToChar(projectionString);
         } else {
             if (checkIfNeedToCastNumberToDecimal(column)) {
                 final DataType castNumberToDecimalType = dialect.getOracleNumberTargetType();
@@ -232,22 +232,22 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
 
     @Override
     public String visit(final SqlLiteralExactnumeric literal) {
-        final String literalString = literal.getValue();
-        return getLiteralString(literalString, literal.hasParent(), literal.getParent());
+        final String literalString = super.visit(literal);
+        return transformString(literalString, literal.hasParent(), literal.getParent());
     }
 
-    private String getLiteralString(final String literalString, final boolean b, final SqlNode parent) {
+    private String transformString(final String literalString, final boolean b, final SqlNode parent) {
         final boolean isDirectlyInSelectList = (b && (parent.getType() == SqlNodeType.SELECT_LIST));
         if (isDirectlyInSelectList) {
-            return createToChar(literalString);
+            return castToChar(literalString);
         }
         return literalString;
     }
 
     @Override
     public String visit(final SqlLiteralDouble literal) {
-        final String literalString = literal.getValue();
-        return getLiteralString(literalString, literal.hasParent(), literal.getParent());
+        final String literalString = super.visit(literal);
+        return transformString(literalString, literal.hasParent(), literal.getParent());
     }
 
     @Override
