@@ -65,7 +65,7 @@ class OracleSqlDialectIT {
     private static Statement statementExasol;
 
     @BeforeAll
-    static void beforeAll() throws InterruptedException, BucketAccessException, TimeoutException, SQLException {
+    static void beforeAll() throws BucketAccessException, TimeoutException, SQLException, FileNotFoundException {
         final String driverName = getPropertyFromFile(RESOURCES_FOLDER_DIALECT_NAME, "driver.name");
         uploadDriverToBucket(driverName, RESOURCES_FOLDER_DIALECT_NAME, exasolContainer.getDefaultBucket());
         uploadVsJarToBucket(exasolContainer.getDefaultBucket());
@@ -109,7 +109,7 @@ class OracleSqlDialectIT {
     }
 
     private static void uploadInstantClientToBucket()
-            throws InterruptedException, BucketAccessException, TimeoutException {
+            throws BucketAccessException, TimeoutException, FileNotFoundException {
         final Bucket bucket = exasolContainer.getDefaultBucket();
         final String instantClientName = getPropertyFromFile(RESOURCES_FOLDER_DIALECT_NAME, "instant.client.name");
         final String instantClientPath = getPropertyFromFile(RESOURCES_FOLDER_DIALECT_NAME, "instant.client.path");
@@ -236,7 +236,7 @@ class OracleSqlDialectIT {
     }
 
     private static void uploadDriverToBucket(final String driverName, final String resourcesDialectName,
-            final Bucket bucket) throws InterruptedException, BucketAccessException, TimeoutException {
+            final Bucket bucket) throws BucketAccessException, TimeoutException, FileNotFoundException {
         final Path pathToSettingsFile = Path.of("src", "test", "resources", "integration", "driver",
                 resourcesDialectName, JDBC_DRIVER_CONFIGURATION_FILE_NAME);
         bucket.uploadFile(PATH_TO_VIRTUAL_SCHEMAS_JAR, VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
@@ -251,7 +251,7 @@ class OracleSqlDialectIT {
     }
 
     private static void uploadVsJarToBucket(final Bucket bucket)
-            throws InterruptedException, BucketAccessException, TimeoutException {
+            throws BucketAccessException, TimeoutException, FileNotFoundException {
         bucket.uploadFile(PATH_TO_VIRTUAL_SCHEMAS_JAR, VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
     }
 
