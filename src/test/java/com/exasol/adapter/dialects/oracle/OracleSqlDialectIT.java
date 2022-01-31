@@ -43,7 +43,7 @@ import com.exasol.dbbuilder.dialects.exasol.*;
 @Testcontainers
 class OracleSqlDialectIT {
     private static final Logger LOGGER = LoggerFactory.getLogger(OracleSqlDialectIT.class);
-    private static final String ORACLE_CONTAINER_NAME = "oracleinanutshell/oracle-xe-11g";
+    private static final String ORACLE_CONTAINER_NAME = "gvenzl/oracle-xe:21.3.0";
     private static final String RESOURCES_FOLDER_DIALECT_NAME = "oracle";
     private static final String SCHEMA_ORACLE = "SCHEMA_ORACLE";
     private static final int ORACLE_PORT = 1521;
@@ -69,7 +69,7 @@ class OracleSqlDialectIT {
         final String driverName = getPropertyFromFile(RESOURCES_FOLDER_DIALECT_NAME, "driver.name");
         uploadDriverToBucket(driverName, RESOURCES_FOLDER_DIALECT_NAME, exasolContainer.getDefaultBucket());
         uploadVsJarToBucket(exasolContainer.getDefaultBucket());
-        uploadInstantClientToBucket();
+
         final Connection exasolConnection = exasolContainer.createConnectionForUser(exasolContainer.getUsername(),
                 exasolContainer.getPassword());
         statementExasol = exasolConnection.createStatement();
@@ -106,14 +106,6 @@ class OracleSqlDialectIT {
                 .properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE, "IMPORT_FROM_ORA", "true", "ORA_CONNECTION_NAME",
                         ORA_CONNECTION_NAME, "oracle_cast_number_to_decimal_with_precision_and_scale", "36,1"))
                 .build();
-    }
-
-    private static void uploadInstantClientToBucket()
-            throws BucketAccessException, TimeoutException, FileNotFoundException {
-        final Bucket bucket = exasolContainer.getDefaultBucket();
-        final String instantClientName = getPropertyFromFile(RESOURCES_FOLDER_DIALECT_NAME, "instant.client.name");
-        final String instantClientPath = getPropertyFromFile(RESOURCES_FOLDER_DIALECT_NAME, "instant.client.path");
-        bucket.uploadFile(Path.of(instantClientPath, instantClientName), "drivers/oracle/" + instantClientName);
     }
 
     private static void createOracleUser(final Statement statementOracle) throws SQLException {

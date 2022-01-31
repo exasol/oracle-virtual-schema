@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.exasol</groupId>
     <artifactId>oracle-virtual-schema</artifactId>
-    <version>2.0.1</version>
+    <version>2.1.0</version>
     <name>Virtual Schema for Oracle</name>
     <distributionManagement>
         <repository>
@@ -24,7 +24,7 @@
         <vscjdbc.version>9.0.3</vscjdbc.version>
         <error.reporting.java.version>0.4.0</error.reporting.java.version>
         <error.code.crawler.version>0.4.0</error.code.crawler.version>
-        <org.testcontainers.version>1.16.0</org.testcontainers.version>
+        <org.testcontainers.version>1.16.2</org.testcontainers.version>
         <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml,target/site/jacoco-it/jacoco.xml
         </sonar.coverage.jacoco.xmlReportPaths>
     </properties>
@@ -112,10 +112,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.oracle.ojdbc</groupId>
-            <artifactId>ojdbc8</artifactId>
-            <version>19.3.0.0</version>
-            <scope>test</scope>
+            <groupId>com.oracle.database.jdbc</groupId>
+            <artifactId>ojdbc11</artifactId>
+            <version>21.4.0.0.1</version>
         </dependency>
         <dependency>
             <groupId>com.exasol</groupId>
@@ -227,9 +226,6 @@
                     <!-- Set the highest log level for coverage testing, so that we have
                         a chance to reach branches <property> in the logging lambdas too. -->
                     <argLine>-Djava.util.logging.config.file=src/test/resources/logging.properties ${argLine}</argLine>
-                    <excludes>
-                        <exclude>OracleSqlDialectIT.java</exclude>
-                    </excludes>
                 </configuration>
                 <executions>
                     <execution>
@@ -351,8 +347,8 @@
                         </goals>
                         <phase>compile</phase>
                         <configuration>
-                            <includeGroupIds>com.oracle.ojdbc</includeGroupIds>
-                            <includeArtifactIds>ojdbc8</includeArtifactIds>
+                            <includeGroupIds>com.oracle.database.jdbc</includeGroupIds>
+                            <includeArtifactIds>ojdbc11</includeArtifactIds>
                             <outputDirectory>${project.build.directory}/oracle-driver</outputDirectory>
                             <stripVersion>true</stripVersion>
                         </configuration>
