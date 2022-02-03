@@ -1,5 +1,15 @@
 package com.exasol.adapter.dialects.oracle;
 
+import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION;
+import static com.exasol.dbbuilder.dialects.exasol.AdapterScript.Language.JAVA;
+
+import java.io.*;
+import java.nio.file.Path;
+import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeoutException;
+
 import com.exasol.bucketfs.Bucket;
 import com.exasol.bucketfs.BucketAccessException;
 import com.exasol.containers.ExasolContainer;
@@ -9,21 +19,6 @@ import com.exasol.dbbuilder.dialects.oracle.OracleObjectFactory;
 import com.exasol.errorreporting.ExaError;
 import com.exasol.udfdebugging.UdfTestSetup;
 import com.github.dockerjava.api.model.ContainerNetwork;
-import org.testcontainers.containers.OracleContainer;
-
-import java.io.Closeable;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeoutException;
-
-import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION;
-import static com.exasol.dbbuilder.dialects.exasol.AdapterScript.Language.JAVA;
 
 /**
  * This class contains the common integration test setup for all Oracle virtual schemas.
@@ -33,13 +28,12 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
     private static final String SCHEMA_EXASOL = "SCHEMA_EXASOL";
     private static final String ADAPTER_SCRIPT_EXASOL = "ADAPTER_SCRIPT_EXASOL";
     private static final String EXASOL_DOCKER_IMAGE_REFERENCE = "7.1.5";
-    private static final String ORACLE_CONTAINER_NAME = "gvenzl/oracle-xe:21.3.0";
+    private static final String ORACLE_CONTAINER_NAME = "gvenzl/oracle-xe:21.3.0-slim";
     private static final String JDBC_DRIVER_NAME = "ojdbc11.jar";
     static final Path JDBC_DRIVER_PATH = Path.of("target/oracle-driver/" + JDBC_DRIVER_NAME);
     private static final int ORACLE_PORT = 1521;
     private final Statement oracleStatement;
-    private final OracleContainerDBA oracleContainer = new OracleContainerDBA(
-            ORACLE_CONTAINER_NAME);
+    private final OracleContainerDBA oracleContainer = new OracleContainerDBA(ORACLE_CONTAINER_NAME);
     private final ExasolContainer<? extends ExasolContainer<?>> exasolContainer = new ExasolContainer<>(
             EXASOL_DOCKER_IMAGE_REFERENCE).withRequiredServices(ExasolService.BUCKETFS, ExasolService.UDF)
                     .withReuse(true);
@@ -61,7 +55,7 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
             uploadVsJarToBucket(bucket);
             this.exasolConnection = this.exasolContainer.createConnection("");
             this.exasolStatement = this.exasolConnection.createStatement();
-            //this.oracleConnection = this.oracleContainer.createConnection("");
+            // this.oracleConnection = this.oracleContainer.createConnection("");
             this.oracleConnection = this.oracleContainer.createConnectionDBA("");
             this.oracleStatement = this.oracleConnection.createStatement();
             final UdfTestSetup udfTestSetup = new UdfTestSetup(getTestHostIpFromInsideExasol(),
@@ -72,19 +66,17 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
             this.oracleFactory = new OracleObjectFactory(this.oracleConnection);
             this.adapterScript = createAdapterScript(exasolSchema);
             final String jdbcConnStr = this.oracleContainer.getJdbcUrl();
-            //todo: check this
+            // todo: check this
             final String connectionString = "jdbc:oracle:thin:@" + this.oracleContainer.getContainerIpAddress() + ":"
-                    + this.oracleContainer.getOraclePort() + "/"
-                    + this.oracleContainer.getDatabaseName();
-            final String connectionStringTest = "jdbc:oracle:thin:@" + "127.0.0.1" + ":"
-                    + "1521" + "/"
+                    + this.oracleContainer.getOraclePort() + "/" + this.oracleContainer.getDatabaseName();
+            final String connectionStringTest = "jdbc:oracle:thin:@" + "127.0.0.1" + ":" + "1521" + "/"
                     + this.oracleContainer.getDatabaseName();
 //            final String connectionString = "jdbc:oracle:thin:@//" + this.oracleContainer.getContainerIpAddress() + ":"
 //                    + this.oracleContainer.getMappedPort(ORACLE_PORT) + "/"
 //                    + this.oracleContainer.getDatabaseName();
-            //todo: check this
-            //this.connectionDefinition = this.exasolFactory.createConnectionDefinition("ORACLE_CONNECTION",
-            //connectionString, this.oracleContainer.getUsername(), this.oracleContainer.getPassword());
+            // todo: check this
+            // this.connectionDefinition = this.exasolFactory.createConnectionDefinition("ORACLE_CONNECTION",
+            // connectionString, this.oracleContainer.getUsername(), this.oracleContainer.getPassword());
             this.connectionDefinition = this.exasolFactory.createConnectionDefinition("ORACLE_CONNECTION",
                     connectionString, "SYSTEM", "test");
         } catch (final SQLException | BucketAccessException | TimeoutException exception) {
@@ -152,9 +144,9 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
 
     public VirtualSchema createVirtualSchema(final String forOracleSchema,
             final Map<String, String> additionalProperties) {
-        final Map<String, String> properties = new HashMap<>(
-                Map.of(//"CATALOG_NAME", this.oracleContainer.getDatabaseName(), //
-                        "SCHEMA_NAME", forOracleSchema));
+        final Map<String, String> properties = new HashMap<>(Map.of(// "CATALOG_NAME",
+                                                                    // this.oracleContainer.getDatabaseName(), //
+                "SCHEMA_NAME", forOracleSchema));
         properties.putAll(additionalProperties);
         return this.exasolFactory.createVirtualSchemaBuilder("ORACLE_VIRTUAL_SCHEMA_" + (this.virtualSchemaCounter++))
                 .adapterScript(this.adapterScript).connectionDefinition(this.connectionDefinition)

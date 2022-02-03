@@ -1,5 +1,12 @@
 package com.exasol.adapter.dialects.oracle;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.*;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import com.exasol.adapter.commontests.scalarfunction.ScalarFunctionsTestBase;
 import com.exasol.adapter.commontests.scalarfunction.TestSetup;
 import com.exasol.adapter.commontests.scalarfunction.virtualschematestsetup.*;
@@ -12,27 +19,18 @@ import com.exasol.dbbuilder.dialects.Schema;
 import com.exasol.dbbuilder.dialects.Table;
 import com.exasol.dbbuilder.dialects.exasol.VirtualSchema;
 import com.exasol.dbbuilder.dialects.oracle.OracleObjectFactory;
-import com.exasol.dbbuilder.dialects.oracle.OracleSchema;
-import com.exasol.dbbuilder.dialects.oracle.OracleTable;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.extension.ExtendWith;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.TimeZone;
 
 @ExtendWith({ CloseAfterAllExtension.class })
 class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
     @CloseAfterAll
     private static final OracleVirtualSchemaIntegrationTestSetup SETUP = new OracleVirtualSchemaIntegrationTestSetup();
     static int idCounter = 0;
+
     protected static String getUniqueIdentifier() {
         ++idCounter;
         return "ID" + idCounter;
     }
+
     @Override
     protected TestSetup getTestSetup() {
         final OracleObjectFactory oracleFactory = SETUP.getOracleFactory();
@@ -41,11 +39,12 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
             @Override
             public VirtualSchemaTestSetupProvider getVirtualSchemaTestSetupProvider() {
                 return (final CreateVirtualSchemaTestSetupRequest request) -> {
-                        final Schema oracleSchema = oracleFactory.createSchema(getUniqueIdentifier());
+                    final Schema oracleSchema = oracleFactory.createSchema(getUniqueIdentifier());
 
                     for (final TableRequest tableRequest : request.getTableRequests()) {
-                        //TODO; check this
-                        final Table.TableBuilder tableBuilder = oracleSchema.createTableBuilder(tableRequest.getName().toLowerCase());
+                        // TODO; check this
+                        final Table.TableBuilder tableBuilder = oracleSchema
+                                .createTableBuilder(tableRequest.getName().toLowerCase());
                         for (final Column column : tableRequest.getColumns()) {
                             tableBuilder.column(column.getName().toLowerCase(), column.getType());
                         }
@@ -55,7 +54,8 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
                         }
                     }
 
-                    final VirtualSchema virtualSchema = SETUP.createVirtualSchema(oracleSchema.getName(), Collections.emptyMap());
+                    final VirtualSchema virtualSchema = SETUP.createVirtualSchema(oracleSchema.getName(),
+                            Collections.emptyMap());
 
                     return new OracleSingleTableVirtualSchemaTestSetup(virtualSchema, oracleSchema);
                 };
@@ -110,8 +110,7 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
         private final VirtualSchema virtualSchema;
         private final Schema OracleSchema;
 
-        private OracleSingleTableVirtualSchemaTestSetup(final VirtualSchema virtualSchema,
-                final Schema OracleSchema) {
+        private OracleSingleTableVirtualSchemaTestSetup(final VirtualSchema virtualSchema, final Schema OracleSchema) {
             this.virtualSchema = virtualSchema;
             this.OracleSchema = OracleSchema;
         }
