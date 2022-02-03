@@ -19,6 +19,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import org.hamcrest.MatcherAssert;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -49,8 +50,8 @@ class OracleSqlDialectIT {
     private static final String SCHEMA_ORACLE = "SCHEMA_ORACLE";
     private static final int ORACLE_PORT = 1521;
 
-    private static final String JDBC_CONNECTION_NAME = "JDBC_CONNECTION";
-    private static final String ORACLE_CONNECTION_NAME = "ORACLE_CONNECTION";
+    private static final String ORACLE_JDBC_CONNECTION_NAME = "JDBC_CONNECTION";
+    private static final String ORACLE_OCI_CONNECTION_NAME = "ORACLE_CONNECTION";
 
     private static final String VIRTUAL_SCHEMA_JDBC = "VIRTUAL_SCHEMA_JDBC";
     private static final String VIRTUAL_SCHEMA_ORACLE = "VIRTUAL_SCHEMA_ORACLE";
@@ -95,21 +96,34 @@ class OracleSqlDialectIT {
 
         final AdapterScript adapterScript = createAdapterScript(driverName, schema);
 
-        final String databaseName = "xepdb1";
-        final String jdbcConnectionString = "jdbc:oracle:thin:@//" + DOCKER_IP_ADDRESS + ":" + mappedPort + "/" + databaseName;
+        createOracleOCIConnection(exasolFactory, mappedPort, oracleUsername, oraclePassword);
 
-        //createOraConnectionOCI(exasolFactory, mappedPort, oracleUsername, oraclePassword);
-        //createOraConnectionJDBC(exasolFactory, jdbcConnectionString, oracleUsername, oraclePassword);
-        final ConnectionDefinition jdbcConnectionDefinitionOra = exasolFactory.createConnectionDefinition(ORACLE_CONNECTION_NAME, jdbcConnectionString, oracleUsername,
-                oraclePassword);
+        ConnectionDefinition jdbcConnectionDefinition = createOracleJDBCConnection(oracleUsername, oraclePassword, exasolFactory);
 
-        final ConnectionDefinition jdbcConnectionDefinition = exasolFactory
-                .createConnectionDefinition(JDBC_CONNECTION_NAME, jdbcConnectionString, oracleUsername, oraclePassword);
-
-        createVirtualSchemasOnExasolDbContainer(exasolFactory, adapterScript, jdbcConnectionDefinition);
+        createVirtualSchemasOnExasolDbContainer(exasolFactory, adapterScript,jdbcConnectionDefinition);
     }
 
-    private static void createVirtualSchemasOnExasolDbContainer(ExasolObjectFactory exasolFactory, AdapterScript adapterScript, ConnectionDefinition jdbcConnectionDefinition) {
+    private static ConnectionDefinition createOracleOCIConnection(final ExasolObjectFactory exasolFactory,
+                                                                  final Integer mappedPort, final String oracleUsername, final String oraclePassword) {
+        final String oraConnectionString = "(DESCRIPTION =" //
+                + "(ADDRESS_LIST = (ADDRESS = (PROTOCOL = TCP)" //
+                + "(HOST = " + exasolContainer.getHostIp() + " )" //
+                + "(PORT = " + oracleContainer.getOraclePort() + ")))" //
+                + "(CONNECT_DATA = (SERVER = DEDICATED)" //
+                + "(SERVICE_NAME = "+ oracleContainer.getDatabaseName() + ")))";
+        return exasolFactory.createConnectionDefinition(ORACLE_OCI_CONNECTION_NAME, oraConnectionString, oracleUsername,
+                oraclePassword);
+    }
+    private static ConnectionDefinition createOracleJDBCConnection(String oracleUsername, String oraclePassword, ExasolObjectFactory exasolFactory) {
+        final String jdbcConnectionString = "jdbc:oracle:thin:@" + exasolContainer.getHostIp() + ":"
+                + oracleContainer.getOraclePort() + "/" + oracleContainer.getDatabaseName();
+
+        return exasolFactory.createConnectionDefinition(ORACLE_JDBC_CONNECTION_NAME, jdbcConnectionString, oracleUsername, oraclePassword);
+
+    }
+
+    private static void createVirtualSchemasOnExasolDbContainer(ExasolObjectFactory exasolFactory, AdapterScript adapterScript,ConnectionDefinition jdbcConnectionDefinition) {
+        //todo: annotate this so it becomes readable
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_JDBC).adapterScript(adapterScript)
                 .connectionDefinition(jdbcConnectionDefinition).properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE))
                 .build();
@@ -120,12 +134,12 @@ class OracleSqlDialectIT {
                 .build();
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_ORACLE).adapterScript(adapterScript)
                 .connectionDefinition(jdbcConnectionDefinition).properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE,
-                        "IMPORT_FROM_ORA", "true", "ORA_CONNECTION_NAME", ORACLE_CONNECTION_NAME))
+                        "IMPORT_FROM_ORA", "true", "ORA_CONNECTION_NAME", ORACLE_OCI_CONNECTION_NAME))
                 .build();
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL).adapterScript(adapterScript)
                 .connectionDefinition(jdbcConnectionDefinition)
                 .properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE, "IMPORT_FROM_ORA", "true", "ORA_CONNECTION_NAME",
-                        ORACLE_CONNECTION_NAME, "oracle_cast_number_to_decimal_with_precision_and_scale", "36,1"))
+                        ORACLE_OCI_CONNECTION_NAME, "oracle_cast_number_to_decimal_with_precision_and_scale", "36,1"))
                 .build();
     }
 
@@ -253,22 +267,8 @@ class OracleSqlDialectIT {
         return schema.createAdapterScript(ADAPTER_SCRIPT_EXASOL, JAVA, content);
     }
 
-    private static ConnectionDefinition createOraConnectionOCI(final ExasolObjectFactory exasolFactory,
-                                                               final Integer mappedPort, final String oracleUsername, final String oraclePassword) {
-        final String oraConnectionString = "(DESCRIPTION =" //
-                + "(ADDRESS_LIST = (ADDRESS = (PROTOCOL = TCP)" //
-                + "(HOST = " + DOCKER_IP_ADDRESS + " )" //
-                + "(PORT = " + mappedPort + ")))" //
-                + "(CONNECT_DATA = (SERVER = DEDICATED)" //
-                + "(SERVICE_NAME = XEPDB1)))";
-        return exasolFactory.createConnectionDefinition(ORACLE_CONNECTION_NAME, oraConnectionString, oracleUsername,
-                oraclePassword);
-    }
-    private static ConnectionDefinition createOraConnectionJDBC(final ExasolObjectFactory exasolFactory,
-                                                               final String jdbcTarget, final String oracleUsername, final String oraclePassword) {
-        return exasolFactory.createConnectionDefinition(ORACLE_CONNECTION_NAME, jdbcTarget, oracleUsername,
-                oraclePassword);
-    }
+
+
     private static void uploadDriverToBucket(final String driverName, final String resourcesDialectName,
             final Bucket bucket) throws BucketAccessException, TimeoutException, FileNotFoundException {
         final Path pathToSettingsFile = Path.of("src", "test", "resources", "integration", "driver",

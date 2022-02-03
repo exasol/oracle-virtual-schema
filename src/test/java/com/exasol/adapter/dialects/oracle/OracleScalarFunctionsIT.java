@@ -24,7 +24,7 @@ import com.exasol.dbbuilder.dialects.oracle.OracleObjectFactory;
 class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
     @CloseAfterAll
     private static final OracleVirtualSchemaIntegrationTestSetup SETUP = new OracleVirtualSchemaIntegrationTestSetup();
-    static int idCounter = 0;
+    static int idCounter = 200;
 
     protected static String getUniqueIdentifier() {
         ++idCounter;

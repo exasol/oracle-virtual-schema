@@ -67,16 +67,9 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
             this.adapterScript = createAdapterScript(exasolSchema);
             final String jdbcConnStr = this.oracleContainer.getJdbcUrl();
             // todo: check this
-            final String connectionString = "jdbc:oracle:thin:@" + this.oracleContainer.getContainerIpAddress() + ":"
+            final String connectionString = "jdbc:oracle:thin:@" + this.exasolContainer.getHostIp() + ":"
                     + this.oracleContainer.getOraclePort() + "/" + this.oracleContainer.getDatabaseName();
-            final String connectionStringTest = "jdbc:oracle:thin:@" + "127.0.0.1" + ":" + "1521" + "/"
-                    + this.oracleContainer.getDatabaseName();
-//            final String connectionString = "jdbc:oracle:thin:@//" + this.oracleContainer.getContainerIpAddress() + ":"
-//                    + this.oracleContainer.getMappedPort(ORACLE_PORT) + "/"
-//                    + this.oracleContainer.getDatabaseName();
-            // todo: check this
-            // this.connectionDefinition = this.exasolFactory.createConnectionDefinition("ORACLE_CONNECTION",
-            // connectionString, this.oracleContainer.getUsername(), this.oracleContainer.getPassword());
+
             this.connectionDefinition = this.exasolFactory.createConnectionDefinition("ORACLE_CONNECTION",
                     connectionString, "SYSTEM", "test");
         } catch (final SQLException | BucketAccessException | TimeoutException exception) {
