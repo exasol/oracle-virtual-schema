@@ -4,7 +4,7 @@ import java.nio.file.Path;
 
 public final class IntegrationTestConstants {
 	public static final String VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION = "virtual-schema-dist-9.0.3-oracle-2.1.0.jar";
-    public static final String EXASOL_DOCKER_IMAGE_REFERENCE = "exasol/docker-db:7.0.2";
+    public static final String EXASOL_DOCKER_IMAGE_REFERENCE = "exasol/docker-db:7.1.5";
     public static final Path PATH_TO_VIRTUAL_SCHEMAS_JAR = Path.of("target", VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
     public static final String SCHEMA_EXASOL = "SCHEMA_EXASOL";
     public static final String ADAPTER_SCRIPT_EXASOL = "ADAPTER_SCRIPT_EXASOL";
