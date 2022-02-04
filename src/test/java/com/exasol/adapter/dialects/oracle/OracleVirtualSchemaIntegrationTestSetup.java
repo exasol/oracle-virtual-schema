@@ -55,7 +55,6 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
             uploadVsJarToBucket(bucket);
             this.exasolConnection = this.exasolContainer.createConnection("");
             this.exasolStatement = this.exasolConnection.createStatement();
-            // this.oracleConnection = this.oracleContainer.createConnection("");
             this.oracleConnection = this.oracleContainer.createConnectionDBA("");
             this.oracleStatement = this.oracleConnection.createStatement();
             final UdfTestSetup udfTestSetup = new UdfTestSetup(getTestHostIpFromInsideExasol(),
@@ -66,7 +65,7 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
             this.oracleFactory = new OracleObjectFactory(this.oracleConnection);
             this.adapterScript = createAdapterScript(exasolSchema);
             final String jdbcConnStr = this.oracleContainer.getJdbcUrl();
-            // todo: check this
+            // todo: check this (should be OK NOW)
             final String connectionString = "jdbc:oracle:thin:@" + this.exasolContainer.getHostIp() + ":"
                     + this.oracleContainer.getOraclePort() + "/" + this.oracleContainer.getDatabaseName();
 
@@ -80,7 +79,7 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
         }
     }
 
-    private static void uploadDriverToBucket(final Bucket bucket)
+    public static void uploadDriverToBucket(final Bucket bucket)
             throws InterruptedException, TimeoutException, BucketAccessException {
         try {
             bucket.uploadFile(JDBC_DRIVER_PATH, JDBC_DRIVER_NAME);
@@ -95,7 +94,7 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
         }
     }
 
-    private static void uploadVsJarToBucket(final Bucket bucket) {
+    public static void uploadVsJarToBucket(final Bucket bucket) {
         try {
             bucket.uploadFile(PATH_TO_VIRTUAL_SCHEMAS_JAR, VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
         } catch (FileNotFoundException | BucketAccessException | TimeoutException exception) {
@@ -103,7 +102,7 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
         }
     }
 
-    private AdapterScript createAdapterScript(final ExasolSchema schema) {
+    public static AdapterScript createAdapterScript(final ExasolSchema schema) {
         final String content = "%scriptclass com.exasol.adapter.RequestDispatcher;\n" //
                 + "%jar /buckets/bfsdefault/default/" + VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION + ";\n";
         return schema.createAdapterScript(ADAPTER_SCRIPT_EXASOL, JAVA, content);

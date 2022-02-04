@@ -1,6 +1,7 @@
 package com.exasol.adapter.dialects.oracle;
 
 import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.*;
+import static com.exasol.adapter.dialects.oracle.OracleVirtualSchemaIntegrationTestSetup.*;
 import static com.exasol.dbbuilder.dialects.exasol.AdapterScript.Language.JAVA;
 import static com.exasol.matcher.ResultSetMatcher.matchesResultSet;
 import static org.hamcrest.CoreMatchers.*;
@@ -62,6 +63,8 @@ class OracleSqlDialectIT {
     private static final String TABLE_ORACLE_NUMBER_HANDLING = "TABLE_ORACLE_NUMBER_HANDLING";
     private static final String TABLE_ORACLE_TIMESTAMPS = "TABLE_ORACLE_TIMESTAMPS";
 
+    //private static final OracleVirtualSchemaIntegrationTestSetup SETUP = new OracleVirtualSchemaIntegrationTestSetup();
+
     @Container
     private static final ExasolContainer<? extends ExasolContainer<?>> exasolContainer = new ExasolContainer<>(
             EXASOL_DOCKER_IMAGE_REFERENCE) //
@@ -72,16 +75,41 @@ class OracleSqlDialectIT {
     private static Statement statementExasol;
 
     @BeforeAll
-    static void beforeAll() throws BucketAccessException, TimeoutException, SQLException, FileNotFoundException {
+    static void beforeAll() throws BucketAccessException, TimeoutException, SQLException, FileNotFoundException, InterruptedException {
         setupOracleDbContainer();
         setupExasolContainer();
     }
+//    private static AdapterScript createAdapterScript(final String driverName, final ExasolSchema schema) {
+//        final String content = "%scriptclass com.exasol.adapter.RequestDispatcher;\n" //
+//                + "%jar /buckets/bfsdefault/default/" + VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION + ";\n" //
+//                + "%jar /buckets/bfsdefault/default/drivers/jdbc/" + driverName + ";\n";
+//        return schema.createAdapterScript(ADAPTER_SCRIPT_EXASOL, JAVA, content);
+//    }
 
-    private static void setupExasolContainer() throws BucketAccessException, TimeoutException, FileNotFoundException, SQLException {
+        private static void uploadDriverToBucket(final String driverName, final String resourcesDialectName,
+            final Bucket bucket) throws BucketAccessException, TimeoutException, FileNotFoundException {
+        final Path pathToSettingsFile = Path.of("src", "test", "resources", "integration", "driver",
+                resourcesDialectName, JDBC_DRIVER_CONFIGURATION_FILE_NAME);
+        //VS schema jar
+        bucket.uploadFile(PATH_TO_VIRTUAL_SCHEMAS_JAR, VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
+        //
+        bucket.uploadFile(pathToSettingsFile, "drivers/jdbc/" + JDBC_DRIVER_CONFIGURATION_FILE_NAME);
+        final String driverPath = getPropertyFromFile(resourcesDialectName, "driver.path");
+        bucket.uploadFile(Path.of(driverPath, driverName), "drivers/jdbc/" + driverName);
+    }
+    private static void uploadVsJarToBucket(final Bucket bucket)
+            throws BucketAccessException, TimeoutException, FileNotFoundException {
+        bucket.uploadFile(PATH_TO_VIRTUAL_SCHEMAS_JAR, VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
+    }
+    private static void setupExasolContainer() throws BucketAccessException, TimeoutException, FileNotFoundException, SQLException, InterruptedException {
         //upload oracle driver and visual schema name to Exasol container
         final String driverName = getPropertyFromFile(RESOURCES_FOLDER_DIALECT_NAME, "driver.name");
         uploadDriverToBucket(driverName, RESOURCES_FOLDER_DIALECT_NAME, exasolContainer.getDefaultBucket());
-        uploadVsJarToBucket(exasolContainer.getDefaultBucket());
+//        uploadVsJarToBucket(exasolContainer.getDefaultBucket());
+        final Bucket bucket = exasolContainer.getDefaultBucket();
+//        uploadDriverToBucket(bucket);
+//        uploadVsJarToBucket(bucket);
+//        uploadDriverConfigurationFileToBucket(bucket);
 
         final Connection exasolConnection = exasolContainer.createConnectionForUser(exasolContainer.getUsername(),
                 exasolContainer.getPassword());
@@ -94,13 +122,19 @@ class OracleSqlDialectIT {
         final ExasolObjectFactory exasolFactory = new ExasolObjectFactory(exasolContainer.createConnection(""));
         final ExasolSchema schema = exasolFactory.createSchema(SCHEMA_EXASOL);
 
-        final AdapterScript adapterScript = createAdapterScript(driverName, schema);
+        final AdapterScript adapterScript = createAdapterScript(schema);
 
         createOracleOCIConnection(exasolFactory, mappedPort, oracleUsername, oraclePassword);
 
         ConnectionDefinition jdbcConnectionDefinition = createOracleJDBCConnection(oracleUsername, oraclePassword, exasolFactory);
 
         createVirtualSchemasOnExasolDbContainer(exasolFactory, adapterScript,jdbcConnectionDefinition);
+    }
+
+    private static void uploadDriverConfigurationFileToBucket(Bucket bucket) throws BucketAccessException, FileNotFoundException, TimeoutException {
+                final Path pathToSettingsFile = Path.of("src", "test", "resources", "integration", "driver",
+                "oracle", JDBC_DRIVER_CONFIGURATION_FILE_NAME);
+        bucket.uploadFile(pathToSettingsFile, "drivers/jdbc/" + JDBC_DRIVER_CONFIGURATION_FILE_NAME);
     }
 
     private static ConnectionDefinition createOracleOCIConnection(final ExasolObjectFactory exasolFactory,
@@ -260,33 +294,11 @@ class OracleSqlDialectIT {
                 + ")");
     }
 
-    private static AdapterScript createAdapterScript(final String driverName, final ExasolSchema schema) {
-        final String content = "%scriptclass com.exasol.adapter.RequestDispatcher;\n" //
-                + "%jar /buckets/bfsdefault/default/" + VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION + ";\n" //
-                + "%jar /buckets/bfsdefault/default/drivers/jdbc/" + driverName + ";\n";
-        return schema.createAdapterScript(ADAPTER_SCRIPT_EXASOL, JAVA, content);
-    }
 
-
-
-    private static void uploadDriverToBucket(final String driverName, final String resourcesDialectName,
-            final Bucket bucket) throws BucketAccessException, TimeoutException, FileNotFoundException {
-        final Path pathToSettingsFile = Path.of("src", "test", "resources", "integration", "driver",
-                resourcesDialectName, JDBC_DRIVER_CONFIGURATION_FILE_NAME);
-        bucket.uploadFile(PATH_TO_VIRTUAL_SCHEMAS_JAR, VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
-        bucket.uploadFile(pathToSettingsFile, "drivers/jdbc/" + JDBC_DRIVER_CONFIGURATION_FILE_NAME);
-        final String driverPath = getPropertyFromFile(resourcesDialectName, "driver.path");
-        bucket.uploadFile(Path.of(driverPath, driverName), "drivers/jdbc/" + driverName);
-    }
 
     private static String getPathToPropertyFile(final String resourcesDialectName) {
         return "src/test/resources/integration/driver/" + resourcesDialectName + "/" + resourcesDialectName
                 + ".properties";
-    }
-
-    private static void uploadVsJarToBucket(final Bucket bucket)
-            throws BucketAccessException, TimeoutException, FileNotFoundException {
-        bucket.uploadFile(PATH_TO_VIRTUAL_SCHEMAS_JAR, VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
     }
 
     private static String getPropertyFromFile(final String resourcesDialectName, final String propertyName) {
