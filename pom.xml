@@ -18,7 +18,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>11</java.version>
-        <surefire.and.failsafe.plugin.version>3.0.0</surefire.and.failsafe.plugin.version>
+        <surefire.and.failsafe.plugin.version>3.0.0-M5</surefire.and.failsafe.plugin.version>
         <vscjdbc.version>9.0.4</vscjdbc.version>
         <error.reporting.java.version>0.4.1</error.reporting.java.version>
         <error.code.crawler.version>0.7.1</error.code.crawler.version>
@@ -111,7 +111,7 @@
         </dependency>
         <dependency>
             <groupId>com.oracle.database.jdbc</groupId>
-            <artifactId>ojdbc11</artifactId>
+            <artifactId>ojdbc8</artifactId>
             <version>21.5.0.0</version>
         </dependency>
         <dependency>
@@ -249,7 +249,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>${surefire.and.failsafe.plugin.version}</version>
+                <version>3.0.0</version>
                 <executions>
         <execution>
             <id>enforce-maven</id>
@@ -358,7 +358,7 @@
                         <phase>compile</phase>
                         <configuration>
                             <includeGroupIds>com.oracle.database.jdbc</includeGroupIds>
-                            <includeArtifactIds>ojdbc11</includeArtifactIds>
+                            <includeArtifactIds>ojdbc8</includeArtifactIds>
                             <outputDirectory>${project.build.directory}/oracle-driver</outputDirectory>
                             <stripVersion>true</stripVersion>
                         </configuration>

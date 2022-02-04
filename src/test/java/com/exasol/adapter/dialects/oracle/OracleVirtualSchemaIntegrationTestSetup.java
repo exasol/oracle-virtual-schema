@@ -29,7 +29,7 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
     private static final String ADAPTER_SCRIPT_EXASOL = "ADAPTER_SCRIPT_EXASOL";
     private static final String EXASOL_DOCKER_IMAGE_REFERENCE = "7.1.5";
     private static final String ORACLE_CONTAINER_NAME = "gvenzl/oracle-xe:21.3.0-slim";
-    private static final String JDBC_DRIVER_NAME = "ojdbc11.jar";
+    private static final String JDBC_DRIVER_NAME = "ojdbc8.jar";
     static final Path JDBC_DRIVER_PATH = Path.of("target/oracle-driver/" + JDBC_DRIVER_NAME);
     private static final int ORACLE_PORT = 1521;
     private final Statement oracleStatement;

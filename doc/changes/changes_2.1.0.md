@@ -11,7 +11,7 @@ Code name:
 
 * Updated `com.exasol:error-reporting-java:0.4.0` to `0.4.1`
 * Updated `com.exasol:virtual-schema-common-jdbc:9.0.3` to `9.0.4`
-* Added `com.oracle.database.jdbc:ojdbc11:21.5.0.0`
+* Added `com.oracle.database.jdbc:ojdbc8:21.5.0.0`
 
 ### Test Dependency Updates
 
@@ -36,9 +36,9 @@ Code name:
 * Updated `io.github.zlika:reproducible-build-maven-plugin:0.13` to `0.15`
 * Updated `org.apache.maven.plugins:maven-compiler-plugin:3.8.1` to `3.9.0`
 * Updated `org.apache.maven.plugins:maven-enforcer-plugin:3.0.0-M3` to `3.0.0`
-* Updated `org.apache.maven.plugins:maven-failsafe-plugin:3.0.0-M3` to `3.0.0`
+* Updated `org.apache.maven.plugins:maven-failsafe-plugin:3.0.0-M3` to `3.0.0-M5`
 * Updated `org.apache.maven.plugins:maven-jar-plugin:3.2.0` to `3.2.2`
-* Updated `org.apache.maven.plugins:maven-surefire-plugin:3.0.0-M3` to `3.0.0`
+* Updated `org.apache.maven.plugins:maven-surefire-plugin:3.0.0-M3` to `3.0.0-M5`
 * Updated `org.codehaus.mojo:versions-maven-plugin:2.8.1` to `2.9.0`
 * Updated `org.jacoco:jacoco-maven-plugin:0.8.6` to `0.8.7`
 * Updated `org.sonatype.ossindex.maven:ossindex-maven-plugin:3.1.0` to `3.2.0`
