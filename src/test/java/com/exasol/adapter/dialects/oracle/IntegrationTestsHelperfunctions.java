@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-public class IntegrationTestsHelper {
+public class IntegrationTestsHelperfunctions {
     public static String getPropertyFromFile(final String resourcesDialectName, final String propertyName) {
         final String pathToPropertyFile = getPathToPropertyFile(resourcesDialectName);
         try (final InputStream inputStream = new FileInputStream(pathToPropertyFile)) {

@@ -20,11 +20,11 @@ import com.exasol.dbbuilder.dialects.Table;
 import com.exasol.dbbuilder.dialects.exasol.VirtualSchema;
 import com.exasol.dbbuilder.dialects.oracle.OracleObjectFactory;
 
-@ExtendWith({ CloseAfterAllExtension.class })
+@ExtendWith({CloseAfterAllExtension.class})
 class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
     @CloseAfterAll
     private static final OracleVirtualSchemaIntegrationTestSetup SETUP = new OracleVirtualSchemaIntegrationTestSetup();
-    static int idCounter = 200;
+    static int idCounter = 0;
 
     protected static String getUniqueIdentifier() {
         ++idCounter;
@@ -42,16 +42,8 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
                     final Schema oracleSchema = oracleFactory.createSchema(getUniqueIdentifier());
 
                     for (final TableRequest tableRequest : request.getTableRequests()) {
-                        // TODO; check this
-                        final Table.TableBuilder tableBuilder = oracleSchema
-                                .createTableBuilder(tableRequest.getName().toLowerCase());
-                        for (final Column column : tableRequest.getColumns()) {
-                            tableBuilder.column(column.getName().toLowerCase(), column.getType());
-                        }
-                        final Table table = tableBuilder.build();
-                        for (final List<Object> row : tableRequest.getRows()) {
-                            table.insert(row.toArray());
-                        }
+                        // TODO; check this (done, should be fine)
+                        createTableInSchema(oracleSchema, tableRequest);
                     }
 
                     final VirtualSchema virtualSchema = SETUP.createVirtualSchema(oracleSchema.getName(),
@@ -64,18 +56,21 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
             @Override
             public String getExternalTypeFor(final DataType exasolType) {
                 switch (exasolType.getExaDataType()) {
-                case VARCHAR:
-                    return "VARCHAR(" + exasolType.getSize() + ")";
-                case DOUBLE:
-                    return "DOUBLE PRECISION";
-                case DECIMAL:
-                    if (exasolType.getScale() == 0) {
-                        return "INTEGER";
-                    } else {
+                    case VARCHAR:
+                        return "VARCHAR(" + exasolType.getSize() + ")";
+                    case DOUBLE:
+                        return "DOUBLE PRECISION";
+                    case DECIMAL:
+                        if (exasolType.getScale() == 0) {
+                            return "INTEGER";
+                        } else {
+                            return exasolType.toString();
+                        }
+                    case BOOLEAN:
+                        return "NUMBER(1)";
+
+                    default:
                         return exasolType.toString();
-                    }
-                default:
-                    return exasolType.toString();
                 }
             }
 
@@ -104,6 +99,18 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
                 return SETUP.getExasolContainer().createConnection();
             }
         };
+    }
+
+    private void createTableInSchema(Schema oracleSchema, TableRequest tableRequest) {
+        final Table.TableBuilder tableBuilder = oracleSchema
+                .createTableBuilder(tableRequest.getName().toLowerCase());
+        for (final Column column : tableRequest.getColumns()) {
+            tableBuilder.column(column.getName().toLowerCase(), column.getType());
+        }
+        final Table table = tableBuilder.build();
+        for (final List<Object> row : tableRequest.getRows()) {
+            table.insert(row.toArray());
+        }
     }
 
     private static class OracleSingleTableVirtualSchemaTestSetup implements VirtualSchemaTestSetup {

@@ -1,6 +1,7 @@
 package com.exasol.adapter.dialects.oracle;
 
-import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION;
+import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.*;
+import static com.exasol.adapter.dialects.oracle.IntegrationTestsHelperfunctions.getPropertyFromFile;
 import static com.exasol.dbbuilder.dialects.exasol.AdapterScript.Language.JAVA;
 
 import java.io.*;
@@ -27,16 +28,14 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
     private static final Path PATH_TO_VIRTUAL_SCHEMAS_JAR = Path.of("target", VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
     private static final String SCHEMA_EXASOL = "SCHEMA_EXASOL";
     private static final String ADAPTER_SCRIPT_EXASOL = "ADAPTER_SCRIPT_EXASOL";
-    private static final String EXASOL_DOCKER_IMAGE_REFERENCE = "7.1.5";
-    private static final String ORACLE_CONTAINER_NAME = "gvenzl/oracle-xe:21.3.0-slim";
-    private static final String JDBC_DRIVER_NAME = "ojdbc8.jar";
-    static final Path JDBC_DRIVER_PATH = Path.of("target/oracle-driver/" + JDBC_DRIVER_NAME);
-    private static final int ORACLE_PORT = 1521;
+    private static final String EXASOL_DOCKER_IMAGE_REFERENCE = IntegrationTestConstants.EXASOL_DOCKER_IMAGE_REFERENCE;
+    private static final String ORACLE_CONTAINER_NAME = IntegrationTestConstants.ORACLE_CONTAINER_NAME;
+
     private final Statement oracleStatement;
     private final OracleContainerDBA oracleContainer = new OracleContainerDBA(ORACLE_CONTAINER_NAME);
     private final ExasolContainer<? extends ExasolContainer<?>> exasolContainer = new ExasolContainer<>(
             EXASOL_DOCKER_IMAGE_REFERENCE).withRequiredServices(ExasolService.BUCKETFS, ExasolService.UDF)
-                    .withReuse(true);
+            .withReuse(true);
     private final Connection exasolConnection;
     private final Statement exasolStatement;
     private final AdapterScript adapterScript;
@@ -50,9 +49,7 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
         try {
             this.exasolContainer.start();
             this.oracleContainer.start();
-            final Bucket bucket = this.exasolContainer.getDefaultBucket();
-            uploadDriverToBucket(bucket);
-            uploadVsJarToBucket(bucket);
+            uploadOracleJDBCDriverAndVSToBucket(exasolContainer.getDefaultBucket());
             this.exasolConnection = this.exasolContainer.createConnection("");
             this.exasolStatement = this.exasolConnection.createStatement();
             this.oracleConnection = this.oracleContainer.createConnectionDBA("");
@@ -64,42 +61,34 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
             final ExasolSchema exasolSchema = this.exasolFactory.createSchema(SCHEMA_EXASOL);
             this.oracleFactory = new OracleObjectFactory(this.oracleConnection);
             this.adapterScript = createAdapterScript(exasolSchema);
-            final String jdbcConnStr = this.oracleContainer.getJdbcUrl();
             // todo: check this (should be OK NOW)
             final String connectionString = "jdbc:oracle:thin:@" + this.exasolContainer.getHostIp() + ":"
                     + this.oracleContainer.getOraclePort() + "/" + this.oracleContainer.getDatabaseName();
 
             this.connectionDefinition = this.exasolFactory.createConnectionDefinition("ORACLE_CONNECTION",
                     connectionString, "SYSTEM", "test");
+
         } catch (final SQLException | BucketAccessException | TimeoutException exception) {
             throw new IllegalStateException("Failed to created Oracle test setup.", exception);
-        } catch (final InterruptedException exception) {
+        } catch (final FileNotFoundException exception) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Thread was interrupted");
         }
     }
 
-    public static void uploadDriverToBucket(final Bucket bucket)
-            throws InterruptedException, TimeoutException, BucketAccessException {
-        try {
-            bucket.uploadFile(JDBC_DRIVER_PATH, JDBC_DRIVER_NAME);
-        } catch (final BucketAccessException | FileNotFoundException exception) {
-            throw new IllegalStateException(
-                    ExaError.messageBuilder("F-PGVS-8")
-                            .message("An error occurred while uploading the jdbc driver to the bucket.")
-                            .mitigation("Make sure the {{JDBC_DRIVER_PATH}} file exists.")
-                            .parameter("JDBC_DRIVER_PATH", JDBC_DRIVER_PATH)
-                            .mitigation("You can generate it by executing the integration test with maven.").toString(),
-                    exception);
-        }
-    }
+    public static void uploadOracleJDBCDriverAndVSToBucket(final Bucket bucket) throws BucketAccessException, TimeoutException, FileNotFoundException {
+        final String driverName = getPropertyFromFile(RESOURCES_FOLDER_DIALECT_NAME, "driver.name");
 
-    public static void uploadVsJarToBucket(final Bucket bucket) {
-        try {
-            bucket.uploadFile(PATH_TO_VIRTUAL_SCHEMAS_JAR, VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
-        } catch (FileNotFoundException | BucketAccessException | TimeoutException exception) {
-            throw new IllegalStateException("Failed to upload jar to bucket " + bucket, exception);
-        }
+        final Path pathToSettingsFile = Path.of("src", "test", "resources", "integration", "driver",
+                RESOURCES_FOLDER_DIALECT_NAME, JDBC_DRIVER_CONFIGURATION_FILE_NAME);
+
+        //Upload the settings.cfg file for the driver that registers the driver.
+        bucket.uploadFile(pathToSettingsFile, "drivers/jdbc/" + JDBC_DRIVER_CONFIGURATION_FILE_NAME);
+        final String driverPath = getPropertyFromFile(RESOURCES_FOLDER_DIALECT_NAME, "driver.path");
+        //Upload the driver itself
+        bucket.uploadFile(Path.of(driverPath, driverName), "drivers/jdbc/" + driverName);
+        //Upload the virtual schema jar to be able to use oracle virtual schemas
+        bucket.uploadFile(PATH_TO_VIRTUAL_SCHEMAS_JAR, VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
     }
 
     public static AdapterScript createAdapterScript(final ExasolSchema schema) {
@@ -117,36 +106,23 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
         return this.oracleFactory;
     }
 
-    /**
-     * Returns the Oracle sql statement.
-     *
-     * @return sql statement
-     */
-    public Statement getOracleStatement() {
-        return this.oracleStatement;
-    }
-
-    public Statement getExasolStatement() {
-        return this.exasolStatement;
-    }
-
     public ExasolContainer<? extends ExasolContainer<?>> getExasolContainer() {
         return this.exasolContainer;
     }
 
     public VirtualSchema createVirtualSchema(final String forOracleSchema,
-            final Map<String, String> additionalProperties) {
+                                             final Map<String, String> additionalProperties) {
+
         final Map<String, String> properties = new HashMap<>(Map.of(// "CATALOG_NAME",
-                                                                    // this.oracleContainer.getDatabaseName(), //
+                // this.oracleContainer.getDatabaseName(), //
                 "SCHEMA_NAME", forOracleSchema));
         properties.putAll(additionalProperties);
-        return this.exasolFactory.createVirtualSchemaBuilder("ORACLE_VIRTUAL_SCHEMA_" + (this.virtualSchemaCounter++))
-                .adapterScript(this.adapterScript).connectionDefinition(this.connectionDefinition)
-                .properties(properties).build();
-    }
 
-    public ExasolObjectFactory getExasolFactory() {
-        return this.exasolFactory;
+        return this.exasolFactory.createVirtualSchemaBuilder("ORACLE_VIRTUAL_SCHEMA_" + (this.virtualSchemaCounter++))
+                .adapterScript(this.adapterScript)
+                .connectionDefinition(this.connectionDefinition)
+                .properties(properties)
+                .build();
     }
 
     @Override
