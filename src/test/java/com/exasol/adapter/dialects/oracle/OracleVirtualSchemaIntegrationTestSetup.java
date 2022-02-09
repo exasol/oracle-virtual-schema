@@ -113,8 +113,7 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
     public VirtualSchema createVirtualSchema(final String forOracleSchema,
                                              final Map<String, String> additionalProperties) {
 
-        final Map<String, String> properties = new HashMap<>(Map.of(// "CATALOG_NAME",
-                // this.oracleContainer.getDatabaseName(), //
+        final Map<String, String> properties = new HashMap<>(Map.of(
                 "SCHEMA_NAME", forOracleSchema));
         properties.putAll(additionalProperties);
 

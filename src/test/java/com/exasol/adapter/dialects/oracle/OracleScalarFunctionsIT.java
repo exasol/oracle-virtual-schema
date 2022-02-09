@@ -34,41 +34,51 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
     @Override
     protected TestSetup getTestSetup() {
         final OracleObjectFactory oracleFactory = SETUP.getOracleFactory();
+
         return new TestSetup() {
 
             @Override
             public VirtualSchemaTestSetupProvider getVirtualSchemaTestSetupProvider() {
                 return (final CreateVirtualSchemaTestSetupRequest request) -> {
+                    //create schema in oracle DB with increasing ID, ID1, ID2, etc.
                     final Schema oracleSchema = oracleFactory.createSchema(getUniqueIdentifier());
 
                     for (final TableRequest tableRequest : request.getTableRequests()) {
-                        // TODO; check this (done, should be fine)
+                        // TODO; check this (done, was not fine)
                         createTableInSchema(oracleSchema, tableRequest);
                     }
-
+                    //create a virtual schema with the same name as the oracle schema
                     final VirtualSchema virtualSchema = SETUP.createVirtualSchema(oracleSchema.getName(),
                             Collections.emptyMap());
 
                     return new OracleSingleTableVirtualSchemaTestSetup(virtualSchema, oracleSchema);
                 };
             }
-
+            //case sensitive!!! 1 on 1
+            // .tolower() for the table and column names (brought over from postgresql) was causing trouble here.
+            private void createTableInSchema(Schema oracleSchema, TableRequest tableRequest) {
+                final Table.TableBuilder tableBuilder = oracleSchema
+                        .createTableBuilder(tableRequest.getName());
+                for (final Column column : tableRequest.getColumns()) {
+                    tableBuilder.column(column.getName(), column.getType());
+                }
+                final Table table = tableBuilder.build();
+                for (final List<Object> row : tableRequest.getRows()) {
+                    table.insert(row.toArray());
+                }
+            }
+            //https://docs.exasol.com/db/latest/migration_guides/oracle/execution/datatypemapping.htm
             @Override
             public String getExternalTypeFor(final DataType exasolType) {
                 switch (exasolType.getExaDataType()) {
                     case VARCHAR:
-                        return "VARCHAR(" + exasolType.getSize() + ")";
+                        return "VARCHAR2(" + exasolType.getSize() + " CHAR)";
                     case DOUBLE:
                         return "DOUBLE PRECISION";
                     case DECIMAL:
-                        if (exasolType.getScale() == 0) {
-                            return "INTEGER";
-                        } else {
-                            return exasolType.toString();
-                        }
+                        return "DECIMAL";//(" + exasolType.getPrecision() + "," + exasolType.  + ")";
                     case BOOLEAN:
                         return "NUMBER(1)";
-
                     default:
                         return exasolType.toString();
                 }
@@ -76,22 +86,23 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
 
             @Override
             public Set<String> getDialectSpecificExcludes() {
-                return Set.of(
-                        // expected was a value close to <1970-03-01> (tolerance: +/- <0.00010>) but was
-                        // "1970-03-01T00:00:00Z"
-                        "add_months",
-                        // expected was a value close to <1970-01-01> (tolerance: +/- <0.00010>) but was
-                        // "1970-01-01T00:00:00Z"
-                        "least",
-                        // expected was a value close to <1970-01-15> (tolerance: +/- <0.00010>) but was
-                        // "1970-01-15T00:00:00Z"
-                        "add_weeks",
-                        // expected was a value close to <1970-01-03> (tolerance: +/- <0.00010>) but was
-                        // "1970-01-03T00:00:00Z"
-                        "add_days",
-                        // expected was a value close to <1972-01-01> (tolerance: +/- <0.00010>) but was
-                        // "1972-01-01T00:00:00Z"
-                        "add_years");
+//                return Set.of(
+//                        // expected was a value close to <1970-03-01> (tolerance: +/- <0.00010>) but was
+//                        // "1970-03-01T00:00:00Z"
+//                        "add_months",
+//                        // expected was a value close to <1970-01-01> (tolerance: +/- <0.00010>) but was
+//                        // "1970-01-01T00:00:00Z"
+//                        "least",
+//                        // expected was a value close to <1970-01-15> (tolerance: +/- <0.00010>) but was
+//                        // "1970-01-15T00:00:00Z"
+//                        "add_weeks",
+//                        // expected was a value close to <1970-01-03> (tolerance: +/- <0.00010>) but was
+//                        // "1970-01-03T00:00:00Z"
+//                        "add_days",
+//                        // expected was a value close to <1972-01-01> (tolerance: +/- <0.00010>) but was
+//                        // "1972-01-01T00:00:00Z"
+//                        "add_years");
+                return Set.of();
             }
 
             @Override
@@ -101,17 +112,7 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
         };
     }
 
-    private void createTableInSchema(Schema oracleSchema, TableRequest tableRequest) {
-        final Table.TableBuilder tableBuilder = oracleSchema
-                .createTableBuilder(tableRequest.getName().toLowerCase());
-        for (final Column column : tableRequest.getColumns()) {
-            tableBuilder.column(column.getName().toLowerCase(), column.getType());
-        }
-        final Table table = tableBuilder.build();
-        for (final List<Object> row : tableRequest.getRows()) {
-            table.insert(row.toArray());
-        }
-    }
+
 
     private static class OracleSingleTableVirtualSchemaTestSetup implements VirtualSchemaTestSetup {
         private final VirtualSchema virtualSchema;
