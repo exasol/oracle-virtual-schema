@@ -15,7 +15,7 @@ dependency-reduced-pom.xml
 
 # Integration tests
 src/test/resources/integration/driver/oracle/*.jar
-src/test/resources/integration/driver/oracle/*.zip
+# src/test/resources/integration/driver/oracle/*.zip
 
 # Others
 .DS_Store

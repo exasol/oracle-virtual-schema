@@ -57,7 +57,7 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
             //case sensitive!!! 1 on 1
             // .tolower() for the table and column names (brought over from postgresql) was causing trouble here.
             private void createTableInSchema(Schema oracleSchema, TableRequest tableRequest) {
-                final Table.TableBuilder tableBuilder = oracleSchema
+                final Table.Builder tableBuilder = oracleSchema
                         .createTableBuilder(tableRequest.getName());
                 for (final Column column : tableRequest.getColumns()) {
                     tableBuilder.column(column.getName(), column.getType());
