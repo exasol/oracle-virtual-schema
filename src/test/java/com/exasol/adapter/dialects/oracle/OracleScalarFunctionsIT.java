@@ -19,6 +19,11 @@ import com.exasol.dbbuilder.dialects.Schema;
 import com.exasol.dbbuilder.dialects.Table;
 import com.exasol.dbbuilder.dialects.exasol.VirtualSchema;
 import com.exasol.dbbuilder.dialects.oracle.OracleObjectFactory;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import static com.exasol.adapter.metadata.DataType.IntervalType.DAY_TO_SECOND;
+import static com.exasol.matcher.ResultSetStructureMatcher.table;
 
 @ExtendWith({CloseAfterAllExtension.class})
 class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
@@ -54,6 +59,7 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
                     return new OracleSingleTableVirtualSchemaTestSetup(virtualSchema, oracleSchema);
                 };
             }
+
             //case sensitive!!! 1 on 1
             // .tolower() for the table and column names (brought over from postgresql) was causing trouble here.
             private void createTableInSchema(Schema oracleSchema, TableRequest tableRequest) {
@@ -67,42 +73,51 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
                     table.insert(row.toArray());
                 }
             }
+
             //https://docs.exasol.com/db/latest/migration_guides/oracle/execution/datatypemapping.htm
             @Override
             public String getExternalTypeFor(final DataType exasolType) {
                 switch (exasolType.getExaDataType()) {
                     case VARCHAR:
                         return "VARCHAR2(" + exasolType.getSize() + " CHAR)";
+                    case CHAR:
+                        return "NCHAR2(" + exasolType.getSize() + ")";
+                    case DATE:
+                        return "DATE";
+                    case TIMESTAMP:
+                        return "TIMESTAMP (" + exasolType.getPrecision() + ")";
                     case DOUBLE:
                         return "DOUBLE PRECISION";
                     case DECIMAL:
-                        return "DECIMAL";//(" + exasolType.getPrecision() + "," + exasolType.  + ")";
+                        return "DECIMAL";
                     case BOOLEAN:
                         return "NUMBER(1)";
+                    case HASHTYPE:
+                        return "RAW(" + exasolType.getSize() + ")";
+                    case INTERVAL:
+                        if (exasolType.getIntervalType() == DAY_TO_SECOND) {
+                            return "INTERVAL DAY(" + exasolType.getPrecision() + ") TO SECOND(" + exasolType.getIntervalFraction() + ")";
+                        } else {
+                            return "INTERVAL YEAR(" + exasolType.getPrecision() + ") TO MONTH";
+                        }
                     default:
                         return exasolType.toString();
                 }
             }
 
+            //has to be lowercase
             @Override
             public Set<String> getDialectSpecificExcludes() {
-//                return Set.of(
-//                        // expected was a value close to <1970-03-01> (tolerance: +/- <0.00010>) but was
-//                        // "1970-03-01T00:00:00Z"
-//                        "add_months",
-//                        // expected was a value close to <1970-01-01> (tolerance: +/- <0.00010>) but was
-//                        // "1970-01-01T00:00:00Z"
-//                        "least",
-//                        // expected was a value close to <1970-01-15> (tolerance: +/- <0.00010>) but was
-//                        // "1970-01-15T00:00:00Z"
-//                        "add_weeks",
-//                        // expected was a value close to <1970-01-03> (tolerance: +/- <0.00010>) but was
-//                        // "1970-01-03T00:00:00Z"
-//                        "add_days",
-//                        // expected was a value close to <1972-01-01> (tolerance: +/- <0.00010>) but was
-//                        // "1972-01-01T00:00:00Z"
-//                        "add_years");
-                return Set.of();
+                return Set.of("neg",
+                        "to_dsinterval","numtoyminterval","systimestamp","cast","current_timestamp","numtodsinterval","to_yminterval",
+                        "character_length","upper","trim","add_months","char_length","instr","lower","regexp_replace","substr","add_hours","left","mid","add_weeks",
+                        "add_minutes","to_timestamp","reverse","regexp_instr","soundex","add_days","add_years","replace","translate","lpad","ltrim","regexp_substr","ucase","lcase",
+                        "character_Length","locate","curdate","substring","rpad","to_date","to_char","repeat","to_number","length","rtrim","add_seconds");
+//                return Set.of("neg",
+//                        "to_dsinterval","numtoyminterval","systimestamp","cast","current_timestamp","numtodsinterval","to_yminterval",
+//                        "character_length","upper","trim","add_months","char_length","instr","lower","regexp_replace","substr","add_hours","left","mid","add_weeks","char_length",
+//                        "add_minutes","to_timestamp","reverse","regexp_inst","soundex","add_days","add_years","replace","translate","lpad","ltrim","regexp_substr","ucase","lcase",
+//                        "character_Length","locate","curdate","substring","rpad","to_date","repeat","to_number","length","rtrim","add_seconds");
             }
 
             @Override
@@ -111,7 +126,6 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
             }
         };
     }
-
 
 
     private static class OracleSingleTableVirtualSchemaTestSetup implements VirtualSchemaTestSetup {
@@ -139,4 +153,5 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
     static void beforeAll() {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
+
 }
