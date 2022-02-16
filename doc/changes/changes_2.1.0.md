@@ -20,7 +20,7 @@ Code name:
 * Updated `com.exasol:test-db-builder-java:3.2.1` to `3.3.0`
 * Added `com.exasol:udf-debugging-java:0.5.0`
 * Updated `com.exasol:virtual-schema-common-jdbc:9.0.3` to `9.0.4`
-* Added `com.exasol:virtual-schema-shared-integration-tests:2.1.0`
+* Added `com.exasol:virtual-schema-shared-integration-tests:2.1.1`
 * Removed `com.oracle.ojdbc:ojdbc8:19.3.0.0`
 * Updated `nl.jqno.equalsverifier:equalsverifier:3.7` to `3.9`
 * Updated `org.junit.jupiter:junit-jupiter:5.7.2` to `5.8.2`
