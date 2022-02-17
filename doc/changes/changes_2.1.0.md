@@ -1,10 +1,11 @@
-# Virtual Schema for Oracle 2.1.0, released 2022-??-??
+# Virtual Schema for Oracle 2.1.0, released 2022-02-17
 
 Code name:
 
 ## Features
 
-* ISSUE_NUMBER: description
+* #9: Reactivated existing integration tests and added new scalar integration tests.
+
 ## Dependency Updates
 
 ### Compile Dependency Updates
