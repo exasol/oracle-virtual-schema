@@ -15,7 +15,6 @@ dependency-reduced-pom.xml
 
 # Integration tests
 src/test/resources/integration/driver/oracle/*.jar
-src/test/resources/integration/driver/oracle/*.zip
 
 # Others
 .DS_Store
@@ -24,3 +23,13 @@ local
 Scripts
 .dbeaver*
 **/*.log
+.directory
+venv/
+pom.xml.versionsBackup
+~*
+*.lock
+*.bak
+*.orig
+*.old
+*.md.html
+.vscode/
