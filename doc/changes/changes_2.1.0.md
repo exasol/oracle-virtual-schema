@@ -1,6 +1,6 @@
 # Virtual Schema for Oracle 2.1.0, released 2022-02-17
 
-Code name:
+Code name: Integration tests
 
 ## Features
 

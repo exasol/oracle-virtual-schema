@@ -15,7 +15,6 @@ dependency-reduced-pom.xml
 
 # Integration tests
 src/test/resources/integration/driver/oracle/*.jar
-# src/test/resources/integration/driver/oracle/*.zip
 
 # Others
 .DS_Store
@@ -33,3 +32,4 @@ pom.xml.versionsBackup
 *.orig
 *.old
 *.md.html
+.vscode/

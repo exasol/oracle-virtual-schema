@@ -27,6 +27,8 @@ import static com.exasol.matcher.ResultSetStructureMatcher.table;
 
 @ExtendWith({CloseAfterAllExtension.class})
 class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
+
+
     @CloseAfterAll
     private static final OracleVirtualSchemaIntegrationTestSetup SETUP = new OracleVirtualSchemaIntegrationTestSetup();
     static int idCounter = 0;
@@ -39,94 +41,8 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
     @Override
     protected TestSetup getTestSetup() {
         final OracleObjectFactory oracleFactory = SETUP.getOracleFactory();
-
-        return new TestSetup() {
-
-            @Override
-            public VirtualSchemaTestSetupProvider getVirtualSchemaTestSetupProvider() {
-                return (final CreateVirtualSchemaTestSetupRequest request) -> {
-                    //create schema in oracle DB with increasing ID, ID1, ID2, etc.
-                    final Schema oracleSchema = oracleFactory.createSchema(getUniqueIdentifier());
-
-                    for (final TableRequest tableRequest : request.getTableRequests()) {
-                        // TODO; check this (done, was not fine)
-                        createTableInSchema(oracleSchema, tableRequest);
-                    }
-                    //create a virtual schema with the same name as the oracle schema
-                    final VirtualSchema virtualSchema = SETUP.createVirtualSchema(oracleSchema.getName(),
-                            Collections.emptyMap());
-
-                    return new OracleSingleTableVirtualSchemaTestSetup(virtualSchema, oracleSchema);
-                };
-            }
-
-            //case sensitive!!! 1 on 1
-            // .tolower() for the table and column names (brought over from postgresql) was causing trouble here.
-            private void createTableInSchema(Schema oracleSchema, TableRequest tableRequest) {
-                final Table.Builder tableBuilder = oracleSchema
-                        .createTableBuilder(tableRequest.getName());
-                for (final Column column : tableRequest.getColumns()) {
-                    tableBuilder.column(column.getName(), column.getType());
-                }
-                final Table table = tableBuilder.build();
-                for (final List<Object> row : tableRequest.getRows()) {
-                    table.insert(row.toArray());
-                }
-            }
-
-            //https://docs.exasol.com/db/latest/migration_guides/oracle/execution/datatypemapping.htm
-            @Override
-            public String getExternalTypeFor(final DataType exasolType) {
-                switch (exasolType.getExaDataType()) {
-                    case VARCHAR:
-                        return "VARCHAR2(" + exasolType.getSize() + " CHAR)";
-                    case CHAR:
-                        return "NCHAR2(" + exasolType.getSize() + ")";
-                    case DATE:
-                        return "DATE";
-                    case TIMESTAMP:
-                        return "TIMESTAMP (" + exasolType.getPrecision() + ")";
-                    case DOUBLE:
-                        return "DOUBLE PRECISION";
-                    case DECIMAL:
-                        return "DECIMAL";
-                    case BOOLEAN:
-                        return "NUMBER(1)";
-                    case HASHTYPE:
-                        return "RAW(" + exasolType.getSize() + ")";
-                    case INTERVAL:
-                        if (exasolType.getIntervalType() == DAY_TO_SECOND) {
-                            return "INTERVAL DAY(" + exasolType.getPrecision() + ") TO SECOND(" + exasolType.getIntervalFraction() + ")";
-                        } else {
-                            return "INTERVAL YEAR(" + exasolType.getPrecision() + ") TO MONTH";
-                        }
-                    default:
-                        return exasolType.toString();
-                }
-            }
-
-            //has to be lowercase
-            @Override
-            public Set<String> getDialectSpecificExcludes() {
-                return Set.of("neg",
-                        "to_dsinterval","numtoyminterval","systimestamp","cast","current_timestamp","numtodsinterval","to_yminterval",
-                        "character_length","upper","trim","add_months","char_length","instr","lower","regexp_replace","substr","add_hours","left","mid","add_weeks",
-                        "add_minutes","to_timestamp","reverse","regexp_instr","soundex","add_days","add_years","replace","translate","lpad","ltrim","regexp_substr","ucase","lcase",
-                        "character_Length","locate","curdate","substring","rpad","to_date","to_char","repeat","to_number","length","rtrim","add_seconds");
-//                return Set.of("neg",
-//                        "to_dsinterval","numtoyminterval","systimestamp","cast","current_timestamp","numtodsinterval","to_yminterval",
-//                        "character_length","upper","trim","add_months","char_length","instr","lower","regexp_replace","substr","add_hours","left","mid","add_weeks","char_length",
-//                        "add_minutes","to_timestamp","reverse","regexp_inst","soundex","add_days","add_years","replace","translate","lpad","ltrim","regexp_substr","ucase","lcase",
-//                        "character_Length","locate","curdate","substring","rpad","to_date","repeat","to_number","length","rtrim","add_seconds");
-            }
-
-            @Override
-            public Connection createExasolConnection() throws SQLException {
-                return SETUP.getExasolContainer().createConnection();
-            }
-        };
+        return new OracleTestSetup(oracleFactory);
     }
-
 
     private static class OracleSingleTableVirtualSchemaTestSetup implements VirtualSchemaTestSetup {
         private final VirtualSchema virtualSchema;
@@ -154,4 +70,89 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
 
+
+    public class OracleTestSetup implements TestSetup {
+        final OracleObjectFactory oracleFactory;
+
+        OracleTestSetup(OracleObjectFactory oracleFactory) {
+            this.oracleFactory = oracleFactory;
+        }
+
+        @Override
+        public VirtualSchemaTestSetupProvider getVirtualSchemaTestSetupProvider() {
+            return (final CreateVirtualSchemaTestSetupRequest request) -> {
+                //create schema in oracle DB with increasing ID, ID1, ID2, etc.
+                final Schema oracleSchema = oracleFactory.createSchema(getUniqueIdentifier());
+
+                for (final TableRequest tableRequest : request.getTableRequests()) {
+                    createTableInSchema(oracleSchema, tableRequest);
+                }
+                //create a virtual schema with the same name as the oracle schema
+                final VirtualSchema virtualSchema = SETUP.createVirtualSchema(oracleSchema.getName(),
+                        Collections.emptyMap());
+
+                return new OracleScalarFunctionsIT.OracleSingleTableVirtualSchemaTestSetup(virtualSchema, oracleSchema);
+            };
+        }
+
+        //case sensitive!!! 1 on 1
+        // .tolower() for the table and column names (brought over from postgresql) was causing trouble here.
+        private void createTableInSchema(Schema oracleSchema, TableRequest tableRequest) {
+            final Table.Builder tableBuilder = oracleSchema
+                    .createTableBuilder(tableRequest.getName());
+            for (final Column column : tableRequest.getColumns()) {
+                tableBuilder.column(column.getName(), column.getType());
+            }
+            final Table table = tableBuilder.build();
+            for (final List<Object> row : tableRequest.getRows()) {
+                table.insert(row.toArray());
+            }
+        }
+
+        //https://docs.exasol.com/db/latest/migration_guides/oracle/execution/datatypemapping.htm
+        @Override
+        public String getExternalTypeFor(final DataType exasolType) {
+            switch (exasolType.getExaDataType()) {
+                case VARCHAR:
+                    return "VARCHAR2(" + exasolType.getSize() + " CHAR)";
+                case CHAR:
+                    return "NCHAR2(" + exasolType.getSize() + ")";
+                case DATE:
+                    return "DATE";
+                case TIMESTAMP:
+                    return "TIMESTAMP (" + exasolType.getPrecision() + ")";
+                case DOUBLE:
+                    return "DOUBLE PRECISION";
+                case DECIMAL:
+                    return "DECIMAL";
+                case BOOLEAN:
+                    return "NUMBER(1)";
+                case HASHTYPE:
+                    return "RAW(" + exasolType.getSize() + ")";
+                case INTERVAL:
+                    if (exasolType.getIntervalType() == DAY_TO_SECOND) {
+                        return "INTERVAL DAY(" + exasolType.getPrecision() + ") TO SECOND(" + exasolType.getIntervalFraction() + ")";
+                    } else {
+                        return "INTERVAL YEAR(" + exasolType.getPrecision() + ") TO MONTH";
+                    }
+                default:
+                    return exasolType.toString();
+            }
+        }
+
+        //has to be lowercase
+        @Override
+        public Set<String> getDialectSpecificExcludes() {
+            return Set.of("neg",
+                    "to_dsinterval", "numtoyminterval", "systimestamp", "cast", "current_timestamp", "numtodsinterval", "to_yminterval",
+                    "character_length", "upper", "trim", "add_months", "char_length", "instr", "lower", "regexp_replace", "substr", "add_hours", "left", "mid", "add_weeks",
+                    "add_minutes", "to_timestamp", "reverse", "regexp_instr", "soundex", "add_days", "add_years", "replace", "translate", "lpad", "ltrim", "regexp_substr", "ucase", "lcase",
+                    "character_Length", "locate", "curdate", "substring", "rpad", "to_date", "to_char", "repeat", "to_number", "length", "rtrim", "add_seconds");
+        }
+
+        @Override
+        public Connection createExasolConnection() throws SQLException {
+            return SETUP.getExasolContainer().createConnection();
+        }
+    }
 }

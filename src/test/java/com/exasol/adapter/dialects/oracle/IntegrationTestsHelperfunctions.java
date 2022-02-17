@@ -12,10 +12,10 @@ public class IntegrationTestsHelperfunctions {
             final Properties properties = new Properties();
             properties.load(inputStream);
             return properties.getProperty(propertyName);
-        } catch (final IOException e) {
+        } catch (final IOException exception) {
             throw new IllegalArgumentException(
                     "Cannot access the properties file or read from it. Check if the path spelling is correct"
-                            + " and if the file exists.");
+                            + " and if the file exists.",exception);
         }
     }
     public static String getPathToPropertyFile(final String resourcesDialectName) {

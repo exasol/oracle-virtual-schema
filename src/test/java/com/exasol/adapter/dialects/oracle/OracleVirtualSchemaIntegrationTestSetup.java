@@ -61,7 +61,6 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
             final ExasolSchema exasolSchema = this.exasolFactory.createSchema(SCHEMA_EXASOL);
             this.oracleFactory = new OracleObjectFactory(this.oracleConnection);
             this.adapterScript = createAdapterScript(exasolSchema);
-            // todo: check this (should be OK NOW)
             final String connectionString = "jdbc:oracle:thin:@" + this.exasolContainer.getHostIp() + ":"
                     + this.oracleContainer.getOraclePort() + "/" + this.oracleContainer.getDatabaseName();
 
