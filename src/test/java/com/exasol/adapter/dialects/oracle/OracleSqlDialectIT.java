@@ -125,7 +125,6 @@ class OracleSqlDialectIT {
     }
 
     private static void createVirtualSchemasOnExasolDbContainer(ExasolObjectFactory exasolFactory, AdapterScript adapterScript, ConnectionDefinition jdbcConnectionDefinition) {
-        //todo: annotate this so it becomes readable
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_JDBC).adapterScript(adapterScript)
                 .connectionDefinition(jdbcConnectionDefinition).properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE))
                 .build();
