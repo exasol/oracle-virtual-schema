@@ -1,8 +1,13 @@
 package com.exasol.adapter.dialects.oracle;
 
-import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.*;
-import static com.exasol.adapter.dialects.oracle.IntegrationTestsHelperfunctions.getPropertyFromFile;
-import static com.exasol.dbbuilder.dialects.exasol.AdapterScript.Language.JAVA;
+import com.exasol.bucketfs.Bucket;
+import com.exasol.bucketfs.BucketAccessException;
+import com.exasol.containers.ExasolContainer;
+import com.exasol.containers.ExasolService;
+import com.exasol.dbbuilder.dialects.exasol.*;
+import com.exasol.dbbuilder.dialects.oracle.OracleObjectFactory;
+import com.exasol.udfdebugging.UdfTestSetup;
+import com.github.dockerjava.api.model.ContainerNetwork;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -11,15 +16,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
-import com.exasol.bucketfs.Bucket;
-import com.exasol.bucketfs.BucketAccessException;
-import com.exasol.containers.ExasolContainer;
-import com.exasol.containers.ExasolService;
-import com.exasol.dbbuilder.dialects.exasol.*;
-import com.exasol.dbbuilder.dialects.oracle.OracleObjectFactory;
-import com.exasol.errorreporting.ExaError;
-import com.exasol.udfdebugging.UdfTestSetup;
-import com.github.dockerjava.api.model.ContainerNetwork;
+import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.*;
+import static com.exasol.adapter.dialects.oracle.IntegrationTestsHelperfunctions.getPropertyFromFile;
+import static com.exasol.dbbuilder.dialects.exasol.AdapterScript.Language.JAVA;
 
 /**
  * This class contains the common integration test setup for all Oracle virtual schemas.
@@ -67,11 +66,8 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
             this.connectionDefinition = this.exasolFactory.createConnectionDefinition("ORACLE_CONNECTION",
                     connectionString, "SYSTEM", "test");
 
-        } catch (final SQLException | BucketAccessException | TimeoutException exception) {
+        } catch (final SQLException | BucketAccessException | TimeoutException | FileNotFoundException exception) {
             throw new IllegalStateException("Failed to created Oracle test setup.", exception);
-        } catch (final FileNotFoundException exception) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Thread was interrupted");
         }
     }
 

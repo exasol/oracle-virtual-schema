@@ -1041,6 +1041,7 @@ truncate: ['"DOUBLE_PRECISION_C0"', '"DECIMAL_C1"', '"DECIMAL_C2"', '"NUMBER1_C3
     "DECIMAL_C2"', '"NUMBER1_C3", "NUMBER1_C3"']
 unicode: ['"DECIMAL_C1"', '"DECIMAL_C2"', '"VARCHAR22_CHAR_C4"']
 unicodechr: ['"DOUBLE_PRECISION_C0"', '"DECIMAL_C1"', '"DECIMAL_C2"', '"NUMBER1_C3"']
+upper: [ '"DECIMAL_C1"', '"DECIMAL_C2"', '"NUMBER1_C3"', '"VARCHAR22_CHAR_C4"' ]
 user: ['']
 week: ['"DATE_C5"', '"TIMESTAMP_0_C6"']
 year: ['"DATE_C5"', '"TIMESTAMP_0_C6"']

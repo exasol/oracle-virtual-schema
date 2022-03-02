@@ -1,12 +1,5 @@
 package com.exasol.adapter.dialects.oracle;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.*;
-
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.extension.ExtendWith;
-
 import com.exasol.adapter.commontests.scalarfunction.ScalarFunctionsTestBase;
 import com.exasol.adapter.commontests.scalarfunction.TestSetup;
 import com.exasol.adapter.commontests.scalarfunction.virtualschematestsetup.*;
@@ -19,11 +12,14 @@ import com.exasol.dbbuilder.dialects.Schema;
 import com.exasol.dbbuilder.dialects.Table;
 import com.exasol.dbbuilder.dialects.exasol.VirtualSchema;
 import com.exasol.dbbuilder.dialects.oracle.OracleObjectFactory;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.*;
 
 import static com.exasol.adapter.metadata.DataType.IntervalType.DAY_TO_SECOND;
-import static com.exasol.matcher.ResultSetStructureMatcher.table;
 
 @ExtendWith({CloseAfterAllExtension.class})
 class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
@@ -140,12 +136,14 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
             }
         }
 
-        //has to be lowercase
         @Override
         public Set<String> getDialectSpecificExcludes() {
             return Set.of("neg",
-                    "to_dsinterval", "numtoyminterval", "systimestamp", "cast", "current_timestamp", "numtodsinterval", "to_yminterval",
-                    "character_length", "upper", "trim", "add_months", "char_length", "instr", "lower", "regexp_replace", "substr", "add_hours", "left", "mid", "add_weeks",
+                    "upper(\"DOUBLE_PRECISION_C0\")",//oracle converts 0.5 to '.5' instead of '0.5'
+                    "upper(\"DATE_C5\")",//different date formatting
+                    "upper(\"TIMESTAMP_0_C6\")", //different timestamp formatting
+                    "to_dsinterval", "numtoyminterval", "systimestamp", "current_timestamp", "numtodsinterval", "to_yminterval",
+                    "character_length", "trim", "add_months", "char_length", "instr", "lower", "regexp_replace", "substr", "add_hours", "left", "mid", "add_weeks",
                     "add_minutes", "to_timestamp", "reverse", "regexp_instr", "soundex", "add_days", "add_years", "replace", "translate", "lpad", "ltrim", "regexp_substr", "ucase", "lcase",
                     "character_Length", "locate", "curdate", "substring", "rpad", "to_date", "to_char", "repeat", "to_number", "length", "rtrim", "add_seconds");
         }
