@@ -142,7 +142,7 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
                     "upper(\"DOUBLE_PRECISION_C0\")",//oracle converts 0.5 to '.5' instead of '0.5'
                     "upper(\"DATE_C5\")",//different date formatting
                     "upper(\"TIMESTAMP_0_C6\")", //different timestamp formatting
-                    "to_dsinterval", "numtoyminterval", "systimestamp", "current_timestamp", "numtodsinterval", "to_yminterval",
+                    "to_dsinterval", "numtoyminterval", "systimestamp", "cast", "current_timestamp", "numtodsinterval", "to_yminterval",
                     "character_length", "trim", "add_months", "char_length", "instr", "lower", "regexp_replace", "substr", "add_hours", "left", "mid", "add_weeks",
                     "add_minutes", "to_timestamp", "reverse", "regexp_instr", "soundex", "add_days", "add_years", "replace", "translate", "lpad", "ltrim", "regexp_substr", "ucase", "lcase",
                     "character_Length", "locate", "curdate", "substring", "rpad", "to_date", "to_char", "repeat", "to_number", "length", "rtrim", "add_seconds");
