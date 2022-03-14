@@ -168,8 +168,8 @@ The Oracle dialect does not support all capabilities. A complete list can be fou
 
 `NUMBER`, `NUMBER with precision > 36` and `LONG` are casted to `VARCHAR` to prevent a loss of precision. 
 
-If you want to return a DECIMAL type for these types you can set the property `ORACLE_CAST_NUMBER_TO_DECIMAL_WITH_PRECISION_AND_SCALE` to `<scale>,<precision>`.
-This will cast values of such types to `DECIMAL(<scale>,<precision>)`.
+If you want to return a DECIMAL type for these types you can set the property `ORACLE_CAST_NUMBER_TO_DECIMAL_WITH_PRECISION_AND_SCALE` to `<precision>,<scale>`.
+This will cast values of such types to `DECIMAL(<precision>,<scale>)`.
 
 For example:
 
@@ -180,7 +180,7 @@ CREATE VIRTUAL SCHEMA <virtual schema name>
     CONNECTION_NAME = 'ORACLE_JDBC_CONNECTION'
     SCHEMA_NAME     = '<schema name>'
     IMPORT_FROM_ORA = 'true'
-    ORACLE_CAST_NUMBER_TO_DECIMAL_WITH_PRECISION_AND_SCALE = '2,18'
+    ORACLE_CAST_NUMBER_TO_DECIMAL_WITH_PRECISION_AND_SCALE = '18,2'
     ORA_CONNECTION_NAME = 'ORA_CONNECTION';
 ```
  
