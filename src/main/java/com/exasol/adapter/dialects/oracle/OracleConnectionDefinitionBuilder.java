@@ -15,6 +15,7 @@ public class OracleConnectionDefinitionBuilder extends BaseConnectionDefinitionB
     @Override
     public String buildConnectionDefinition(final AdapterProperties properties,
             final ExaConnectionInformation exaConnectionInformation) {
+        // is containing it enough? don't we need to check for true
         if (properties.containsKey(ORACLE_IMPORT_PROPERTY)) {
             return buildImportFromOraConnectionDefinition(properties);
         } else {

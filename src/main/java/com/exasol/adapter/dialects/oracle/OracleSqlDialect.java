@@ -170,10 +170,22 @@ public class OracleSqlDialect extends AbstractSqlDialect {
         }
     }
 
+//    final ColumnMetadataReader columnMetadataReader = this.remoteMetadataReader.getColumnMetadataReader();
+//
+//    final ResultSetMetadataReader resultSetMetadataReader = new ResultSetMetadataReader(
+//            this.connectionFactory.getConnection(), columnMetadataReader);
+//
+
     @Override
     protected QueryRewriter createQueryRewriter() {
         if (this.isImportFromOraEnabled()) {
-            return new OracleQueryRewriter(this, this.createRemoteMetadataReader());
+            try {
+                return new OracleQueryRewriter(this, this.createRemoteMetadataReader(), this.connectionFactory.getConnection());
+            } catch (SQLException exception) {
+                throw new RemoteMetadataReaderException(ExaError.messageBuilder("E-VS-ORA-1")
+                        .message("Unable to create Oracle remote metadata reader. Caused by: {{cause}}")
+                        .unquotedParameter("cause", exception.getMessage()).toString(), exception);
+            }
         }
         return new ImportIntoTemporaryTableQueryRewriter(this, this.createRemoteMetadataReader(), this.connectionFactory);
     }
