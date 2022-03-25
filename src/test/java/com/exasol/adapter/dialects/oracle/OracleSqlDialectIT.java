@@ -365,7 +365,8 @@ class OracleSqlDialectIT {
         void testSelectAllColsNumberFromOra() throws SQLException {
             final String qualifiedTableNameActual = VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL + "."
                     + TABLE_ORACLE_NUMBER_HANDLING;
-            final ResultSet expected = getExpectedResultSet("(A VARCHAR(100), B VARCHAR(100), C VARCHAR(100))",
+            //previously final ResultSet expected = getExpectedResultSet("(A VARCHAR(100), B VARCHAR(100), C VARCHAR(100))",
+            final ResultSet expected = getExpectedResultSet("(A DECIMAL(36,1), B DECIMAL(36,1), C DECIMAL(36,2))",
                     "('12.3456789012345678901234567890123460E32', '12.3456789012345678901234567890E26', '12.3456789012345678901234567890123456E32')");
             assertThat(statementExasol.executeQuery("SELECT * FROM " + qualifiedTableNameActual), //
                     matchesResultSet(expected));
@@ -549,10 +550,11 @@ class OracleSqlDialectIT {
             final String actual = result.getString(1);
             MatcherAssert.assertThat(actual, containsString(expected));
         }
-
+//        @CsvSource(value = {"VIRTUAL_SCHEMA_JDBC, 12355.12345", //
+//                "VIRTUAL_SCHEMA_ORACLE, 01.2355123450E4"})
         @ParameterizedTest
         @CsvSource(value = {"VIRTUAL_SCHEMA_JDBC, 12355.12345", //
-                "VIRTUAL_SCHEMA_ORACLE, 01.2355123450E4"})
+                "VIRTUAL_SCHEMA_ORACLE, 12355.12345"})
         void testFilterExpression(final String virtualSchemaName, final String expectedColumnValue) {
             final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT C7 FROM " + qualifiedTableNameActual + " WHERE C7 > 12346";

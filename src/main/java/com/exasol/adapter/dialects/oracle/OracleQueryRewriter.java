@@ -23,6 +23,7 @@ public class OracleQueryRewriter extends AbstractQueryRewriter {
      * @param remoteMetadataReader reader for metadata from the remote data source
      */
     Connection connection;
+    private static final Logger LOGGER = Logger.getLogger(OracleQueryRewriter.class.getName());
     public OracleQueryRewriter(final SqlDialect dialect, final RemoteMetadataReader remoteMetadataReader, Connection connection) {
         super(dialect, remoteMetadataReader, new OracleConnectionDefinitionBuilder());
         this.connection = connection;
@@ -43,7 +44,7 @@ public class OracleQueryRewriter extends AbstractQueryRewriter {
                 connection, columnMetadataReader);
 
         final String columnsDescription = resultSetMetadataReader.describeColumns(query);
-        //LOGGER.finer(() -> "Import columns: " + columnsDescription);
+        LOGGER.finer(() -> "columndescription: " + columnsDescription);
         return columnsDescription;
     }
 }
