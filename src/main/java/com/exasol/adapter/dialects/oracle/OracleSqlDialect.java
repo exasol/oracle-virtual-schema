@@ -182,7 +182,7 @@ public class OracleSqlDialect extends AbstractSqlDialect {
             try {
                 return new OracleQueryRewriter(this, this.createRemoteMetadataReader(), this.connectionFactory.getConnection());
             } catch (SQLException exception) {
-                throw new RemoteMetadataReaderException(ExaError.messageBuilder("E-VS-ORA-1")
+                throw new RemoteMetadataReaderException(ExaError.messageBuilder("E-VS-ORA-4")
                         .message("Unable to create Oracle remote metadata reader. Caused by: {{cause}}")
                         .unquotedParameter("cause", exception.getMessage()).toString(), exception);
             }
