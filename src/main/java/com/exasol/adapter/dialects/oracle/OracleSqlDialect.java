@@ -66,7 +66,7 @@ public class OracleSqlDialect extends AbstractSqlDialect {
      */
     public OracleSqlDialect(final ConnectionFactory connectionFactory, final AdapterProperties properties) {
         super(connectionFactory, properties, Set.of(SCHEMA_NAME_PROPERTY, ORACLE_IMPORT_PROPERTY,
-                ORACLE_CONNECTION_NAME_PROPERTY, ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY));
+                ORACLE_CONNECTION_NAME_PROPERTY, ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY, GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI_PROPERTY));
         this.omitParenthesesMap.add(ScalarFunction.SYSDATE);
         this.omitParenthesesMap.add(ScalarFunction.SYSTIMESTAMP);
     }
@@ -180,7 +180,7 @@ public class OracleSqlDialect extends AbstractSqlDialect {
     protected QueryRewriter createQueryRewriter() {
         if (this.isImportFromOraEnabled()) {
             try {
-                return new OracleQueryRewriter(this, this.createRemoteMetadataReader(), this.connectionFactory.getConnection());
+                return new OracleQueryRewriter(this, this.createRemoteMetadataReader(), this.connectionFactory.getConnection(), properties);
             } catch (SQLException exception) {
                 throw new RemoteMetadataReaderException(ExaError.messageBuilder("E-VS-ORA-4")
                         .message("Unable to create Oracle remote metadata reader. Caused by: {{cause}}")

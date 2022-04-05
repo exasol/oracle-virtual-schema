@@ -53,9 +53,10 @@ class OracleSqlDialectIT {
 
     private static final String VIRTUAL_SCHEMA_JDBC = "VIRTUAL_SCHEMA_JDBC";
     private static final String VIRTUAL_SCHEMA_ORACLE = "VIRTUAL_SCHEMA_ORACLE";
+    private static final String VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING = "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING";
     private static final String VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL = "VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL";
     private static final String VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL = "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL";
-
+    private static final String VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING = "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING";
     private static final String TABLE_ORACLE_ALL_DATA_TYPES = "TABLE_ORACLE_ALL_DATA_TYPES";
     private static final String TABLE_ORACLE_NUMBER_HANDLING = "TABLE_ORACLE_NUMBER_HANDLING";
     private static final String TABLE_ORACLE_TIMESTAMPS = "TABLE_ORACLE_TIMESTAMPS";
@@ -137,11 +138,22 @@ class OracleSqlDialectIT {
                 .connectionDefinition(jdbcConnectionDefinition).properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE,
                         "IMPORT_FROM_ORA", "true", "ORA_CONNECTION_NAME", ORACLE_OCI_CONNECTION_NAME))
                 .build();
+        exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING).adapterScript(adapterScript)
+                .connectionDefinition(jdbcConnectionDefinition).properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE,
+                        "IMPORT_FROM_ORA", "true", "ORA_CONNECTION_NAME", ORACLE_OCI_CONNECTION_NAME, "GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI", "true"))
+                .build();
+
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL).adapterScript(adapterScript)
                 .connectionDefinition(jdbcConnectionDefinition)
                 .properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE, "IMPORT_FROM_ORA", "true", "ORA_CONNECTION_NAME",
                         ORACLE_OCI_CONNECTION_NAME, "oracle_cast_number_to_decimal_with_precision_and_scale", "36,1"))
                 .build();
+        exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING).adapterScript(adapterScript)
+                .connectionDefinition(jdbcConnectionDefinition)
+                .properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE, "IMPORT_FROM_ORA",  "true","GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI", "true", "ORA_CONNECTION_NAME",
+                        ORACLE_OCI_CONNECTION_NAME, "oracle_cast_number_to_decimal_with_precision_and_scale", "36,1"))
+                .build();
+        //
     }
 
     private static void setupOracleDbContainer() throws SQLException {
@@ -365,13 +377,21 @@ class OracleSqlDialectIT {
         void testSelectAllColsNumberFromOra() throws SQLException {
             final String qualifiedTableNameActual = VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL + "."
                     + TABLE_ORACLE_NUMBER_HANDLING;
+            final ResultSet expected = getExpectedResultSet("(A VARCHAR(100), B VARCHAR(100), C VARCHAR(100))",
+                    "('12.3456789012345678901234567890123460E32', '12.3456789012345678901234567890E26', '12.3456789012345678901234567890123456E32')");
+            assertThat(statementExasol.executeQuery("SELECT * FROM " + qualifiedTableNameActual), //
+                    matchesResultSet(expected));
+        }
+        @Test
+        void testSelectAllColsNumberFromOraWithJDBCTypemapping() throws SQLException {
+            final String qualifiedTableNameActual = VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING + "."
+                    + TABLE_ORACLE_NUMBER_HANDLING;
             //previously final ResultSet expected = getExpectedResultSet("(A VARCHAR(100), B VARCHAR(100), C VARCHAR(100))",
             final ResultSet expected = getExpectedResultSet("(A DECIMAL(36,1), B DECIMAL(36,1), C DECIMAL(36,2))",
                     "('12.3456789012345678901234567890123460E32', '12.3456789012345678901234567890E26', '12.3456789012345678901234567890123456E32')");
             assertThat(statementExasol.executeQuery("SELECT * FROM " + qualifiedTableNameActual), //
                     matchesResultSet(expected));
         }
-
         @ParameterizedTest
         @ValueSource(strings = {VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL})
         void testNumberDataTypes(final String virtualSchemaName) {
@@ -554,7 +574,8 @@ class OracleSqlDialectIT {
 //                "VIRTUAL_SCHEMA_ORACLE, 01.2355123450E4"})
         @ParameterizedTest
         @CsvSource(value = {"VIRTUAL_SCHEMA_JDBC, 12355.12345", //
-                "VIRTUAL_SCHEMA_ORACLE, 12355.12345"})
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, 12355.12345",
+                "VIRTUAL_SCHEMA_ORACLE, 01.2355123450E4"})
         void testFilterExpression(final String virtualSchemaName, final String expectedColumnValue) {
             final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT C7 FROM " + qualifiedTableNameActual + " WHERE C7 > 12346";
