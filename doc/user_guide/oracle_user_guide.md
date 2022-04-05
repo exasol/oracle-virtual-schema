@@ -166,7 +166,7 @@ The Oracle dialect does not support all capabilities. A complete list can be fou
 
 ### Mapping of Number Types:
 
-`NUMBER`, `NUMBER with precision > 36` and `LONG` are casted to `VARCHAR` to prevent a loss of precision. 
+`NUMBER` and `NUMBER with precision > 36` are casted to `VARCHAR` to prevent a loss of precision.
 
 If you want to return a DECIMAL type for these types you can set the property `ORACLE_CAST_NUMBER_TO_DECIMAL_WITH_PRECISION_AND_SCALE` to `<precision>,<scale>`.
 This will cast values of such types to `DECIMAL(<precision>,<scale>)`.
