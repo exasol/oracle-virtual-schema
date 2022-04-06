@@ -47,7 +47,7 @@ public class OracleQueryRewriter extends AbstractQueryRewriter {
         }
     }
 
-    private String createImportColumnsDescription(final String query) throws SQLException {
+    private String createImportColumnsDescription(final String query) {
         final ColumnMetadataReader columnMetadataReader = this.remoteMetadataReader.getColumnMetadataReader();
         final ResultSetMetadataReader resultSetMetadataReader = new ResultSetMetadataReader(
                 connection, columnMetadataReader);

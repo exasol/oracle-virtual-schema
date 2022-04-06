@@ -165,16 +165,10 @@ public class OracleSqlDialect extends AbstractSqlDialect {
             return new OracleMetadataReader(this.connectionFactory.getConnection(), this.properties);
         } catch (final SQLException exception) {
             throw new RemoteMetadataReaderException(ExaError.messageBuilder("E-VS-ORA-1")
-                    .message("Unable to create Oracle remote metadata reader. Caused by: {{cause}}")
-                    .unquotedParameter("cause", exception.getMessage()).toString(), exception);
+                    .message("Unable to create Oracle remote metadata reader. Caused by: {{cause|uq}}")
+                    .parameter("cause", exception.getMessage()).toString(), exception);
         }
     }
-
-//    final ColumnMetadataReader columnMetadataReader = this.remoteMetadataReader.getColumnMetadataReader();
-//
-//    final ResultSetMetadataReader resultSetMetadataReader = new ResultSetMetadataReader(
-//            this.connectionFactory.getConnection(), columnMetadataReader);
-//
 
     @Override
     protected QueryRewriter createQueryRewriter() {
@@ -183,8 +177,8 @@ public class OracleSqlDialect extends AbstractSqlDialect {
                 return new OracleQueryRewriter(this, this.createRemoteMetadataReader(), this.connectionFactory.getConnection(), properties);
             } catch (SQLException exception) {
                 throw new RemoteMetadataReaderException(ExaError.messageBuilder("E-VS-ORA-4")
-                        .message("Unable to create Oracle remote metadata reader. Caused by: {{cause}}")
-                        .unquotedParameter("cause", exception.getMessage()).toString(), exception);
+                        .message("Unable to create Oracle remote metadata reader. Caused by: {{cause|uq}}")
+                        .parameter("cause", exception.getMessage()).toString(), exception);
             }
         }
         return new ImportIntoTemporaryTableQueryRewriter(this, this.createRemoteMetadataReader(), this.connectionFactory);

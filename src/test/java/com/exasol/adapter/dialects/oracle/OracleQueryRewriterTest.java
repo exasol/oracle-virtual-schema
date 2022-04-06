@@ -28,16 +28,16 @@ public class OracleQueryRewriterTest extends AbstractQueryRewriterTestBase {
         this.statement = TestSqlStatementFactory.createSelectOneFromDual();
     }
 
-//    @Test
-//    void testRewriteToImportFromOraWithConnectionDetailsInProperties(
-//            @Mock final ConnectionFactory connectionFactoryMock) throws AdapterException, SQLException {
-//        final AdapterProperties properties = new AdapterProperties(Map.of( //
-//                ORACLE_IMPORT_PROPERTY, "true", //
-//                ORACLE_CONNECTION_NAME_PROPERTY, "ora_connection"));
-//        final SqlDialectFactory dialectFactory = new OracleSqlDialectFactory();
-//        final SqlDialect dialect = dialectFactory.createSqlDialect(connectionFactoryMock, properties);
-//        final QueryRewriter queryRewriter = new OracleQueryRewriter(dialect, null,null);
-//        assertThat(queryRewriter.rewrite(this.statement, EXA_METADATA, properties),
-//                equalTo("IMPORT FROM ORA AT ora_connection STATEMENT 'SELECT TO_CHAR(1) FROM \"DUAL\"'"));
-//    }
+    @Test
+    void testRewriteToImportFromOraWithConnectionDetailsInProperties(
+            @Mock final ConnectionFactory connectionFactoryMock) throws AdapterException, SQLException {
+        final AdapterProperties properties = new AdapterProperties(Map.of( //
+                ORACLE_IMPORT_PROPERTY, "true", //
+                ORACLE_CONNECTION_NAME_PROPERTY, "ora_connection"));
+        final SqlDialectFactory dialectFactory = new OracleSqlDialectFactory();
+        final SqlDialect dialect = dialectFactory.createSqlDialect(connectionFactoryMock, properties);
+        final QueryRewriter queryRewriter = new OracleQueryRewriter(dialect, null,connectionFactoryMock.getConnection(),properties);
+        assertThat(queryRewriter.rewrite(this.statement, EXA_METADATA, properties),
+                equalTo("IMPORT FROM ORA AT ora_connection STATEMENT 'SELECT TO_CHAR(1) FROM \"DUAL\"'"));
+    }
 }
