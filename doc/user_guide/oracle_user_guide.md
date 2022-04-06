@@ -132,7 +132,7 @@ CREATE VIRTUAL SCHEMA <virtual schema name>
 ```
 ### Auto generated datatype mapping list while using IMPORT_FROM_ORA.
 Using `IMPORT FROM ORA` might lead to some unexpected datatype mappings. Unlike for a JDBC connection there's no explicit data mapping being generated when using `IMPORT FROM ORA`.  
-As a current stopgap solution for this issue we now (starting from version 2.3.0) also provide a `GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI` switch you can specify and enable when creating the virtual schema.   
+As a current stopgap solution for this issue we now (starting from version 2.2.0) also provide a `GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI` switch you can specify and enable when creating the virtual schema.   
 ```sql
 CREATE VIRTUAL SCHEMA <virtual schema name>
     USING ADAPTER.JDBC_ADAPTER
