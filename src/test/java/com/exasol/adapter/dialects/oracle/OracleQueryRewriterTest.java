@@ -45,7 +45,7 @@ public class OracleQueryRewriterTest extends AbstractQueryRewriterTestBase {
                 equalTo("IMPORT FROM ORA AT ora_connection STATEMENT 'SELECT TO_CHAR(1) FROM \"DUAL\"'"));
     }
     @Test
-    void testRewriteToImportFromOraWithConnectionDetailsInProperties2(
+    void testRewriteToImportFromOraWithConnectionDetailsInPropertiesJDBCDatatypeMapping(
             @Mock final ConnectionFactory connectionFactoryMock) throws AdapterException, SQLException {
         final AdapterProperties properties = new AdapterProperties(Map.of( //
                 ORACLE_IMPORT_PROPERTY, "true", //
