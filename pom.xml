@@ -190,6 +190,25 @@
                     <finalName>virtual-schema-dist-${vscjdbc.version}-oracle-${project.version}</finalName>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-oracle-driver</id>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <phase>compile</phase>
+                        <configuration>
+                            <includeGroupIds>com.oracle.database.jdbc</includeGroupIds>
+                            <includeArtifactIds>ojdbc8</includeArtifactIds>
+                            <outputDirectory>${project.build.directory}/oracle-driver</outputDirectory>
+                            <stripVersion>true</stripVersion>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     <parent>
