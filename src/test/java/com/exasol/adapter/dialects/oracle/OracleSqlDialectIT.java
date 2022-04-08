@@ -19,6 +19,8 @@ import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import com.exasol.udfdebugging.UdfTestSetup;
+import com.github.dockerjava.api.model.ContainerNetwork;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -83,7 +85,14 @@ class OracleSqlDialectIT {
         final String instantClientPath = getPropertyFromFile(RESOURCES_FOLDER_DIALECT_NAME, "instant.client.path");
         bucket.uploadFile(Path.of(instantClientPath, instantClientName), "drivers/oracle/" + instantClientName);
     }
-
+    private static String getTestHostIpFromInsideExasol(ExasolContainer exasolContainer) {
+        final Map<String, ContainerNetwork> networks = exasolContainer.getContainerInfo().getNetworkSettings()
+                .getNetworks();
+        if (networks.size() == 0) {
+            return null;
+        }
+        return networks.values().iterator().next().getGateway();
+    }
     private static void setupExasolContainer() throws BucketAccessException, TimeoutException, FileNotFoundException, SQLException, InterruptedException {
         uploadOracleJDBCDriverAndVSToBucket(  exasolContainer.getDefaultBucket());
         uploadInstantClientToBucket();
@@ -91,7 +100,10 @@ class OracleSqlDialectIT {
                 exasolContainer.getPassword());
         statementExasol = exasolConnection.createStatement();
 
-        final ExasolObjectFactory exasolFactory = new ExasolObjectFactory(exasolContainer.createConnection(""));
+        final UdfTestSetup udfTestSetup = new UdfTestSetup(getTestHostIpFromInsideExasol(exasolContainer),
+                exasolContainer.getDefaultBucket(), exasolConnection);
+        final ExasolObjectFactory exasolFactory = new ExasolObjectFactory(exasolContainer.createConnection(""),
+                ExasolObjectConfiguration.builder().withJvmOptions(udfTestSetup.getJvmOptions()).build());
         final ExasolSchema schema = exasolFactory.createSchema(SCHEMA_EXASOL);
 
         final AdapterScript adapterScript = createAdapterScript(schema);
