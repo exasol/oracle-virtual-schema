@@ -33,3 +33,5 @@ pom.xml.versionsBackup
 *.old
 *.md.html
 .vscode/
+
+*.flattened-pom.xml

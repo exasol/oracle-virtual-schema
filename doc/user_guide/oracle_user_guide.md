@@ -130,6 +130,30 @@ CREATE VIRTUAL SCHEMA <virtual schema name>
     IMPORT_FROM_ORA = 'true'
     ORA_CONNECTION_NAME = 'ORA_CONNECTION';
 ```
+### Auto generated datatype mapping list while using IMPORT_FROM_ORA.
+Using `IMPORT FROM ORA` might lead to some unexpected datatype mappings. Unlike for a JDBC connection there's no explicit data mapping being generated when using `IMPORT FROM ORA`.  
+As a current stopgap solution for this issue we now (starting from version 2.2.0) also provide a `GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI` switch you can specify and enable when creating the virtual schema.   
+```sql
+CREATE VIRTUAL SCHEMA <virtual schema name>
+    USING ADAPTER.JDBC_ADAPTER
+    WITH
+    CONNECTION_NAME = 'ORACLE_JDBC_CONNECTION'
+    SCHEMA_NAME     = '<schema name>'
+    IMPORT_FROM_ORA = 'true'
+    GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI = 'true'
+    ORA_CONNECTION_NAME = 'ORA_CONNECTION';
+```
+This will add explicit datatype mapping to the generated command when using `IMPORT FROM ORA`.  
+
+Example:
+
+Before  
+
+`IMPORT FROM ORA AT ORACLE_CON STATEMENT ...`
+
+After setting `GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI` to `true`   
+
+`IMPORT INTO(c1 DECIMAL(36,1), c2 .... )   FROM ORA AT ORACLE_CON STATEMENT ...`
 
 ## Supported Capabilities
 
@@ -137,7 +161,7 @@ The Oracle dialect does not support all capabilities. A complete list can be fou
 
 ## Type Mappings and Limitations
 
-| Orcale Data Type                                                                 | Supported | Converted Exasol Data Type | Comments                                                                                                                                      |
+| Oracle Data Type                                                                 | Supported | Converted Exasol Data Type | Comments                                                                                                                                      |
 | -------------------------------------------------------------------------------- | --------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | BINARY\_DOUBLE                                                                   | ✓         | VARCHAR(2000000)           |                                                                                                                                               |
 | BINARY\_FLOAT                                                                    | ✓         | VARCHAR(2000000)           |                                                                                                                                               |
