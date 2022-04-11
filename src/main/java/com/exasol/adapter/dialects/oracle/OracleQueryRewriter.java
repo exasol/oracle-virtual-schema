@@ -21,8 +21,8 @@ public class OracleQueryRewriter extends AbstractQueryRewriter {
      * @param dialect              Oracle SQl dialect
      * @param remoteMetadataReader reader for metadata from the remote data source
      */
-    Connection connection;
-    AdapterProperties properties;
+    private final Connection connection;
+    private final AdapterProperties properties;
 
     private static final Logger LOGGER = Logger.getLogger(OracleQueryRewriter.class.getName());
 
