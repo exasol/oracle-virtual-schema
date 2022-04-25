@@ -22,7 +22,7 @@
 | [Test containers for Exasol on Docker][18]      | [MIT][1]                          |
 | [Testcontainers :: JUnit Jupiter Extension][20] | [MIT][21]                         |
 | [Testcontainers :: JDBC :: Oracle XE][20]       | [MIT][21]                         |
-| [Test Database Builder for Java][24]            | [MIT][1]                          |
+| [Test Database Builder for Java][24]            | [MIT License][25]                 |
 | [udf-debugging-java][26]                        | [MIT][1]                          |
 | [Matcher for SQL Result Sets][28]               | [MIT][1]                          |
 | [virtual-schema-shared-integration-tests][30]   | [MIT][1]                          |
@@ -58,6 +58,7 @@
 [4]: https://github.com/exasol/error-reporting-java
 [6]: https://www.oracle.com/database/technologies/maven-central-guide.html
 [2]: https://github.com/exasol/db-fundamentals-java
+[24]: https://github.com/exasol/test-db-builder-java/
 [41]: http://www.apache.org/licenses/LICENSE-2.0.txt
 [46]: https://maven.apache.org/surefire/maven-surefire-plugin/
 [66]: http://maven.apache.org/plugins/maven-clean-plugin/
@@ -65,7 +66,6 @@
 [1]: https://opensource.org/licenses/MIT
 [14]: https://github.com/mockito/mockito
 [60]: https://maven.apache.org/surefire/maven-failsafe-plugin/
-[24]: https://github.com/exasol/test-db-builder-java
 [30]: https://github.com/exasol/virtual-schema-shared-integration-tests
 [48]: http://www.mojohaus.org/versions-maven-plugin/
 [50]: https://github.com/exasol/project-keeper/
@@ -73,6 +73,7 @@
 [36]: https://maven.apache.org/plugins/maven-compiler-plugin/
 [21]: http://opensource.org/licenses/MIT
 [0]: https://github.com/exasol/virtual-schema-common-jdbc
+[25]: https://github.com/exasol/test-db-builder-java/blob/main/LICENSE
 [33]: https://www.eclipse.org/legal/epl-2.0/
 [35]: http://www.gnu.org/licenses/lgpl.txt
 [18]: https://github.com/exasol/exasol-testcontainers
