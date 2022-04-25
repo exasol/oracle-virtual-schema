@@ -1,7 +1,7 @@
 package com.exasol.adapter.dialects.oracle;
 
 public final class IntegrationTestConstants {
-	public static final String VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION = "virtual-schema-dist-9.0.4-oracle-2.2.0.jar";
+	public static final String VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION = "virtual-schema-dist-9.0.4-oracle-2.2.1.jar";
     public static final String EXASOL_DOCKER_IMAGE_REFERENCE = "exasol/docker-db:7.0.10";
     public static final String ORACLE_CONTAINER_NAME = "gvenzl/oracle-xe:21.3.0";
     public static final String SCHEMA_EXASOL = "SCHEMA_EXASOL";
