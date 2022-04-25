@@ -1,4 +1,4 @@
-# Virtual Schema for Oracle 2.2.1, released 2022-04-25
+# Virtual Schema for Oracle 2.2.1, released 2022-??-??
 
 Code name: test-db-builder-java update for CVE.
 
