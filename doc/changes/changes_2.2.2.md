@@ -1,12 +1,10 @@
-# Virtual Schema for Oracle 2.2.2, released 2022-??-??
+# Virtual Schema for Oracle 2.2.2, released 2022-06-14
 
-Code name:
+Code name: Updated dependencies and plugins
 
 ## Summary
 
-## Features
-
-* ISSUE_NUMBER: description
+Updated dependencies, plugins, fixed broken links checker
 
 ## Dependency Updates
 
