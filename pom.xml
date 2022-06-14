@@ -150,6 +150,9 @@
                         <!-- Ignores CVE-2020-15250, because we use Java 11 and junit 4.13.1 which contains a fix:
                                     https://ossindex.sonatype.org/vuln/7ea56ad4-8a8b-4e51-8ed9-5aad83d8efb1 -->
                         <exclude>7ea56ad4-8a8b-4e51-8ed9-5aad83d8efb1</exclude>
+                        <!-- Vulnerability in io.netty:netty-handler:4.1.77.Final https://ossindex.sonatype.org/vulnerability/sonatype-2020-0026
+                Excluded until a fixed version is available. exasol-test-setup-abstraction-java dependency -->
+                        <exclude>sonatype-2020-0026</exclude>
                     </excludeVulnerabilityIds>
                 </configuration>
             </plugin>
