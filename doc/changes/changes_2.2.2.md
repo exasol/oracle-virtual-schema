@@ -8,6 +8,10 @@ Updated dependencies, plugins, fixed broken links checker
 
 ## Dependency Updates
 
+### Runtime Dependency Updates
+
+* Added `org.glassfish:jakarta.json:2.0.1`
+
 ### Test Dependency Updates
 
 * Updated `com.exasol:exasol-testcontainers:6.0.0` to `6.1.1`
