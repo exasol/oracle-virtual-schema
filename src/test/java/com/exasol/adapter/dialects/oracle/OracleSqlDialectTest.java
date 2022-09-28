@@ -122,7 +122,7 @@ class OracleSqlDialectTest {
                 CATALOG_NAME_PROPERTY, "MY_CATALOG")));
         final PropertyValidationException exception = assertThrows(PropertyValidationException.class,
                 sqlDialect::validateProperties);
-        MatcherAssert.assertThat(exception.getMessage(), containsString("E-VS-COM-JDBC-13"));
+        MatcherAssert.assertThat(exception.getMessage(), containsString("E-VSCJDBC-13"));
     }
 
     @Test
