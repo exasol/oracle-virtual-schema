@@ -35,3 +35,5 @@ pom.xml.versionsBackup
 .vscode/
 
 *.flattened-pom.xml
+/.apt_generated/
+/.apt_generated_tests/
