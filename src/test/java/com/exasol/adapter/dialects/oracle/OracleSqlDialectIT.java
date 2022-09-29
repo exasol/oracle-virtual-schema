@@ -2,7 +2,8 @@ package com.exasol.adapter.dialects.oracle;
 
 import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.*;
 import static com.exasol.adapter.dialects.oracle.IntegrationTestsHelperfunctions.getPropertyFromFile;
-import static com.exasol.adapter.dialects.oracle.OracleVirtualSchemaIntegrationTestSetup.*;
+import static com.exasol.adapter.dialects.oracle.OracleVirtualSchemaIntegrationTestSetup.createAdapterScript;
+import static com.exasol.adapter.dialects.oracle.OracleVirtualSchemaIntegrationTestSetup.uploadOracleJDBCDriverAndVSToBucket;
 import static com.exasol.matcher.ResultSetMatcher.matchesResultSet;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -10,17 +11,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.*;
+import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.sql.*;
-import java.sql.Date;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import com.exasol.udfdebugging.UdfTestSetup;
-import com.github.dockerjava.api.model.ContainerNetwork;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -36,6 +35,8 @@ import com.exasol.bucketfs.Bucket;
 import com.exasol.bucketfs.BucketAccessException;
 import com.exasol.containers.ExasolContainer;
 import com.exasol.dbbuilder.dialects.exasol.*;
+import com.exasol.udfdebugging.UdfTestSetup;
+import com.github.dockerjava.api.model.ContainerNetwork;
 
 /**
  * How to run `OracleSqlDialectIT`: See the documentation <a
@@ -66,14 +67,15 @@ class OracleSqlDialectIT {
     @Container
     private static final ExasolContainer<? extends ExasolContainer<?>> exasolContainer = new ExasolContainer<>(
             EXASOL_DOCKER_IMAGE_REFERENCE) //
-            .withLogConsumer(new Slf4jLogConsumer(LOGGER));
+                    .withLogConsumer(new Slf4jLogConsumer(LOGGER));
     @Container
     private static final OracleContainerDBA oracleContainer = new OracleContainerDBA(ORACLE_CONTAINER_NAME);
 
     private static Statement statementExasol;
 
     @BeforeAll
-    static void beforeAll() throws BucketAccessException, TimeoutException, SQLException, FileNotFoundException, InterruptedException {
+    static void beforeAll()
+            throws BucketAccessException, TimeoutException, SQLException, FileNotFoundException, InterruptedException {
         setupOracleDbContainer();
         setupExasolContainer();
     }
@@ -85,7 +87,8 @@ class OracleSqlDialectIT {
         final String instantClientPath = getPropertyFromFile(RESOURCES_FOLDER_DIALECT_NAME, "instant.client.path");
         bucket.uploadFile(Path.of(instantClientPath, instantClientName), "drivers/oracle/" + instantClientName);
     }
-    private static String getTestHostIpFromInsideExasol(ExasolContainer exasolContainer) {
+
+    private static String getTestHostIpFromInsideExasol(final ExasolContainer<?> exasolContainer) {
         final Map<String, ContainerNetwork> networks = exasolContainer.getContainerInfo().getNetworkSettings()
                 .getNetworks();
         if (networks.size() == 0) {
@@ -93,8 +96,10 @@ class OracleSqlDialectIT {
         }
         return networks.values().iterator().next().getGateway();
     }
-    private static void setupExasolContainer() throws BucketAccessException, TimeoutException, FileNotFoundException, SQLException, InterruptedException {
-        uploadOracleJDBCDriverAndVSToBucket(  exasolContainer.getDefaultBucket());
+
+    private static void setupExasolContainer()
+            throws BucketAccessException, TimeoutException, FileNotFoundException, SQLException, InterruptedException {
+        uploadOracleJDBCDriverAndVSToBucket(exasolContainer.getDefaultBucket());
         uploadInstantClientToBucket();
         final Connection exasolConnection = exasolContainer.createConnectionForUser(exasolContainer.getUsername(),
                 exasolContainer.getPassword());
@@ -112,13 +117,14 @@ class OracleSqlDialectIT {
         final String oracleUsername = "SYSTEM";
         final String oraclePassword = "test";
         createOracleOCIConnection(exasolFactory, mappedPort, oracleUsername, oraclePassword);
-        ConnectionDefinition jdbcConnectionDefinition = createOracleJDBCConnection(oracleUsername, oraclePassword, exasolFactory);
+        final ConnectionDefinition jdbcConnectionDefinition = createOracleJDBCConnection(oracleUsername, oraclePassword,
+                exasolFactory);
 
         createVirtualSchemasOnExasolDbContainer(exasolFactory, adapterScript, jdbcConnectionDefinition);
     }
 
     private static ConnectionDefinition createOracleOCIConnection(final ExasolObjectFactory exasolFactory,
-                                                                  final Integer mappedPort, final String oracleUsername, final String oraclePassword) {
+            final Integer mappedPort, final String oracleUsername, final String oraclePassword) {
         final String oraConnectionString = "(DESCRIPTION =" //
                 + "(ADDRESS_LIST = (ADDRESS = (PROTOCOL = TCP)" //
                 + "(HOST = " + exasolContainer.getHostIp() + " )" //
@@ -129,15 +135,18 @@ class OracleSqlDialectIT {
                 oraclePassword);
     }
 
-    private static ConnectionDefinition createOracleJDBCConnection(String oracleUsername, String oraclePassword, ExasolObjectFactory exasolFactory) {
+    private static ConnectionDefinition createOracleJDBCConnection(final String oracleUsername,
+            final String oraclePassword, final ExasolObjectFactory exasolFactory) {
         final String jdbcConnectionString = "jdbc:oracle:thin:@" + exasolContainer.getHostIp() + ":"
                 + oracleContainer.getOraclePort() + "/" + oracleContainer.getDatabaseName();
 
-        return exasolFactory.createConnectionDefinition(ORACLE_JDBC_CONNECTION_NAME, jdbcConnectionString, oracleUsername, oraclePassword);
+        return exasolFactory.createConnectionDefinition(ORACLE_JDBC_CONNECTION_NAME, jdbcConnectionString,
+                oracleUsername, oraclePassword);
 
     }
 
-    private static void createVirtualSchemasOnExasolDbContainer(ExasolObjectFactory exasolFactory, AdapterScript adapterScript, ConnectionDefinition jdbcConnectionDefinition) {
+    private static void createVirtualSchemasOnExasolDbContainer(final ExasolObjectFactory exasolFactory,
+            final AdapterScript adapterScript, final ConnectionDefinition jdbcConnectionDefinition) {
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_JDBC).adapterScript(adapterScript)
                 .connectionDefinition(jdbcConnectionDefinition).properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE))
                 .build();
@@ -151,8 +160,9 @@ class OracleSqlDialectIT {
                         "IMPORT_FROM_ORA", "true", "ORA_CONNECTION_NAME", ORACLE_OCI_CONNECTION_NAME))
                 .build();
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING).adapterScript(adapterScript)
-                .connectionDefinition(jdbcConnectionDefinition).properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE,
-                        "IMPORT_FROM_ORA", "true", "ORA_CONNECTION_NAME", ORACLE_OCI_CONNECTION_NAME, "GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI", "true"))
+                .connectionDefinition(jdbcConnectionDefinition)
+                .properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE, "IMPORT_FROM_ORA", "true", "ORA_CONNECTION_NAME",
+                        ORACLE_OCI_CONNECTION_NAME, "GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI", "true"))
                 .build();
 
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL).adapterScript(adapterScript)
@@ -160,16 +170,17 @@ class OracleSqlDialectIT {
                 .properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE, "IMPORT_FROM_ORA", "true", "ORA_CONNECTION_NAME",
                         ORACLE_OCI_CONNECTION_NAME, "oracle_cast_number_to_decimal_with_precision_and_scale", "36,1"))
                 .build();
-        exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING).adapterScript(adapterScript)
-                .connectionDefinition(jdbcConnectionDefinition)
-                .properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE, "IMPORT_FROM_ORA",  "true","GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI", "true", "ORA_CONNECTION_NAME",
+        exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING)
+                .adapterScript(adapterScript).connectionDefinition(jdbcConnectionDefinition)
+                .properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE, "IMPORT_FROM_ORA", "true",
+                        "GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI", "true", "ORA_CONNECTION_NAME",
                         ORACLE_OCI_CONNECTION_NAME, "oracle_cast_number_to_decimal_with_precision_and_scale", "36,1"))
                 .build();
         //
     }
 
     private static void setupOracleDbContainer() throws SQLException {
-        var oracleConnection = oracleContainer.createConnectionDBA("");
+        final var oracleConnection = oracleContainer.createConnectionDBA("");
         final Statement statementOracle = oracleConnection.createStatement();
         createOracleUser(statementOracle);
         grantAdditionalRights(statementOracle);
@@ -335,7 +346,7 @@ class OracleSqlDialectIT {
     @DisplayName("Number handling test")
     class numberHandlingTest {
         @ParameterizedTest
-        @ValueSource(strings = {VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL})
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
         void testNumberToDecimalThrowsException(final String virtualSchemaName) {
             final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT c5 FROM " + qualifiedTableName;
@@ -345,7 +356,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL})
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
         void testNumber36ToDecimal(final String virtualSchemaName) throws SQLException {
             final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT c_number36 FROM " + qualifiedTableName;
@@ -357,7 +368,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL})
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
         void testNumber38ToDecimalThrowsException(final String virtualSchemaName) {
             final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT c6 FROM " + qualifiedTableName;
@@ -367,7 +378,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL})
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
         void testNumber10S5ToDecimal(final String virtualSchemaName) {
             final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT C7 FROM " + qualifiedTableName;
@@ -394,18 +405,21 @@ class OracleSqlDialectIT {
             assertThat(statementExasol.executeQuery("SELECT * FROM " + qualifiedTableNameActual), //
                     matchesResultSet(expected));
         }
+
         @Test
         void testSelectAllColsNumberFromOraWithJDBCTypemapping() throws SQLException {
             final String qualifiedTableNameActual = VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING + "."
                     + TABLE_ORACLE_NUMBER_HANDLING;
-            //previously final ResultSet expected = getExpectedResultSet("(A VARCHAR(100), B VARCHAR(100), C VARCHAR(100))",
+            // previously final ResultSet expected = getExpectedResultSet("(A VARCHAR(100), B VARCHAR(100), C
+            // VARCHAR(100))",
             final ResultSet expected = getExpectedResultSet("(A DECIMAL(36,1), B DECIMAL(36,1), C DECIMAL(36,2))",
                     "('12.3456789012345678901234567890123460E32', '12.3456789012345678901234567890E26', '12.3456789012345678901234567890123456E32')");
             assertThat(statementExasol.executeQuery("SELECT * FROM " + qualifiedTableNameActual), //
                     matchesResultSet(expected));
         }
+
         @ParameterizedTest
-        @ValueSource(strings = {VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL})
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
         void testNumberDataTypes(final String virtualSchemaName) {
             final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_NUMBER_HANDLING;
             assertAll(() -> assertThat(getColumnTypesOfTable(qualifiedTableName, "A"), equalTo("DECIMAL(36,1)")),
@@ -414,7 +428,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL})
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
         void testSelectOneNumberColumn(final String virtualSchemaName) {
             final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_NUMBER_HANDLING;
             assertAll(
@@ -464,7 +478,7 @@ class OracleSqlDialectIT {
     @DisplayName("Join test")
     class JoinTest {
         @ParameterizedTest
-        @ValueSource(strings = {VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE})
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testInnerJoin(final String virtualSchema) throws SQLException {
             final String query = "SELECT * FROM " + virtualSchema + "." + TABLE_JOIN_1 + " a INNER JOIN  "
                     + virtualSchema + "." + TABLE_JOIN_2 + " b ON a.x=b.x";
@@ -475,7 +489,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE})
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testInnerJoinWithProjection(final String virtualSchemaName) throws SQLException {
             final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
             final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
@@ -487,7 +501,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE})
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testLeftJoin(final String virtualSchemaName) throws SQLException {
             final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
             final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
@@ -501,7 +515,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE})
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testRightJoin(final String virtualSchemaName) throws SQLException {
             final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
             final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
@@ -515,7 +529,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE})
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testFullOuterJoin(final String virtualSchemaName) throws SQLException {
             final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
             final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
@@ -530,7 +544,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE})
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testRightJoinWithComplexCondition(final String virtualSchemaName) throws SQLException {
             final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
             final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
@@ -544,7 +558,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE})
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testFullOuterJoinWithComplexCondition(final String virtualSchemaName) throws SQLException {
             final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
             final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
@@ -563,8 +577,8 @@ class OracleSqlDialectIT {
     @DisplayName("Datatype tests")
     class DatatypeTest {
         @ParameterizedTest
-        @CsvSource(value = {"VIRTUAL_SCHEMA_JDBC, 12346.12345", //
-                "VIRTUAL_SCHEMA_ORACLE, 01.2346123450E4"})
+        @CsvSource(value = { "VIRTUAL_SCHEMA_JDBC, 12346.12345", //
+                "VIRTUAL_SCHEMA_ORACLE, 01.2346123450E4" })
         void testSelectExpression(final String virtualSchemaName, final String expectedColumnValue) {
             final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT C7 + 1 FROM " + qualifiedTableNameActual + " ORDER BY 1";
@@ -582,12 +596,12 @@ class OracleSqlDialectIT {
             final String actual = result.getString(1);
             MatcherAssert.assertThat(actual, containsString(expected));
         }
+
 //        @CsvSource(value = {"VIRTUAL_SCHEMA_JDBC, 12355.12345", //
 //                "VIRTUAL_SCHEMA_ORACLE, 01.2355123450E4"})
         @ParameterizedTest
-        @CsvSource(value = {"VIRTUAL_SCHEMA_JDBC, 12355.12345", //
-                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, 12355.12345",
-                "VIRTUAL_SCHEMA_ORACLE, 01.2355123450E4"})
+        @CsvSource(value = { "VIRTUAL_SCHEMA_JDBC, 12355.12345", //
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, 12355.12345", "VIRTUAL_SCHEMA_ORACLE, 01.2355123450E4" })
         void testFilterExpression(final String virtualSchemaName, final String expectedColumnValue) {
             final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT C7 FROM " + qualifiedTableNameActual + " WHERE C7 > 12346";
@@ -599,8 +613,8 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @CsvSource(value = {"VIRTUAL_SCHEMA_JDBC, 12345.12345", //
-                "VIRTUAL_SCHEMA_ORACLE, 01.2345123450E4"})
+        @CsvSource(value = { "VIRTUAL_SCHEMA_JDBC, 12345.12345", //
+                "VIRTUAL_SCHEMA_ORACLE, 01.2345123450E4" })
         void testAggregateSingleGroup(final String virtualSchemaName, final String expectedColumnValue) {
             final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT min(C7) FROM " + qualifiedTableNameActual;
@@ -682,7 +696,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE})
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testOrderByColumn(final String virtualSchemaName) {
             final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT C1 FROM " + qualifiedTableNameActual + " ORDER BY C1 DESC NULLS LAST";
@@ -746,7 +760,7 @@ class OracleSqlDialectIT {
                 "VIRTUAL_SCHEMA_ORACLE, C4, VARCHAR(50) UTF8, dddddddddddddddddddd" //
         })
         void testCharactersColumns(final String virtualSchemaName, final String columnName,
-                                   final String expectedColumnType, final String expectedColumnValue) {
+                final String expectedColumnType, final String expectedColumnValue) {
             final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
             assertAll(() -> assertExpressionExecutionStringResult(query, expectedColumnValue),
@@ -782,7 +796,7 @@ class OracleSqlDialectIT {
                 "VIRTUAL_SCHEMA_ORACLE | C7 | DECIMAL(10,5) | 12345.12345" //
         }, delimiter = '|')
         void testNumberColumns(final String virtualSchemaName, final String columnName, final String expectedColumnType,
-                               final String expectedValue) {
+                final String expectedValue) {
             final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
             assertAll(() -> assertExpressionExecutionBigDecimalResult(query, new BigDecimal(expectedValue)),
@@ -800,7 +814,7 @@ class OracleSqlDialectIT {
                 "VIRTUAL_SCHEMA_ORACLE | C_FLOAT126 | DOUBLE | 12345678.01234567901234567890123456789" //
         }, delimiter = '|')
         void testFloatNumbers(final String virtualSchemaName, final String columnName, final String expectedColumnType,
-                              final String expectedValue) {
+                final String expectedValue) {
             final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
             assertAll(() -> assertExpressionExecutionFloatResult(query, Float.parseFloat(expectedValue)),
@@ -817,7 +831,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE})
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testBinaryDouble(final String virtualSchemaName) {
             final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT C_BINDOUBLE FROM " + qualifiedTableName;
@@ -853,7 +867,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE})
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testDate(final String virtualSchemaName) {
             final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT C10 FROM " + qualifiedTableName;
@@ -916,7 +930,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE})
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testIntervalYear(final String virtualSchemaName) {
             final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT C16 FROM " + qualifiedTableName;
@@ -929,7 +943,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE})
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testIntervalDay(final String virtualSchemaName) throws SQLException {
             final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT C17 FROM " + qualifiedTableName + " ORDER BY 1";
@@ -948,7 +962,7 @@ class OracleSqlDialectIT {
         @ParameterizedTest
         @CsvSource(value = {
                 "VIRTUAL_SCHEMA_JDBC ! ('2018-01-01 11:00:00.0', '2018-01-01 11:00:00.0', '2018-01-01 11:00:00.000')", //
-                "VIRTUAL_SCHEMA_ORACLE ! ('2018-01-01 11:00:00.0', '2018-01-01 10:00:00.0', '2018-01-01 10:00:00.000')"}, //
+                "VIRTUAL_SCHEMA_ORACLE ! ('2018-01-01 11:00:00.0', '2018-01-01 10:00:00.0', '2018-01-01 10:00:00.000')" }, //
                 delimiter = '!')
         void testSelectAllTimestampColumns(final String virtualSchemaName, final String expectedColumnValue)
                 throws SQLException {
