@@ -22,7 +22,7 @@ You need to specify the following settings when adding the JDBC driver via EXAOp
 |-----------|-----------------------------------|
 | Name      | `ORACLE`                          |
 | Main      | `oracle.jdbc.driver.OracleDriver` |
-| Prefix    | `jdbc:oracle:thin:`               |  
+| Prefix    | `jdbc:oracle:thin:`               |
 | Files     | `ojdbc<JDBC driver version>.jar`  |
 
 
@@ -74,7 +74,7 @@ IMPORT FROM JDBC AT ORACLE_JDBC_CONNECTION
 
 ## Creating a Virtual Schema
 
-Below you see how an Oracle Virtual Schema is created. 
+Below you see how an Oracle Virtual Schema is created.
 
 ```sql
 CREATE VIRTUAL SCHEMA <virtual schema name>
@@ -83,6 +83,8 @@ CREATE VIRTUAL SCHEMA <virtual schema name>
     CONNECTION_NAME = 'ORACLE_JDBC_CONNECTION'
     SCHEMA_NAME     = '<schema name>';
 ```
+
+See also [Adapter Properties for JDBC-Based Virtual Schemas](https://github.com/exasol/virtual-schema-common-jdbc#adapter-properties-for-jdbc-based-virtual-schemas).
 
 ## Using IMPORT FROM ORA Instead of IMPORT FROM JDBC
 
@@ -131,8 +133,8 @@ CREATE VIRTUAL SCHEMA <virtual schema name>
     ORA_CONNECTION_NAME = 'ORA_CONNECTION';
 ```
 ### Auto generated datatype mapping list while using IMPORT_FROM_ORA.
-Using `IMPORT FROM ORA` might lead to some unexpected datatype mappings. Unlike for a JDBC connection there's no explicit data mapping being generated when using `IMPORT FROM ORA`.  
-As a current stopgap solution for this issue we now (starting from version 2.2.0) also provide a `GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI` switch you can specify and enable when creating the virtual schema.   
+Using `IMPORT FROM ORA` might lead to some unexpected datatype mappings. Unlike for a JDBC connection there's no explicit data mapping being generated when using `IMPORT FROM ORA`.
+As a current stopgap solution for this issue we now (starting from version 2.2.0) also provide a `GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI` switch you can specify and enable when creating the virtual schema.
 ```sql
 CREATE VIRTUAL SCHEMA <virtual schema name>
     USING ADAPTER.JDBC_ADAPTER
@@ -143,15 +145,15 @@ CREATE VIRTUAL SCHEMA <virtual schema name>
     GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI = 'true'
     ORA_CONNECTION_NAME = 'ORA_CONNECTION';
 ```
-This will add explicit datatype mapping to the generated command when using `IMPORT FROM ORA`.  
+This will add explicit datatype mapping to the generated command when using `IMPORT FROM ORA`.
 
 Example:
 
-Before  
+Before
 
 `IMPORT FROM ORA AT ORACLE_CON STATEMENT ...`
 
-After setting `GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI` to `true`   
+After setting `GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI` to `true`
 
 `IMPORT INTO(c1 DECIMAL(36,1), c2 .... )   FROM ORA AT ORACLE_CON STATEMENT ...`
 
@@ -207,7 +209,7 @@ CREATE VIRTUAL SCHEMA <virtual schema name>
     ORACLE_CAST_NUMBER_TO_DECIMAL_WITH_PRECISION_AND_SCALE = '18,2'
     ORA_CONNECTION_NAME = 'ORA_CONNECTION';
 ```
- 
+
 Keep in mind that this will yield errors if the data in the Oracle database does not fit into the specified DECIMAL type.
 
 ## Testing information
