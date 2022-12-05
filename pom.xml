@@ -78,14 +78,14 @@
         <dependency>
             <groupId>nl.jqno.equalsverifier</groupId>
             <artifactId>equalsverifier</artifactId>
-            <version>3.12</version>
+            <version>3.12.1</version>
             <scope>test</scope>
         </dependency>
         <!--Integration test dependencies -->
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>exasol-testcontainers</artifactId>
-            <version>6.3.1</version>
+            <version>6.4.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -145,9 +145,11 @@
                 <artifactId>ossindex-maven-plugin</artifactId>
                 <configuration>
                     <excludeVulnerabilityIds>
-                        <!-- False positive in snakeyaml. According to https://bitbucket.org/snakeyaml/snakeyaml/issues/531/stackoverflow-oss-fuzz-47081
-                             this is already fixed in 1.32. -->
-                        <exclude>CVE-2022-38752</exclude>
+                        <!-- Exclude vulnerabilities found in transitive dependency
+                             to org.yaml:snakeyaml:jar:1.33
+                             required by virtual-schema-shared-integration-tests
+                             as there is no update available currently -->
+                        <exclude>CVE-2022-1471</exclude>
                     </excludeVulnerabilityIds>
                 </configuration>
             </plugin>
