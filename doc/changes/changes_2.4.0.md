@@ -14,7 +14,9 @@ Unfortunately with the new algorithm compatibility problems with the source data
 * 8-bit character sets with encodings like `latin1` or `ISO-8859-1`
 * characters being not strictly ASCII, e.g. German umlaut "Ü"
 
-The current release therefore uses an updated version of `virtual-schema-common-jdbc` with an additional adapter property to configure the data type detection. For details please see the User Guide of `virtual-schema-common-jdbc`.
+The current release therefore uses an updated version of `virtual-schema-common-jdbc` with an additional adapter property to configure the data type detection.
+
+For details please see [adapter Properties for JDBC-Based Virtual Schemas](https://github.com/exasol/virtual-schema-common-jdbc/blob/main/README.md#adapter-properties-for-jdbc-based-virtual-schemas).
 
 ## Features
 
