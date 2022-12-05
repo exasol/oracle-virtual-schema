@@ -1,4 +1,4 @@
-# Virtual Schema for Oracle 2.4.0, released 2022-??-??
+# Virtual Schema for Oracle 2.4.0, released 2022-12-05
 
 Code name: Dependency Upgrade
 
