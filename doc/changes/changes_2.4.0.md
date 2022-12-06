@@ -1,4 +1,4 @@
-# Virtual Schema for Oracle 2.4.0, released 2022-12-05
+# Virtual Schema for Oracle 2.4.0, released 2022-12-06
 
 Code name: Dependency Upgrade
 
@@ -12,7 +12,7 @@ Unfortunately with the new algorithm compatibility problems with the source data
 
 * data type `CHAR` or `VARCHAR`
 * 8-bit character sets with encodings like `latin1` or `ISO-8859-1`
-* characters being not strictly ASCII, e.g. German umlaut "Ü"
+* characters being not strictly ASCII, e.g. German umlaut "Ãœ"
 
 The current release therefore uses an updated version of `virtual-schema-common-jdbc` with an additional adapter property to configure the data type detection.
 
