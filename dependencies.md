@@ -23,7 +23,7 @@
 | [Testcontainers :: JUnit Jupiter Extension][20] | [MIT][21]                         |
 | [Testcontainers :: JDBC :: Oracle XE][20]       | [MIT][21]                         |
 | [Test Database Builder for Java][24]            | [MIT License][25]                 |
-| [udf-debugging-java][26]                        | [MIT][27]                         |
+| [udf-debugging-java][26]                        | [MIT License][27]                 |
 | [Matcher for SQL Result Sets][28]               | [MIT License][29]                 |
 | [virtual-schema-shared-integration-tests][30]   | [MIT License][31]                 |
 | [JaCoCo :: Agent][32]                           | [Eclipse Public License 2.0][33]  |
@@ -49,11 +49,11 @@
 | [Project keeper maven plugin][53]                       | [The MIT License][54]                          |
 | [Apache Maven Assembly Plugin][55]                      | [Apache License, Version 2.0][17]              |
 | [Apache Maven JAR Plugin][57]                           | [Apache License, Version 2.0][17]              |
-| [Artifact reference checker and unifier][59]            | [MIT][27]                                      |
+| [Artifact reference checker and unifier][59]            | [MIT][60]                                      |
 | [Apache Maven Dependency Plugin][61]                    | [Apache License, Version 2.0][17]              |
 | [Maven Failsafe Plugin][63]                             | [Apache License, Version 2.0][17]              |
 | [JaCoCo :: Maven Plugin][65]                            | [Eclipse Public License 2.0][33]               |
-| [error-code-crawler-maven-plugin][67]                   | [MIT][27]                                      |
+| [error-code-crawler-maven-plugin][67]                   | [MIT][60]                                      |
 | [Maven Clean Plugin][69]                                | [The Apache Software License, Version 2.0][44] |
 | [Maven Resources Plugin][71]                            | [The Apache Software License, Version 2.0][44] |
 | [Maven Install Plugin][73]                              | [The Apache Software License, Version 2.0][44] |
@@ -66,7 +66,7 @@
 [69]: http://maven.apache.org/plugins/maven-clean-plugin/
 [7]: https://www.oracle.com/downloads/licenses/oracle-free-license.html
 [14]: https://github.com/mockito/mockito
-[27]: https://opensource.org/licenses/MIT
+[60]: https://opensource.org/licenses/MIT
 [43]: https://www.mojohaus.org/flatten-maven-plugin/
 [51]: http://www.mojohaus.org/versions-maven-plugin/
 [53]: https://github.com/exasol/project-keeper/
@@ -116,4 +116,5 @@
 [75]: http://maven.apache.org/plugins/maven-deploy-plugin/
 [77]: http://maven.apache.org/plugins/maven-site-plugin/
 [67]: https://github.com/exasol/error-code-crawler-maven-plugin
+[27]: https://github.com/exasol/udf-debugging-java/blob/main/LICENSE
 [55]: https://maven.apache.org/plugins/maven-assembly-plugin/
