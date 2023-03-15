@@ -192,6 +192,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <!-- Fix locale dependent tests in case the OS locale is not English -->
                     <argLine>-Duser.country=US -Duser.language=en ${argLine}</argLine>
                 </configuration>
             </plugin>
