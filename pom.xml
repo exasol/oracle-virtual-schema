@@ -11,7 +11,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>11</java.version>
         <surefire.and.failsafe.plugin.version>3.0.0-M5</surefire.and.failsafe.plugin.version>
-        <vscjdbc.version>10.4.0</vscjdbc.version>
+        <vscjdbc.version>10.5.0</vscjdbc.version>
         <error.reporting.java.version>1.0.1</error.reporting.java.version>
         <error.code.crawler.version>0.7.1</error.code.crawler.version>
         <org.testcontainers.version>1.17.6</org.testcontainers.version>
@@ -66,6 +66,12 @@
             <scope>test</scope>
         </dependency>
         <!--Integration test dependencies -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jdk14</artifactId>
+            <version>2.0.6</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>exasol-testcontainers</artifactId>
@@ -181,6 +187,13 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-Duser.country=US -Duser.language=en ${argLine}</argLine>
+                </configuration>
             </plugin>
         </plugins>
     </build>

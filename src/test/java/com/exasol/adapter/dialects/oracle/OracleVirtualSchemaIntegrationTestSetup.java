@@ -1,5 +1,16 @@
 package com.exasol.adapter.dialects.oracle;
 
+import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.*;
+import static com.exasol.adapter.dialects.oracle.IntegrationTestsHelperfunctions.getPropertyFromFile;
+import static com.exasol.dbbuilder.dialects.exasol.AdapterScript.Language.JAVA;
+
+import java.io.*;
+import java.nio.file.Path;
+import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeoutException;
+
 import com.exasol.bucketfs.Bucket;
 import com.exasol.bucketfs.BucketAccessException;
 import com.exasol.containers.ExasolContainer;
@@ -9,17 +20,6 @@ import com.exasol.dbbuilder.dialects.oracle.OracleObjectFactory;
 import com.exasol.udfdebugging.UdfTestSetup;
 import com.github.dockerjava.api.model.ContainerNetwork;
 
-import java.io.*;
-import java.nio.file.Path;
-import java.sql.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeoutException;
-
-import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.*;
-import static com.exasol.adapter.dialects.oracle.IntegrationTestsHelperfunctions.getPropertyFromFile;
-import static com.exasol.dbbuilder.dialects.exasol.AdapterScript.Language.JAVA;
-
 /**
  * This class contains the common integration test setup for all Oracle virtual schemas.
  */
@@ -27,14 +27,14 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
     private static final Path PATH_TO_VIRTUAL_SCHEMAS_JAR = Path.of("target", VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
     private static final String SCHEMA_EXASOL = "SCHEMA_EXASOL";
     private static final String ADAPTER_SCRIPT_EXASOL = "ADAPTER_SCRIPT_EXASOL";
-    private static final String EXASOL_DOCKER_IMAGE_REFERENCE = "exasol/docker-db:7.1.6";//IntegrationTestConstants.EXASOL_DOCKER_IMAGE_REFERENCE;
+    private static final String EXASOL_DOCKER_IMAGE_REFERENCE = "exasol/docker-db:7.1.18";
     private static final String ORACLE_CONTAINER_NAME = IntegrationTestConstants.ORACLE_CONTAINER_NAME;
 
     private final Statement oracleStatement;
     private final OracleContainerDBA oracleContainer = new OracleContainerDBA(ORACLE_CONTAINER_NAME);
     private final ExasolContainer<? extends ExasolContainer<?>> exasolContainer = new ExasolContainer<>(
             EXASOL_DOCKER_IMAGE_REFERENCE).withRequiredServices(ExasolService.BUCKETFS, ExasolService.UDF)
-            .withReuse(true);
+                    .withReuse(true);
     private final Connection exasolConnection;
     private final Statement exasolStatement;
     private final AdapterScript adapterScript;
@@ -48,7 +48,7 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
         try {
             this.exasolContainer.start();
             this.oracleContainer.start();
-            uploadOracleJDBCDriverAndVSToBucket(exasolContainer.getDefaultBucket());
+            uploadOracleJDBCDriverAndVSToBucket(this.exasolContainer.getDefaultBucket());
             this.exasolConnection = this.exasolContainer.createConnection("");
             this.exasolStatement = this.exasolConnection.createStatement();
             this.oracleConnection = this.oracleContainer.createConnectionDBA("");
@@ -71,18 +71,19 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
         }
     }
 
-    public static void uploadOracleJDBCDriverAndVSToBucket(final Bucket bucket) throws BucketAccessException, TimeoutException, FileNotFoundException {
+    public static void uploadOracleJDBCDriverAndVSToBucket(final Bucket bucket)
+            throws BucketAccessException, TimeoutException, FileNotFoundException {
         final String driverName = getPropertyFromFile(RESOURCES_FOLDER_DIALECT_NAME, "driver.name");
 
         final Path pathToSettingsFile = Path.of("src", "test", "resources", "integration", "driver",
                 RESOURCES_FOLDER_DIALECT_NAME, JDBC_DRIVER_CONFIGURATION_FILE_NAME);
 
-        //Upload the settings.cfg file for the driver that registers the driver.
+        // Upload the settings.cfg file for the driver that registers the driver.
         bucket.uploadFile(pathToSettingsFile, "drivers/jdbc/" + JDBC_DRIVER_CONFIGURATION_FILE_NAME);
         final String driverPath = getPropertyFromFile(RESOURCES_FOLDER_DIALECT_NAME, "driver.path");
-        //Upload the driver itself
+        // Upload the driver itself
         bucket.uploadFile(Path.of(driverPath, driverName), "drivers/jdbc/" + driverName);
-        //Upload the virtual schema jar to be able to use oracle virtual schemas
+        // Upload the virtual schema jar to be able to use oracle virtual schemas
         bucket.uploadFile(PATH_TO_VIRTUAL_SCHEMAS_JAR, VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
     }
 
@@ -106,16 +107,16 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
     }
 
     public VirtualSchema createVirtualSchema(final String forOracleSchema,
-                                             final Map<String, String> additionalProperties) {
+            final Map<String, String> additionalProperties) {
 
-        final Map<String, String> properties = new HashMap<>(Map.of(
-                "SCHEMA_NAME", forOracleSchema));
+        final Map<String, String> properties = new HashMap<>(Map.of("SCHEMA_NAME", forOracleSchema));
         properties.putAll(additionalProperties);
 
-        return this.exasolFactory.createVirtualSchemaBuilder("ORACLE_VIRTUAL_SCHEMA_" + (this.virtualSchemaCounter++))
-                .adapterScript(this.adapterScript)
-                .connectionDefinition(this.connectionDefinition)
-                .properties(properties)
+        return this.exasolFactory //
+                .createVirtualSchemaBuilder("ORACLE_VIRTUAL_SCHEMA_" + (this.virtualSchemaCounter++)) //
+                .adapterScript(this.adapterScript) //
+                .connectionDefinition(this.connectionDefinition) //
+                .properties(properties) //
                 .build();
     }
 

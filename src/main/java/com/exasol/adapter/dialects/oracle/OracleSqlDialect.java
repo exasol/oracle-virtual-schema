@@ -20,7 +20,7 @@ import com.exasol.adapter.dialects.rewriting.ImportIntoTemporaryTableQueryRewrit
 import com.exasol.adapter.dialects.rewriting.SqlGenerationContext;
 import com.exasol.adapter.jdbc.*;
 import com.exasol.adapter.metadata.DataType;
-import com.exasol.adapter.properties.*;
+import com.exasol.adapter.properties.PropertyValidationException;
 import com.exasol.adapter.sql.AggregateFunction;
 import com.exasol.adapter.sql.ScalarFunction;
 import com.exasol.errorreporting.ExaError;
@@ -68,11 +68,11 @@ public class OracleSqlDialect extends AbstractSqlDialect {
     public OracleSqlDialect(final ConnectionFactory connectionFactory, final AdapterProperties properties) {
         super(connectionFactory, properties,
                 Set.of(SCHEMA_NAME_PROPERTY, ORACLE_IMPORT_PROPERTY, ORACLE_CONNECTION_NAME_PROPERTY,
-                        ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY, GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI_PROPERTY), //
-                List.of(CastNumberToDecimalProperty.validator(ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY), //
-                        BooleanProperty.validator(ORACLE_IMPORT_PROPERTY), //
-                        ImportProperty.validator(ORACLE_IMPORT_PROPERTY, ORACLE_CONNECTION_NAME_PROPERTY) //
-                ));
+                        ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY, GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI_PROPERTY) //
+//                List.of(CastNumberToDecimalProperty.validator(ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY), //
+//                        BooleanProperty.validator(ORACLE_IMPORT_PROPERTY), //
+//                        ImportProperty.validator(ORACLE_IMPORT_PROPERTY, ORACLE_CONNECTION_NAME_PROPERTY)) //
+        );
         this.omitParenthesesMap.add(ScalarFunction.SYSDATE);
         this.omitParenthesesMap.add(ScalarFunction.SYSTIMESTAMP);
     }
@@ -190,6 +190,14 @@ public class OracleSqlDialect extends AbstractSqlDialect {
         }
         return new ImportIntoTemporaryTableQueryRewriter(this, this.createRemoteMetadataReader(),
                 this.connectionFactory);
+    }
+
+    @Override
+    public void validateProperties() throws PropertyValidationException {
+        super.validateProperties();
+        this.checkImportPropertyConsistency(ORACLE_IMPORT_PROPERTY, ORACLE_CONNECTION_NAME_PROPERTY);
+        this.validateBooleanProperty(ORACLE_IMPORT_PROPERTY);
+        this.validateCastNumberToDecimalProperty(ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY);
     }
 
     private boolean isImportFromOraEnabled() {
