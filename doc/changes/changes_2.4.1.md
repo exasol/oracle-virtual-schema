@@ -1,4 +1,4 @@
-# Virtual Schema for Oracle 2.4.1, released 2023-03-14
+# Virtual Schema for Oracle 2.4.1, released 2023-03-15
 
 Code name: Dependency Upgrade on Top of 2.4.0
 

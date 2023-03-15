@@ -294,8 +294,6 @@ class OracleSqlDialectIT {
 
     private static void createTestTablesForJoinTests(final Connection connection, final String schemaName)
             throws SQLException {
-//        final String escape = connection.getMetaData().getSearchStringEscape();
-//        LOGGER.info("Search String escape = '" + escape + "'");
         try (final Statement statement = connection.createStatement()) {
             statement.execute("CREATE TABLE " + schemaName + "." + TABLE_JOIN_1 + "(x INT, y VARCHAR(100))");
             statement.execute("INSERT INTO " + schemaName + "." + TABLE_JOIN_1 + " VALUES (1,'aaa')");
@@ -591,7 +589,6 @@ class OracleSqlDialectIT {
                 throws SQLException {
             final ResultSet result = statementExasol.executeQuery(query);
             result.next();
-            result.getDouble(1);
             final String actual = result.getString(1);
             MatcherAssert.assertThat(actual, containsString(expected));
         }
