@@ -26,7 +26,7 @@ public class OracleConnectionDefinitionBuilder extends BaseConnectionDefinitionB
         if (properties.containsKey(ORACLE_CONNECTION_NAME_PROPERTY)) {
             return buildOracleConnectionDefinitionFromOracleConnectionOnly(properties);
         } else {
-            throw new IllegalArgumentException(ExaError.messageBuilder("E-VS-ORA-3")
+            throw new IllegalArgumentException(ExaError.messageBuilder("E-VSORA-3")
                     .message("If you enable IMPORT FROM ORA with property {{OracleImportProperty}} "
                             + "you also need to provide the name of an Oracle connection with {{OracleConnectionNameProperty}}.")
                     .parameter("OracleImportProperty", ORACLE_IMPORT_PROPERTY)

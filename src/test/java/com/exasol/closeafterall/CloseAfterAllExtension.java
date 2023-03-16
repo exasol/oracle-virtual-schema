@@ -39,7 +39,7 @@ public class CloseAfterAllExtension implements AfterAllCallback {
         if (annotatedObject instanceof Closeable) {
             ((Closeable) annotatedObject).close();
         } else {
-            throw new IllegalStateException(ExaError.messageBuilder("E-VS-ORA-9").message(
+            throw new IllegalStateException(ExaError.messageBuilder("E-VSORA-9").message(
                     "Could not close the field {{field}} annotated with @CloseAfterAll since it does not implement Closable.")
                     .parameter("field", field.getName()).toString());
         }

@@ -169,7 +169,7 @@ public class OracleSqlDialect extends AbstractSqlDialect {
         try {
             return new OracleMetadataReader(this.connectionFactory.getConnection(), this.properties);
         } catch (final SQLException exception) {
-            throw new RemoteMetadataReaderException(ExaError.messageBuilder("E-VS-ORA-1")
+            throw new RemoteMetadataReaderException(ExaError.messageBuilder("E-VSORA-1")
                     .message("Unable to create Oracle remote metadata reader. Caused by: {{cause|uq}}")
                     .parameter("cause", exception.getMessage()).toString(), exception);
         }
@@ -182,7 +182,7 @@ public class OracleSqlDialect extends AbstractSqlDialect {
                 return new OracleQueryRewriter(this, this.createRemoteMetadataReader(),
                         this.connectionFactory.getConnection(), this.properties);
             } catch (final SQLException exception) {
-                throw new RemoteMetadataReaderException(ExaError.messageBuilder("E-VS-ORA-4")
+                throw new RemoteMetadataReaderException(ExaError.messageBuilder("E-VSORA-4")
                         .message("Unable to create Oracle remote metadata reader. Caused by: {{cause|uq}}")
                         .parameter("cause", exception.getMessage()).toString(), exception);
             }
