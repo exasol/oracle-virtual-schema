@@ -1,10 +1,12 @@
 # Virtual Schema for Oracle 2.4.1, released 2023-03-16
 
-Code name: Dependency Upgrade on Top of 2.4.0
+Code name: Maintenance
 
 ## Summary
 
 Updated dependencies to replace `com.exasol:exasol-script-api` by `udf-api-java/1.0.1` as `com.exasol:exasol-script-api` had been available on discontinued maven repository `maven.exasol.com`.
+
+Please note that updated dependency `virtual-schema-common-jdbc` adds support for a new adapter property [`MAX_TABLE_COUNT`](https://github.com/exasol/virtual-schema-common-jdbc#property-max_table_count) and fixes ambiguous results by escaping SQL wildcards such as underscore `_` and percent `%` in names of catalogs, schemas, and tables when retrieving column metadata from JDBC driver.
 
 ## Bugfixes
 
