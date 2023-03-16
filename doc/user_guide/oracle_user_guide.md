@@ -48,7 +48,7 @@ The SQL statement below creates the adapter script, defines the Java class that 
 ```sql
 CREATE JAVA ADAPTER SCRIPT ADAPTER.JDBC_ADAPTER AS
   %scriptclass com.exasol.adapter.RequestDispatcher;
-  %jar /buckets/<BFS service>/<bucket>/virtual-schema-dist-10.1.0-oracle-2.4.0.jar;
+  %jar /buckets/<BFS service>/<bucket>/virtual-schema-dist-10.5.0-oracle-2.4.1.jar;
   %jar /buckets/<BFS service>/<bucket>/ojdbc<JDBC driver version>.jar;
 /
 ;

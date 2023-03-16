@@ -38,10 +38,6 @@ import com.exasol.dbbuilder.dialects.exasol.*;
 import com.exasol.udfdebugging.UdfTestSetup;
 import com.github.dockerjava.api.model.ContainerNetwork;
 
-/**
- * How to run `OracleSqlDialectIT`: See the documentation <a
- * href="doc/development/developing-sql-dialect/integration_testing_with_containers.md>integration_testing_with_containers.md</a>.
- */
 @Tag("integration")
 @Testcontainers
 class OracleSqlDialectIT {
@@ -597,8 +593,6 @@ class OracleSqlDialectIT {
             MatcherAssert.assertThat(actual, containsString(expected));
         }
 
-//        @CsvSource(value = {"VIRTUAL_SCHEMA_JDBC, 12355.12345", //
-//                "VIRTUAL_SCHEMA_ORACLE, 01.2355123450E4"})
         @ParameterizedTest
         @CsvSource(value = { "VIRTUAL_SCHEMA_JDBC, 12355.12345", //
                 "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, 12355.12345", "VIRTUAL_SCHEMA_ORACLE, 01.2355123450E4" })
