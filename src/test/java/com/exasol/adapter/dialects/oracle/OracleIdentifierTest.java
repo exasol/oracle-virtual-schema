@@ -22,7 +22,7 @@ class OracleIdentifierTest {
     @ValueSource(strings = { "\"testtable\"", "test\"table" })
     void testCreateInvalidIdentifier(final String identifier) {
         final AssertionError assertionError = assertThrows(AssertionError.class, () -> OracleIdentifier.of(identifier));
-        assertThat(assertionError.getMessage(), containsString("E-VS-ORA-2"));
+        assertThat(assertionError.getMessage(), containsString("E-VSORA-2"));
     }
 
     @Test

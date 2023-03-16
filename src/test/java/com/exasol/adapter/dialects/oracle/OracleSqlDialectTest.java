@@ -93,7 +93,7 @@ class OracleSqlDialectTest {
         when(this.connectionFactoryMock.getConnection()).thenThrow(new SQLException());
         final RemoteMetadataReaderException exception = assertThrows(RemoteMetadataReaderException.class,
                 this.dialect::createRemoteMetadataReader);
-        assertThat(exception.getMessage(), containsString("E-VS-ORA-1"));
+        assertThat(exception.getMessage(), containsString("E-VSORA-1"));
     }
 
     @CsvSource({ "FALSE, FALSE, JDBC", //

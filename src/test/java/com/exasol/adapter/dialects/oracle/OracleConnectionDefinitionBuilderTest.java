@@ -33,6 +33,6 @@ class OracleConnectionDefinitionBuilderTest {
                 CONNECTION_NAME_PROPERTY, "ora_connection"));
         final IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> this.connectionDefinitionBuilder.buildConnectionDefinition(properties, null));
-        assertThat(exception.getMessage(), containsString("E-VS-ORA-3"));
+        assertThat(exception.getMessage(), containsString("E-VSORA-3"));
     }
 }

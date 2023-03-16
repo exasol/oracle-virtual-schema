@@ -1,5 +1,5 @@
 error-tags:
-  VS-ORA:
+  VSORA:
     packages:
       - com.exasol.adapter.dialects.oracle
       - com.exasol.closeafterall
