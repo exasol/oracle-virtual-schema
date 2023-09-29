@@ -1,12 +1,14 @@
-# Virtual Schema for Oracle 2.4.2, released 2023-??-??
+# Virtual Schema for Oracle 2.4.2, released 2023-09-29
 
-Code name:
+Code name: Fix CVE-2023-42503 in test dependency
 
 ## Summary
 
-## Features
+This release fixes CVE-2023-42503 in test dependency `org.apache.commons:commons-compress`.
 
-* ISSUE_NUMBER: description
+## Security
+
+* #34: Fixed CVE-2023-42503 in test dependency `org.apache.commons:commons-compress`
 
 ## Dependency Updates
 
