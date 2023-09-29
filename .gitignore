@@ -35,7 +35,6 @@ pom.xml.versionsBackup
 *.orig
 *.old
 *.md.html
-.vscode/
 
 *.flattened-pom.xml
 /.apt_generated/
