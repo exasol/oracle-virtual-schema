@@ -1,6 +1,5 @@
 package com.exasol.adapter.dialects.oracle;
 
-import static com.exasol.adapter.AdapterProperties.IS_LOCAL_PROPERTY;
 import static com.exasol.adapter.AdapterProperties.SCHEMA_NAME_PROPERTY;
 import static com.exasol.adapter.capabilities.AggregateFunctionCapability.*;
 import static com.exasol.adapter.capabilities.LiteralCapability.*;
