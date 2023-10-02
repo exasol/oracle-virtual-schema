@@ -6,7 +6,6 @@ package com.exasol.adapter.dialects.oracle;
 public final class OracleProperties {
     public static final String ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY = "ORACLE_CAST_NUMBER_TO_DECIMAL_WITH_PRECISION_AND_SCALE";
     public static final String ORACLE_IMPORT_PROPERTY = "IMPORT_FROM_ORA";
-    public static final String IS_LOCAL_PROPERTY = "IS_LOCAL";
     public static final String GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI_PROPERTY = "GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI";
     public static final String ORACLE_CONNECTION_NAME_PROPERTY = "ORA_CONNECTION_NAME";
 

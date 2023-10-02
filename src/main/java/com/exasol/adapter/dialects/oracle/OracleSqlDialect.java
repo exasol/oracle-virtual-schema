@@ -154,9 +154,7 @@ public class OracleSqlDialect extends AbstractSqlDialect {
      * @return import type
      */
     public ImportType getImportType() {
-        if (this.properties.isEnabled(IS_LOCAL_PROPERTY)) {
-            return ImportType.LOCAL;
-        } else if (this.properties.isEnabled(ORACLE_IMPORT_PROPERTY)) {
+        if (this.properties.isEnabled(ORACLE_IMPORT_PROPERTY)) {
             return ImportType.ORA;
         } else {
             return ImportType.JDBC;

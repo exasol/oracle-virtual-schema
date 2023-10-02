@@ -6,7 +6,6 @@ import static com.exasol.adapter.capabilities.LiteralCapability.*;
 import static com.exasol.adapter.capabilities.MainCapability.*;
 import static com.exasol.adapter.capabilities.PredicateCapability.*;
 import static com.exasol.adapter.capabilities.ScalarFunctionCapability.*;
-import static com.exasol.adapter.dialects.oracle.OracleProperties.IS_LOCAL_PROPERTY;
 import static com.exasol.adapter.dialects.oracle.OracleProperties.ORACLE_IMPORT_PROPERTY;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -97,14 +96,12 @@ class OracleSqlDialectTest {
         assertThat(exception.getMessage(), containsString("E-VSORA-1"));
     }
 
-    @CsvSource({ "FALSE, FALSE, JDBC", //
-            "TRUE, FALSE, LOCAL", //
-            "FALSE, TRUE, ORA" })
+    @CsvSource({ "FALSE, JDBC", //
+            "TRUE, ORA" })
     @ParameterizedTest
-    void testGetImportTypeLocal(final String local, final String fromOracle, final String expectedImportType) {
+    void testGetImportTypeLocal(final String fromOracle, final String expectedImportType) {
         final OracleSqlDialect dialect = new OracleSqlDialect(null,
-                new AdapterProperties(Map.of(IS_LOCAL_PROPERTY, local, //
-                        ORACLE_IMPORT_PROPERTY, fromOracle)));
+                new AdapterProperties(Map.of(ORACLE_IMPORT_PROPERTY, fromOracle)));
         assertThat(dialect.getImportType().toString(), equalTo(expectedImportType));
     }
 
