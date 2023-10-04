@@ -15,7 +15,7 @@ This release fixes CVE-2023-42503 in test dependency `org.apache.commons:commons
 ### Compile Dependency Updates
 
 * Updated `com.exasol:virtual-schema-common-jdbc:10.5.0` to `11.0.2`
-* Updated `com.oracle.database.jdbc:ojdbc8:21.9.0.0` to `23.2.0.0`
+* Updated `com.oracle.database.jdbc:ojdbc8:21.9.0.0` to `23.3.0.23.09`
 
 ### Test Dependency Updates
 
@@ -30,8 +30,8 @@ This release fixes CVE-2023-42503 in test dependency `org.apache.commons:commons
 * Updated `org.junit.jupiter:junit-jupiter:5.9.2` to `5.10.0`
 * Updated `org.mockito:mockito-junit-jupiter:5.2.0` to `5.5.0`
 * Updated `org.slf4j:slf4j-jdk14:2.0.6` to `2.0.9`
-* Updated `org.testcontainers:junit-jupiter:1.17.6` to `1.19.0`
-* Updated `org.testcontainers:oracle-xe:1.17.6` to `1.19.0`
+* Updated `org.testcontainers:junit-jupiter:1.17.6` to `1.19.1`
+* Updated `org.testcontainers:oracle-xe:1.17.6` to `1.19.1`
 
 ### Plugin Dependency Updates
 
