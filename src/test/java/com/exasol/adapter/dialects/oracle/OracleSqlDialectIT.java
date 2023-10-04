@@ -57,8 +57,7 @@ class OracleSqlDialectIT {
     private static final String TABLE_ORACLE_TIMESTAMPS = "TABLE_ORACLE_TIMESTAMPS";
 
     @Container
-    private static final ExasolContainer<? extends ExasolContainer<?>> exasolContainer = new ExasolContainer<>(
-            EXASOL_DOCKER_IMAGE_REFERENCE) //
+    private static final ExasolContainer<? extends ExasolContainer<?>> exasolContainer = new ExasolContainer<>("7.0.10") //
             .withRequiredServices(ExasolService.BUCKETFS, ExasolService.UDF).withReuse(true);
     @Container
     private static final OracleContainerDBA oracleContainer = new OracleContainerDBA(ORACLE_CONTAINER_NAME);

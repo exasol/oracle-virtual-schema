@@ -31,9 +31,8 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
 
     private final Statement oracleStatement;
     private final OracleContainerDBA oracleContainer = new OracleContainerDBA(ORACLE_CONTAINER_NAME);
-    private final ExasolContainer<? extends ExasolContainer<?>> exasolContainer = new ExasolContainer<>(
-            EXASOL_DOCKER_IMAGE_REFERENCE).withRequiredServices(ExasolService.BUCKETFS, ExasolService.UDF)
-            .withReuse(true);
+    private final ExasolContainer<? extends ExasolContainer<?>> exasolContainer = new ExasolContainer<>()
+            .withRequiredServices(ExasolService.BUCKETFS, ExasolService.UDF).withReuse(true);
     private final Connection exasolConnection;
     private final Statement exasolStatement;
     private final AdapterScript adapterScript;
