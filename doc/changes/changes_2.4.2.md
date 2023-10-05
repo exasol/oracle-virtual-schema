@@ -1,4 +1,4 @@
-# Virtual Schema for Oracle 2.4.2, released 2023-10-04
+# Virtual Schema for Oracle 2.4.2, released 2023-10-05
 
 Code name: Fix CVE-2023-42503 in test dependency
 

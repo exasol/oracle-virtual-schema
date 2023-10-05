@@ -218,6 +218,8 @@ In the following matrix you find combinations of JDBC driver and dialect version
 
 | Virtual Schema Version | Oracle Version     | Driver Name               | Driver Version |
 |------------------------|--------------------|---------------------------|----------------|
-| 2.0.0                  | Oracle XE 11g      | ojdbc                     | 8              |
+| 2.0.0                  | Oracle XE 11g      | ojdbc8                    | 19.3.0.0       |
 | 2.0.0                  | Oracle XE 11g      | instantclient-basic-linux | x64-12.1.0.2.0 |
+| 2.4.2                  | Oracle XE 21c      | ojdbc8                    | 23.3.0.23.09   |
+| 2.4.2                  | Oracle XE 21c      | instantclient-basic-linux | x64-12.1.0.2.0 |
 
