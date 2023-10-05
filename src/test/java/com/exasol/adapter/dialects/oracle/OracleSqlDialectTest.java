@@ -96,14 +96,12 @@ class OracleSqlDialectTest {
         assertThat(exception.getMessage(), containsString("E-VSORA-1"));
     }
 
-    @CsvSource({ "FALSE, FALSE, JDBC", //
-            "TRUE, FALSE, LOCAL", //
-            "FALSE, TRUE, ORA" })
+    @CsvSource({ "FALSE, JDBC", //
+            "TRUE, ORA" })
     @ParameterizedTest
-    void testGetImportTypeLocal(final String local, final String fromOracle, final String expectedImportType) {
+    void testGetImportTypeLocal(final String fromOracle, final String expectedImportType) {
         final OracleSqlDialect dialect = new OracleSqlDialect(null,
-                new AdapterProperties(Map.of(IS_LOCAL_PROPERTY, local, //
-                        ORACLE_IMPORT_PROPERTY, fromOracle)));
+                new AdapterProperties(Map.of(ORACLE_IMPORT_PROPERTY, fromOracle)));
         assertThat(dialect.getImportType().toString(), equalTo(expectedImportType));
     }
 

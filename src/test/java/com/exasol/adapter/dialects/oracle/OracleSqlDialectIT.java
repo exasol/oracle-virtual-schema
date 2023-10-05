@@ -5,6 +5,7 @@ import static com.exasol.adapter.dialects.oracle.IntegrationTestsHelperfunctions
 import static com.exasol.adapter.dialects.oracle.OracleVirtualSchemaIntegrationTestSetup.createAdapterScript;
 import static com.exasol.adapter.dialects.oracle.OracleVirtualSchemaIntegrationTestSetup.uploadOracleJDBCDriverAndVSToBucket;
 import static com.exasol.matcher.ResultSetMatcher.matchesResultSet;
+import static com.exasol.matcher.ResultSetStructureMatcher.table;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -25,15 +26,13 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.exasol.bucketfs.Bucket;
 import com.exasol.bucketfs.BucketAccessException;
 import com.exasol.containers.ExasolContainer;
+import com.exasol.containers.ExasolService;
 import com.exasol.dbbuilder.dialects.exasol.*;
 import com.exasol.udfdebugging.UdfTestSetup;
 import com.github.dockerjava.api.model.ContainerNetwork;
@@ -41,8 +40,6 @@ import com.github.dockerjava.api.model.ContainerNetwork;
 @Tag("integration")
 @Testcontainers
 class OracleSqlDialectIT {
-    private static final Logger LOGGER = LoggerFactory.getLogger(OracleSqlDialectIT.class);
-
     private static final String ORACLE_CONTAINER_NAME = IntegrationTestConstants.ORACLE_CONTAINER_NAME;
 
     private static final String SCHEMA_ORACLE = "SCHEMA_ORACLE";
@@ -61,9 +58,8 @@ class OracleSqlDialectIT {
     private static final String TABLE_ORACLE_TIMESTAMPS = "TABLE_ORACLE_TIMESTAMPS";
 
     @Container
-    private static final ExasolContainer<? extends ExasolContainer<?>> exasolContainer = new ExasolContainer<>(
-            EXASOL_DOCKER_IMAGE_REFERENCE) //
-                    .withLogConsumer(new Slf4jLogConsumer(LOGGER));
+    private static final ExasolContainer<? extends ExasolContainer<?>> exasolContainer = new ExasolContainer<>() //
+            .withRequiredServices(ExasolService.BUCKETFS, ExasolService.UDF).withReuse(true);
     @Container
     private static final OracleContainerDBA oracleContainer = new OracleContainerDBA(ORACLE_CONTAINER_NAME);
 
@@ -333,9 +329,7 @@ class OracleSqlDialectIT {
     void testCountAll() throws SQLException {
         final String qualifiedTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_NUMBER_HANDLING;
         final String query = "SELECT COUNT(*) FROM " + qualifiedTableName;
-        final ResultSet expected = getExpectedResultSet(List.of("x DECIMAL(36,0)"), //
-                List.of("1"));
-        assertThat(getActualResultSet(query), matchesResultSet(expected));
+        assertThat(getActualResultSet(query), table("BIGINT").row(1L).matches());
     }
 
     @Nested
@@ -622,16 +616,17 @@ class OracleSqlDialectIT {
         void testAggregateGroupByColumnJdbc() throws SQLException {
             final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT C5, min(C7) FROM " + qualifiedActualTableName + " GROUP BY C5 ORDER BY 1 DESC";
-            final ResultSet expected = getExpectedResultSet("(A VARCHAR(100), B VARCHAR(100))",
-                    "('123456789012345678901234567890123456', '12345.12345')," //
-                            + "('1234567890.123456789', '12355.12345')");
             final ResultSet actual = statementExasol.executeQuery(query);
             final String expectedExplainVirtual = "SELECT TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
                     + "\".\"C5\"), CAST(MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") AS FLOAT) FROM \""
                     + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY \""
                     + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\" ORDER BY \"" + TABLE_ORACLE_ALL_DATA_TYPES
                     + "\".\"C5\" DESC";
-            assertAll(() -> assertThat(actual, matchesResultSet(expected)),
+            assertAll(
+                    () -> assertThat(actual,
+                            table("VARCHAR", "DECIMAL")
+                                    .row("123456789012345678901234567890123456", new BigDecimal("12345.12345"))
+                                    .row("1234567890.123456789", new BigDecimal("12355.12345")).matches()),
                     () -> assertExplainVirtual(query, expectedExplainVirtual));
         }
 
@@ -658,9 +653,6 @@ class OracleSqlDialectIT {
             final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT C_NUMBER36, C5, min(C7) FROM " + qualifiedActualTableName
                     + " GROUP BY C_NUMBER36, C5 ORDER BY C5 DESC";
-            final ResultSet expected = getExpectedResultSet("(A DECIMAL(36,0), B VARCHAR(100), C VARCHAR(100))",
-                    "(123456789012345678901234567890123456, '123456789012345678901234567890123456', '12345.12345')," //
-                            + "(null, '1234567890.123456789', '12355.12345')");
             final ResultSet actual = statementExasol.executeQuery(query);
             final String expectedExplainVirtual = "SELECT \"" + TABLE_ORACLE_ALL_DATA_TYPES
                     + "\".\"C_NUMBER36\", TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\"), CAST(MIN(\""
@@ -668,7 +660,12 @@ class OracleSqlDialectIT {
                     + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\", \""
                     + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C_NUMBER36\" ORDER BY \"" + TABLE_ORACLE_ALL_DATA_TYPES
                     + "\".\"C5\" DESC";
-            assertAll(() -> assertThat(actual, matchesResultSet(expected)),
+            assertAll(
+                    () -> assertThat(actual,
+                            table("DECIMAL", "VARCHAR", "DECIMAL")
+                                    .row(new BigDecimal("123456789012345678901234567890123456"),
+                                            "123456789012345678901234567890123456", new BigDecimal("12345.12345"))
+                                    .row(null, "1234567890.123456789", new BigDecimal("12355.12345")).matches()),
                     () -> assertExplainVirtual(query, expectedExplainVirtual));
         }
 
@@ -677,15 +674,15 @@ class OracleSqlDialectIT {
             final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT C5, min(C7) FROM " + qualifiedActualTableName
                     + " GROUP BY C5 HAVING MIN(C7) > 12350";
-            final ResultSet expected = getExpectedResultSet("(A VARCHAR(100), B VARCHAR(100))",
-                    "('1234567890.123456789', '12355.12345')");
             final ResultSet actual = statementExasol.executeQuery(query);
             final String expectedExplainVirtual = "SELECT TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
                     + "\".\"C5\"), CAST(MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") AS FLOAT) FROM \""
                     + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY \""
                     + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\" HAVING 12350 < MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES
                     + "\".\"C7\")";
-            assertAll(() -> assertThat(actual, matchesResultSet(expected)),
+            assertAll(
+                    () -> assertThat(actual, table("VARCHAR", "DECIMAL")
+                            .row("1234567890.123456789", new BigDecimal("12355.12345")).matches()),
                     () -> assertExplainVirtual(query, expectedExplainVirtual));
         }
 
