@@ -42,7 +42,7 @@ import com.github.dockerjava.api.model.ContainerNetwork;
 class OracleSqlDialectIT {
     private static final String ORACLE_CONTAINER_NAME = IntegrationTestConstants.ORACLE_CONTAINER_NAME;
 
-    private static final String SCHEMA_ORACLE = "SCHEMA_ORACLE";
+    private static final String SCHEMA_ORACLE = "SCHEMA_ORACLE_" + System.currentTimeMillis();
 
     private static final String ORACLE_JDBC_CONNECTION_NAME = "JDBC_CONNECTION";
     private static final String ORACLE_OCI_CONNECTION_NAME = "ORACLE_CONNECTION";
