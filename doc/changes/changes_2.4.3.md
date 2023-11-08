@@ -14,9 +14,14 @@ This release adds integration tests using Exasol 8.
 
 ## Dependency Updates
 
+### Compile Dependency Updates
+
+* Removed `com.oracle.database.jdbc:ojdbc8:23.3.0.23.09`
+
 ### Test Dependency Updates
 
 * Updated `com.exasol:hamcrest-resultset-matcher:1.6.1` to `1.6.2`
+* Added `com.oracle.database.jdbc:ojdbc8:23.3.0.23.09`
 * Updated `nl.jqno.equalsverifier:equalsverifier:3.15.2` to `3.15.3`
 * Updated `org.jacoco:org.jacoco.agent:0.8.10` to `0.8.11`
 * Updated `org.junit.jupiter:junit-jupiter:5.10.0` to `5.10.1`

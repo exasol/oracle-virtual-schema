@@ -6,7 +6,6 @@ public final class IntegrationTestConstants {
     public static final String SCHEMA_EXASOL = "SCHEMA_EXASOL";
     public static final String TABLE_JOIN_1 = "TABLE_JOIN_1";
     public static final String TABLE_JOIN_2 = "TABLE_JOIN_2";
-    public static final String JDBC_DRIVER_CONFIGURATION_FILE_NAME = "settings.cfg";
     public static final int ORACLE_PORT = 1521;
     public static final String RESOURCES_FOLDER_DIALECT_NAME = "oracle";
 
