@@ -13,7 +13,9 @@ This release adds integration tests using Exasol 8 and an extension for the Exte
 
 ## Dependency Updates
 
-### Test Dependency Updates
+### Virtual Schema for Oracle
+
+#### Test Dependency Updates
 
 * Added `com.exasol:extension-manager-integration-test-java:0.5.5`
 * Updated `com.exasol:hamcrest-resultset-matcher:1.6.1` to `1.6.2`
@@ -22,7 +24,7 @@ This release adds integration tests using Exasol 8 and an extension for the Exte
 * Updated `org.junit.jupiter:junit-jupiter:5.10.0` to `5.10.1`
 * Updated `org.mockito:mockito-junit-jupiter:5.5.0` to `5.7.0`
 
-### Plugin Dependency Updates
+#### Plugin Dependency Updates
 
 * Updated `com.exasol:error-code-crawler-maven-plugin:1.3.0` to `1.3.1`
 * Updated `com.exasol:project-keeper-maven-plugin:2.9.12` to `2.9.15`
@@ -32,3 +34,21 @@ This release adds integration tests using Exasol 8 and an extension for the Exte
 * Updated `org.codehaus.mojo:versions-maven-plugin:2.16.0` to `2.16.1`
 * Updated `org.jacoco:jacoco-maven-plugin:0.8.10` to `0.8.11`
 * Updated `org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.1.2184` to `3.10.0.2594`
+
+### Extension
+
+#### Compile Dependency Updates
+
+* Added `@exasol/extension-manager-interface:0.4.0`
+
+#### Development Dependency Updates
+
+* Added `eslint:^8.53.0`
+* Added `@typescript-eslint/parser:^6.10.0`
+* Added `ts-jest:^29.1.1`
+* Added `@types/jest:^29.5.8`
+* Added `typescript:^5.2.2`
+* Added `@typescript-eslint/eslint-plugin:^6.10.0`
+* Added `jest:29.7.0`
+* Added `ts-node:^10.9.1`
+* Added `esbuild:^0.19.5`

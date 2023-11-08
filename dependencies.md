@@ -1,7 +1,9 @@
 <!-- @formatter:off -->
 # Dependencies
 
-## Compile Dependencies
+## Virtual Schema for Oracle
+
+### Compile Dependencies
 
 | Dependency                                 | License                                          |
 | ------------------------------------------ | ------------------------------------------------ |
@@ -10,7 +12,7 @@
 | [error-reporting-java][4]                  | [MIT License][5]                                 |
 | [ojdbc8][6]                                | [Oracle Free Use Terms and Conditions (FUTC)][7] |
 
-## Test Dependencies
+### Test Dependencies
 
 | Dependency                                      | License                           |
 | ----------------------------------------------- | --------------------------------- |
@@ -30,13 +32,13 @@
 | [Extension integration tests library][30]       | [MIT License][31]                 |
 | [JaCoCo :: Agent][32]                           | [Eclipse Public License 2.0][33]  |
 
-## Runtime Dependencies
+### Runtime Dependencies
 
 | Dependency                    | License                                                                                                        |
 | ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | [JSON-P Default Provider][34] | [Eclipse Public License 2.0][35]; [GNU General Public License, version 2 with the GNU Classpath Exception][36] |
 
-## Plugin Dependencies
+### Plugin Dependencies
 
 | Dependency                                              | License                           |
 | ------------------------------------------------------- | --------------------------------- |
@@ -59,6 +61,14 @@
 | [Reproducible Build Maven Plugin][59]                   | [Apache 2.0][43]                  |
 | [Exec Maven Plugin][60]                                 | [Apache License 2][15]            |
 | [Apache Maven Clean Plugin][61]                         | [Apache-2.0][15]                  |
+
+## Extension
+
+### Compile Dependencies
+
+| Dependency                                | License |
+| ----------------------------------------- | ------- |
+| [@exasol/extension-manager-interface][62] | MIT     |
 
 [0]: https://github.com/exasol/virtual-schema-common-jdbc/
 [1]: https://github.com/exasol/virtual-schema-common-jdbc/blob/main/LICENSE
@@ -122,3 +132,4 @@
 [59]: http://zlika.github.io/reproducible-build-maven-plugin
 [60]: https://www.mojohaus.org/exec-maven-plugin
 [61]: https://maven.apache.org/plugins/maven-clean-plugin/
+[62]: https://registry.npmjs.org/@exasol/extension-manager-interface/-/extension-manager-interface-0.4.0.tgz
