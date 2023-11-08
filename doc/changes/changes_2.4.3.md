@@ -15,6 +15,7 @@ This release adds integration tests using Exasol 8 and an extension for the Exte
 
 ### Test Dependency Updates
 
+* Added `com.exasol:extension-manager-integration-test-java:0.5.5`
 * Updated `com.exasol:hamcrest-resultset-matcher:1.6.1` to `1.6.2`
 * Updated `nl.jqno.equalsverifier:equalsverifier:3.15.2` to `3.15.3`
 * Updated `org.jacoco:org.jacoco.agent:0.8.10` to `0.8.11`
