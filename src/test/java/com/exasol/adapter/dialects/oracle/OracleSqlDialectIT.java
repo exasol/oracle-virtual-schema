@@ -334,7 +334,7 @@ class OracleSqlDialectIT {
 
     @Nested
     @DisplayName("Number handling test")
-    class numberHandlingTest {
+    class NumberHandlingTest {
         @ParameterizedTest
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
         void testNumberToDecimalThrowsException(final String virtualSchemaName) {

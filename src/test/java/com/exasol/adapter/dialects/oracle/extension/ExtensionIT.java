@@ -8,21 +8,22 @@ import static org.hamcrest.Matchers.containsString;
 import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.*;
 
 import com.exasol.adapter.RequestDispatcher;
 import com.exasol.adapter.dialects.oracle.IntegrationTestConstants;
-import com.exasol.adapter.dialects.oracle.OracleContainerDBA;
+import com.exasol.bucketfs.Bucket;
 import com.exasol.bucketfs.BucketAccessException;
+import com.exasol.dbbuilder.dialects.Schema;
 import com.exasol.dbbuilder.dialects.exasol.AdapterScript.Language;
 import com.exasol.dbbuilder.dialects.exasol.ExasolSchema;
+import com.exasol.drivers.ExasolDriverManager;
+import com.exasol.drivers.JdbcDriver;
 import com.exasol.exasoltestsetup.ExasolTestSetup;
 import com.exasol.exasoltestsetup.ExasolTestSetupFactory;
 import com.exasol.extensionmanager.client.model.ParameterValue;
@@ -31,6 +32,7 @@ import com.exasol.extensionmanager.itest.ExtensionManagerSetup;
 import com.exasol.extensionmanager.itest.base.AbstractVirtualSchemaExtensionIT;
 import com.exasol.extensionmanager.itest.base.ExtensionITConfig;
 import com.exasol.extensionmanager.itest.builder.ExtensionBuilder;
+import com.exasol.matcher.ResultSetStructureMatcher.Builder;
 import com.exasol.mavenprojectversiongetter.MavenProjectVersionGetter;
 
 class ExtensionIT extends AbstractVirtualSchemaExtensionIT {
@@ -38,12 +40,51 @@ class ExtensionIT extends AbstractVirtualSchemaExtensionIT {
     private static final String PROJECT_VERSION = MavenProjectVersionGetter.getCurrentProjectVersion();
     private static final String EXTENSION_ID = "oracle-vs-extension.js";
     private static final String MAPPING_DESTINATION_TABLE = "DESTINATION_TABLE";
-    private static final String ORACLE_SCHEMA_NAME = "EXTENSION_TEST_" + System.currentTimeMillis();
-    private static final String ORACLE_HOST_IP = "172.17.0.1";
 
     private static ExasolTestSetup exasolTestSetup;
     private static ExtensionManagerSetup setup;
-    private static OracleContainerDBA oracleContainer;
+    private static OracleTestSetup oracleSetup;
+    private String oracleSchemaName;
+
+    @BeforeAll
+    static void setup() throws FileNotFoundException, BucketAccessException, TimeoutException {
+        if (System.getProperty("com.exasol.dockerdb.image") == null) {
+            System.setProperty("com.exasol.dockerdb.image", "8.23.1");
+        }
+        exasolTestSetup = new ExasolTestSetupFactory(Path.of("no-cloud-setup")).getTestSetup();
+        ExasolVersionCheck.assumeExasolVersion8(exasolTestSetup);
+        setup = ExtensionManagerSetup.create(exasolTestSetup, ExtensionBuilder.createDefaultNpmBuilder(
+                EXTENSION_SOURCE_DIR, EXTENSION_SOURCE_DIR.resolve("dist").resolve(EXTENSION_ID)));
+        installJdbcDriver(exasolTestSetup.getDefaultBucket());
+        oracleSetup = OracleTestSetup.start();
+        exasolTestSetup.getDefaultBucket().uploadFile(IntegrationTestConstants.VIRTUAL_SCHEMA_JAR,
+                IntegrationTestConstants.VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
+    }
+
+    private static void installJdbcDriver(final Bucket bucket) {
+        final ExasolDriverManager driverManager = new ExasolDriverManager(bucket);
+        driverManager
+                .install(JdbcDriver.builder("ORACLE").mainClass("oracle.jdbc.OracleDriver").prefix("jdbc:oracle:thin:")
+                        .sourceFile(Path.of("target/oracle-driver/ojdbc8.jar")).enableSecurityManager(false).build());
+    }
+
+    @BeforeEach
+    void generateOracleSchemaName() {
+        oracleSchemaName = "EXTENSION_TEST_" + System.currentTimeMillis();
+    }
+
+    @AfterAll
+    static void teardownSetup() throws Exception {
+        if (setup != null) {
+            setup.close();
+        }
+        if (exasolTestSetup != null) {
+            exasolTestSetup.close();
+        }
+        if (oracleSetup != null) {
+            oracleSetup.close();
+        }
+    }
 
     @Override
     protected ExtensionITConfig createConfig() {
@@ -55,34 +96,6 @@ class ExtensionIT extends AbstractVirtualSchemaExtensionIT {
                 .extensionDescription("Virtual Schema for Oracle") //
                 .previousVersion(null) //
                 .previousVersionJarFile(null).build();
-    }
-
-    @BeforeAll
-    static void setup() throws FileNotFoundException, BucketAccessException, TimeoutException {
-        if (System.getProperty("com.exasol.dockerdb.image") == null) {
-            System.setProperty("com.exasol.dockerdb.image", "8.23.1");
-        }
-        exasolTestSetup = new ExasolTestSetupFactory(Path.of("no-cloud-setup")).getTestSetup();
-        ExasolVersionCheck.assumeExasolVersion8(exasolTestSetup);
-        setup = ExtensionManagerSetup.create(exasolTestSetup, ExtensionBuilder.createDefaultNpmBuilder(
-                EXTENSION_SOURCE_DIR, EXTENSION_SOURCE_DIR.resolve("dist").resolve(EXTENSION_ID)));
-        exasolTestSetup.getDefaultBucket().uploadFile(IntegrationTestConstants.VIRTUAL_SCHEMA_JAR,
-                IntegrationTestConstants.VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
-        oracleContainer = new OracleContainerDBA(IntegrationTestConstants.ORACLE_CONTAINER_NAME);
-        oracleContainer.start();
-    }
-
-    @AfterAll
-    static void teardownSetup() throws Exception {
-        if (setup != null) {
-            setup.close();
-        }
-        if (exasolTestSetup != null) {
-            exasolTestSetup.close();
-        }
-        if (oracleContainer != null) {
-            oracleContainer.stop();
-        }
     }
 
     @Override
@@ -116,31 +129,34 @@ class ExtensionIT extends AbstractVirtualSchemaExtensionIT {
 
     @Override
     protected void prepareInstance() {
-
+        final Schema schema = oracleSetup.createSchema(oracleSchemaName);
+        schema.createTable(MAPPING_DESTINATION_TABLE, "ID", "DECIMAL", "NAME", "VARCHAR(10)").insert(1, "abc").insert(2,
+                "xyz");
     }
 
     @Override
     protected void assertVirtualSchemaContent(final String virtualSchemaName) {
         final String virtualTable = "\"" + virtualSchemaName + "\".\"" + MAPPING_DESTINATION_TABLE + "\"";
-        try (final ResultSet result = exasolTestSetup.createConnection().createStatement()
-                .executeQuery("SELECT ID, NAME FROM " + virtualTable + " ORDER BY ID ASC")) {
-            assertThat(result, table().row(1L, "abc").row(2L, "xyz").matches());
+        final String query = "SELECT ID, NAME FROM " + virtualTable + " ORDER BY ID ASC";
+        assertQueryResult(query, table().row("1", "abc").row("2", "xyz"));
+    }
+
+    private void assertQueryResult(final String query, final Builder expectedRowBuilder) throws AssertionError {
+        try (Connection connection = exasolTestSetup.createConnection();
+                final ResultSet result = connection.createStatement().executeQuery(query)) {
+            assertThat(result, expectedRowBuilder.matches());
         } catch (final SQLException exception) {
-            throw new AssertionError("Assertion query failed", exception);
+            throw new IllegalStateException("Assertion query '" + query + "' failed", exception);
         }
     }
 
     @Override
     protected Collection<ParameterValue> createValidParameterValues() {
         return List.of( //
-                param("SCHEMA_NAME", ORACLE_SCHEMA_NAME), //
-                param("connection", getJdbcConnectionString()), //
-                param("username", "SYSTEM"), //
-                param("password", oracleContainer.getPassword()));
-    }
-
-    private String getJdbcConnectionString() {
-        return "jdbc:oracle:thin:@" + ORACLE_HOST_IP + ":" + oracleContainer.getOraclePort() + "/"
-                + oracleContainer.getDatabaseName();
+                param("SCHEMA_NAME", oracleSchemaName), //
+                param("connection", oracleSetup.getJdbcConnectionString()), //
+                param("username", oracleSetup.getUsername()), //
+                param("password", oracleSetup.getPassword()), //
+                param("IMPORT_DATA_TYPES", "EXASOL_CALCULATED"));
     }
 }
