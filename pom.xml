@@ -88,9 +88,8 @@
             <groupId>com.oracle.database.jdbc</groupId>
             <artifactId>ojdbc8</artifactId>
             <version>23.3.0.23.09</version>
-            <!-- This must be in compile scope to avoid the following error when creating the virtual schema:
-                 "java.sql.SQLException: No suitable driver found for jdbc:oracle:thin:@172.17.0.1:32805/xepdb1" -->
-            <scope>compile</scope>
+            <!-- This must be in test scope to avoid including the driver in the built JAR. -->
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exasol</groupId>

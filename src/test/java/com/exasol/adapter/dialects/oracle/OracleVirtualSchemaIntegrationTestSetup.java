@@ -87,7 +87,8 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
 
     public static AdapterScript createAdapterScript(final ExasolSchema schema) {
         final String content = "%scriptclass com.exasol.adapter.RequestDispatcher;\n" //
-                + "%jar /buckets/bfsdefault/default/" + VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION + ";\n";
+                + "%jar /buckets/bfsdefault/default/" + VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION + ";\n" //
+                + "%jar /buckets/bfsdefault/default/drivers/jdbc/ojdbc8.jar;\n";
         return schema.createAdapterScript(ADAPTER_SCRIPT_EXASOL, JAVA, content);
     }
 

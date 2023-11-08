@@ -6,6 +6,8 @@ Code name: Test with Exasol 8
 
 This release adds integration tests using Exasol 8.
 
+**Note:** This release removes the Oracle JDBC driver from the adapter JAR file that was accidentally included in version 2.1.0. This means that you will need to define the `ADAPTER SCRIPT` specifying both the adapter JAR and the JDBC driver JAR as described in the [user guide](../user_guide/oracle_user_guide.md#installing-the-adapter-script).
+
 ## Feature
 
 * #33: Added tests with Exasol 8
