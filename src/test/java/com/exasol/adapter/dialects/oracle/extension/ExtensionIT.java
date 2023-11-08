@@ -2,20 +2,24 @@ package com.exasol.adapter.dialects.oracle.extension;
 
 import static com.exasol.matcher.ResultSetStructureMatcher.table;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
 
 import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 
 import com.exasol.adapter.RequestDispatcher;
 import com.exasol.adapter.dialects.oracle.IntegrationTestConstants;
+import com.exasol.adapter.dialects.oracle.OracleContainerDBA;
 import com.exasol.bucketfs.BucketAccessException;
 import com.exasol.dbbuilder.dialects.exasol.AdapterScript.Language;
 import com.exasol.dbbuilder.dialects.exasol.ExasolSchema;
@@ -34,43 +38,51 @@ class ExtensionIT extends AbstractVirtualSchemaExtensionIT {
     private static final String PROJECT_VERSION = MavenProjectVersionGetter.getCurrentProjectVersion();
     private static final String EXTENSION_ID = "oracle-vs-extension.js";
     private static final String MAPPING_DESTINATION_TABLE = "DESTINATION_TABLE";
+    private static final String ORACLE_SCHEMA_NAME = "EXTENSION_TEST_" + System.currentTimeMillis();
+    private static final String ORACLE_HOST_IP = "172.17.0.1";
 
     private static ExasolTestSetup exasolTestSetup;
     private static ExtensionManagerSetup setup;
-    private static String s3BucketName;
-    private String s3ImportPrefix;
-
-    @BeforeEach
-    void createS3ImportPrefix() {
-        s3ImportPrefix = "vs-works-test-" + System.currentTimeMillis() + "/";
-    }
+    private static OracleContainerDBA oracleContainer;
 
     @Override
     protected ExtensionITConfig createConfig() {
-        final String previousVersion = "2.8.2";
-        return ExtensionITConfig.builder().projectName("s3-document-files-virtual-schema") //
+        return ExtensionITConfig.builder().projectName("oracle-virtual-schema") //
                 .extensionId(EXTENSION_ID) //
                 .currentVersion(PROJECT_VERSION) //
-                .expectedParameterCount(13) //
-                .extensionName("S3 Virtual Schema") //
-                .extensionDescription("Virtual Schema for document files on AWS S3") //
-                .previousVersion(previousVersion) //
-                .previousVersionJarFile("document-files-virtual-schema-dist-7.3.6-s3-" + previousVersion + ".jar")
-                .build();
+                .expectedParameterCount(12) //
+                .extensionName("Oracle Virtual Schema") //
+                .extensionDescription("Virtual Schema for Oracle") //
+                .previousVersion(null) //
+                .previousVersionJarFile(null).build();
     }
 
     @BeforeAll
     static void setup() throws FileNotFoundException, BucketAccessException, TimeoutException {
         if (System.getProperty("com.exasol.dockerdb.image") == null) {
-            System.setProperty("com.exasol.dockerdb.image", "8.23.0");
+            System.setProperty("com.exasol.dockerdb.image", "8.23.1");
         }
         exasolTestSetup = new ExasolTestSetupFactory(Path.of("no-cloud-setup")).getTestSetup();
         ExasolVersionCheck.assumeExasolVersion8(exasolTestSetup);
         setup = ExtensionManagerSetup.create(exasolTestSetup, ExtensionBuilder.createDefaultNpmBuilder(
                 EXTENSION_SOURCE_DIR, EXTENSION_SOURCE_DIR.resolve("dist").resolve(EXTENSION_ID)));
-        s3BucketName = "extension-test.s3.virtual-schema-test-bucket-" + System.currentTimeMillis();
         exasolTestSetup.getDefaultBucket().uploadFile(IntegrationTestConstants.VIRTUAL_SCHEMA_JAR,
                 IntegrationTestConstants.VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
+        oracleContainer = new OracleContainerDBA(IntegrationTestConstants.ORACLE_CONTAINER_NAME);
+        oracleContainer.start();
+    }
+
+    @AfterAll
+    static void teardownSetup() throws Exception {
+        if (setup != null) {
+            setup.close();
+        }
+        if (exasolTestSetup != null) {
+            exasolTestSetup.close();
+        }
+        if (oracleContainer != null) {
+            oracleContainer.stop();
+        }
     }
 
     @Override
@@ -120,17 +132,15 @@ class ExtensionIT extends AbstractVirtualSchemaExtensionIT {
 
     @Override
     protected Collection<ParameterValue> createValidParameterValues() {
-        final List<ParameterValue> parameters = new ArrayList<>();
-
-        return parameters;
+        return List.of( //
+                param("SCHEMA_NAME", ORACLE_SCHEMA_NAME), //
+                param("connection", getJdbcConnectionString()), //
+                param("username", "SYSTEM"), //
+                param("password", oracleContainer.getPassword()));
     }
 
-    @Override
-    @Test
-    public void upgradeFromPreviousVersion() {
-        // This test can be removed once version 2.8.3 was released
-        setup.client().assertRequestFails(super::upgradeFromPreviousVersion, containsString(
-                "invalid parameters: Failed to validate parameter 'Name of the new virtual schema' (virtualSchemaName): This is a required parameter."),
-                equalTo(400));
+    private String getJdbcConnectionString() {
+        return "jdbc:oracle:thin:@" + ORACLE_HOST_IP + ":" + oracleContainer.getOraclePort() + "/"
+                + oracleContainer.getDatabaseName();
     }
 }

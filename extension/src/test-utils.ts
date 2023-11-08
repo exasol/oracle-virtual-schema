@@ -62,7 +62,7 @@ export function createMockContext(): ContextMock {
 export function script({ schema = "schema", name = "name", inputType, resultType, type = "", text = "", comment }: Partial<ExaScriptsRow>): ExaScriptsRow {
     return { schema, name, inputType, resultType, type, text, comment }
 }
-export function adapterScript({ name = "ORACLE_ADAPTER", type = "ADAPTER", text = undefined }: Partial<ExaScriptsRow>): ExaScriptsRow {
+export function adapterScript({ name = "ORACLE_VS_ADAPTER", type = "ADAPTER", text = undefined }: Partial<ExaScriptsRow>): ExaScriptsRow {
     const version = "1.2.3"
     text = text ?? `CREATE ... %jar /path/to/virtual-schema-dist-0.0.0-oracle-${version}.jar;`
     return script({ name, type, text })
