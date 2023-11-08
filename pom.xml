@@ -124,6 +124,12 @@
             <classifier>module</classifier>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>com.exasol</groupId>
+            <artifactId>extension-manager-integration-test-java</artifactId>
+            <version>0.5.5</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

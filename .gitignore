@@ -39,3 +39,10 @@ pom.xml.versionsBackup
 *.flattened-pom.xml
 /.apt_generated/
 /.apt_generated_tests/
+
+# Extension
+/extension/node_modules/
+/extension/dist/
+/extension/coverage/
+/extension/src/extension-config.ts
+/extension-test.properties

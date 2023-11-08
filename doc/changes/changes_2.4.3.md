@@ -4,11 +4,12 @@ Code name: Test with Exasol 8
 
 ## Summary
 
-This release adds integration tests using Exasol 8.
+This release adds integration tests using Exasol 8 and an extension for the Extension Manager.
 
 ## Feature
 
 * #33: Added tests with Exasol 8
+* #38: Added extension for Extension Manager
 
 ## Dependency Updates
 

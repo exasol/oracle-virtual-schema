@@ -90,7 +90,7 @@ See also [Adapter Properties for JDBC-Based Virtual Schemas](https://github.com/
 
 Exasol provides the `IMPORT FROM ORA` command for loading data from Oracle. It is possible to create a virtual schema that uses `IMPORT FROM ORA` instead of JDBC to communicate with Oracle. Both options are intended to support the same features. `IMPORT FROM ORA` almost always offers better performance since it is implemented natively.
 
-This behavior is toggled by the Boolean `IMPORT_FROM_ORA` variable. Note that a JDBC connection to Oracle is still required to fetch metadata. In addition, a "direct" connection to the Oracle database is needed.
+This behavior is toggled by the boolean `IMPORT_FROM_ORA` variable. Note that a JDBC connection to Oracle is still required to fetch metadata. In addition, a "direct" connection to the Oracle database is needed.
 
 ### Deploying the Oracle Instant Client
 
@@ -101,7 +101,7 @@ To be able to communicate with Oracle, you first need to supply Exasol with the 
 Having deployed the Oracle Instant Client, a connection to your Oracle database can be set up.
 
 ```sql
-CREATE CONNECTION ORA_CONNECTION
+CREATE OR REPLACE CONNECTION ORA_CONNECTION
   TO '(DESCRIPTION =
 		(ADDRESS_LIST = (ADDRESS = (PROTOCOL = TCP)
                                    (HOST = <host>)
@@ -132,9 +132,12 @@ CREATE VIRTUAL SCHEMA <virtual schema name>
     IMPORT_FROM_ORA = 'true'
     ORA_CONNECTION_NAME = 'ORA_CONNECTION';
 ```
+
 ### Auto generated datatype mapping list while using IMPORT_FROM_ORA.
+
 Using `IMPORT FROM ORA` might lead to some unexpected datatype mappings. Unlike for a JDBC connection there's no explicit data mapping being generated when using `IMPORT FROM ORA`.
 As a current stopgap solution for this issue we now (starting from version 2.2.0) also provide a `GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI` switch you can specify and enable when creating the virtual schema.
+
 ```sql
 CREATE VIRTUAL SCHEMA <virtual schema name>
     USING ADAPTER.JDBC_ADAPTER
@@ -145,6 +148,7 @@ CREATE VIRTUAL SCHEMA <virtual schema name>
     GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI = 'true'
     ORA_CONNECTION_NAME = 'ORA_CONNECTION';
 ```
+
 This will add explicit datatype mapping to the generated command when using `IMPORT FROM ORA`.
 
 Example:
@@ -222,4 +226,3 @@ In the following matrix you find combinations of JDBC driver and dialect version
 | 2.0.0                  | Oracle XE 11g      | instantclient-basic-linux | x64-12.1.0.2.0 |
 | 2.4.2                  | Oracle XE 21c      | ojdbc8                    | 23.3.0.23.09   |
 | 2.4.2                  | Oracle XE 21c      | instantclient-basic-linux | x64-12.1.0.2.0 |
-

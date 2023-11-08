@@ -24,7 +24,6 @@ import com.github.dockerjava.api.model.ContainerNetwork;
  * This class contains the common integration test setup for all Oracle virtual schemas.
  */
 public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
-    private static final Path PATH_TO_VIRTUAL_SCHEMAS_JAR = Path.of("target", VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
     private static final String SCHEMA_EXASOL = "SCHEMA_EXASOL";
     private static final String ADAPTER_SCRIPT_EXASOL = "ADAPTER_SCRIPT_EXASOL";
     private static final String ORACLE_CONTAINER_NAME = IntegrationTestConstants.ORACLE_CONTAINER_NAME;
@@ -82,7 +81,7 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
         // Upload the driver itself
         bucket.uploadFile(Path.of(driverPath, driverName), "drivers/jdbc/" + driverName);
         // Upload the virtual schema jar to be able to use oracle virtual schemas
-        bucket.uploadFile(PATH_TO_VIRTUAL_SCHEMAS_JAR, VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
+        bucket.uploadFile(VIRTUAL_SCHEMA_JAR, VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
     }
 
     public static AdapterScript createAdapterScript(final ExasolSchema schema) {
