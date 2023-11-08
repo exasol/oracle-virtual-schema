@@ -11,7 +11,7 @@
         "lint": "eslint ./src/",
         "clean": "rm -rf dist/",
         "test": "jest --silent",
-        "test-watch": "jest --watch"
+        "test-watch": "jest --watch --silent"
     },
     "dependencies": {
         "@exasol/extension-manager-interface": "0.4.0"

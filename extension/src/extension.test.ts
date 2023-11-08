@@ -1,4 +1,4 @@
-import { ExaMetadata, Installation, Instance, ParameterValue, Row } from '@exasol/extension-manager-interface';
+import { ExaMetadata, Installation, Instance, Row } from '@exasol/extension-manager-interface';
 import { ExaScriptsRow } from '@exasol/extension-manager-interface/dist/exasolSchema';
 import { describe, expect, it } from '@jest/globals';
 import { createExtension } from "./extension";
@@ -53,7 +53,7 @@ describe("Oracle VS Extension", () => {
         })
 
         describe("returns expected installations", () => {
-            function installation({ name = "S3 Virtual Schema", version = "(unknown)" }: Partial<Installation>): Installation {
+            function installation({ name = "Oracle Virtual Schema", version = "(unknown)" }: Partial<Installation>): Installation {
                 return { name, version }
             }
 
@@ -61,9 +61,9 @@ describe("Oracle VS Extension", () => {
                 { name: "all values match", scripts: [adapterScript({})], expected: installation({ version: "1.2.3" }) },
                 { name: "adapter has wrong name", scripts: [adapterScript({ name: "wrong" })], expected: undefined },
                 { name: "adapter missing", scripts: [], expected: undefined },
-                { name: "version found in filename", scripts: [adapterScript({ text: "CREATE ... %jar /path/to/document-files-virtual-schema-dist-0.0.0-s3-1.2.3.jar; more text" })], expected: installation({ version: "1.2.3" }) },
-                { name: "script contains LF", scripts: [adapterScript({ text: "CREATE ...\n %jar /path/to/document-files-virtual-schema-dist-0.0.0-s3-1.2.3.jar; more text" })], expected: installation({ version: "1.2.3" }) },
-                { name: "script contains CRLF", scripts: [adapterScript({ text: "CREATE ...\r\n %jar /path/to/document-files-virtual-schema-dist-0.0.0-s3-1.2.3.jar; more text" })], expected: installation({ version: "1.2.3" }) },
+                { name: "version found in filename", scripts: [adapterScript({ text: "CREATE ... %jar /path/to/virtual-schema-dist-0.0.0-oracle-1.2.3.jar; more text" })], expected: installation({ version: "1.2.3" }) },
+                { name: "script contains LF", scripts: [adapterScript({ text: "CREATE ...\n %jar /path/to/virtual-schema-dist-0.0.0-oracle-1.2.3.jar; more text" })], expected: installation({ version: "1.2.3" }) },
+                { name: "script contains CRLF", scripts: [adapterScript({ text: "CREATE ...\r\n %jar /path/to/virtual-schema-dist-0.0.0-oracle-1.2.3.jar; more text" })], expected: installation({ version: "1.2.3" }) },
             ]
             tests.forEach(test => {
                 it(test.name, () => {
@@ -87,7 +87,7 @@ describe("Oracle VS Extension", () => {
         })
         it("returns expected parameters", () => {
             const actual = createExtension().getInstanceParameters(createMockContext(), CONFIG.version)
-            expect(actual).toHaveLength(13)
+            expect(actual).toHaveLength(12)
             expect(actual[0]).toStrictEqual({
                 id: "base-vs.virtual-schema-name", name: "Virtual Schema name", required: true, type: "string",
                 description: "Name for the new virtual schema",
@@ -101,16 +101,12 @@ describe("Oracle VS Extension", () => {
             const context = createMockContext();
             createExtension().install(context, CONFIG.version);
             const executeCalls = context.mocks.sqlExecute.mock.calls
-            expect(executeCalls.length).toBe(4)
+            expect(executeCalls.length).toBe(2)
             const adapterScript = executeCalls[0][0]
-            const setScript = executeCalls[1][0]
-            expect(adapterScript).toContain(`CREATE OR REPLACE JAVA ADAPTER SCRIPT "ext-schema"."S3_FILES_ADAPTER" AS`)
+            expect(adapterScript).toContain(`CREATE OR REPLACE JAVA ADAPTER SCRIPT "ext-schema"."ORACLE_VS_ADAPTER" AS`)
             expect(adapterScript).toContain(`%jar /bucketfs/${CONFIG.fileName};`)
-            expect(setScript).toContain(`CREATE OR REPLACE JAVA SET SCRIPT "ext-schema"."IMPORT_FROM_S3_DOCUMENT_FILES"`)
-            expect(setScript).toContain(`%jar /bucketfs/${CONFIG.fileName};`)
             const expectedComment = `Created by Extension Manager for Oracle Virtual Schema ${CONFIG.version}`
-            expect(executeCalls[2]).toEqual([`COMMENT ON SCRIPT "ext-schema"."S3_FILES_ADAPTER" IS '${expectedComment}'`])
-            expect(executeCalls[3]).toEqual([`COMMENT ON SCRIPT "ext-schema"."IMPORT_FROM_S3_DOCUMENT_FILES" IS '${expectedComment}'`])
+            expect(executeCalls[1]).toEqual([`COMMENT ON SCRIPT "ext-schema"."ORACLE_VS_ADAPTER" IS '${expectedComment}'`])
         })
         it("fails for wrong version", () => {
             expect(() => { createExtension().install(createMockContext(), "wrongVersion") })
@@ -138,9 +134,8 @@ describe("Oracle VS Extension", () => {
             context.mocks.sqlQuery.mockReturnValue({ columns: [], rows: [[1]] });
             createExtension().uninstall(context, CONFIG.version)
             const calls = context.mocks.sqlExecute.mock.calls
-            expect(calls.length).toEqual(2)
-            expect(calls[0]).toEqual(['DROP ADAPTER SCRIPT "ext-schema"."S3_FILES_ADAPTER"'])
-            expect(calls[1]).toEqual(['DROP SCRIPT "ext-schema"."IMPORT_FROM_S3_DOCUMENT_FILES"'])
+            expect(calls.length).toEqual(1)
+            expect(calls[0]).toEqual(['DROP ADAPTER SCRIPT "ext-schema"."ORACLE_VS_ADAPTER"'])
         })
         it("fails for wrong version", () => {
             expect(() => { createExtension().uninstall(createMockContext(), "wrongVersion") })
@@ -149,56 +144,34 @@ describe("Oracle VS Extension", () => {
     })
 
     describe("addInstance()", () => {
-        describe("connection parameters converted", () => {
-            type TestCase = { name: string, paramValues: ParameterValue[], expected: string }
-            const tests: TestCase[] = [
-                { name: "no parameters", paramValues: [], expected: '{}' },
-                { name: "unknown parameter", paramValues: [{ name: "unknown", value: "ignore" }], expected: '{}' },
-                { name: "parameter with single quote", paramValues: [{ name: "awsAccessKeyId", value: "abc'123''xyz" }], expected: `{"awsAccessKeyId":"abc''123''''xyz"}` },
-                { name: "parameter with double quote", paramValues: [{ name: "awsAccessKeyId", value: 'abc"123""xyz' }], expected: `{"awsAccessKeyId":"abc\\"123\\"\\"xyz"}` },
-                { name: "multiple parameters", paramValues: [{ name: "awsAccessKeyId", value: 'id' }, { name: "awsSecretAccessKey", value: "key" }], expected: `{"awsAccessKeyId":"id","awsSecretAccessKey":"key"}` },
-                { name: "mixed parameters", paramValues: [{ name: "awsAccessKeyId", value: 'id' }, { name: "unknown", value: "ignored" }], expected: `{"awsAccessKeyId":"id"}` },
-                { name: "boolean", paramValues: [{ name: "useSsl", value: "true" }], expected: `{"useSsl":"true"}` },
-                { name: "ignores invalid boolean", paramValues: [{ name: "useSsl", value: "invalid" }], expected: `{"useSsl":"invalid"}` },
-            ];
-            for (const test of tests) {
-                it(test.name, () => {
-                    const context = createMockContext();
-                    const parameters = test.paramValues.concat([{ name: "base-vs.virtual-schema-name", value: "NEW_S3_VS" }, { name: "MAPPING", value: "my mapping" }])
-                    const instance = createExtension().addInstance(context, CONFIG.version, { values: parameters });
-                    expect(instance.name).toEqual("NEW_S3_VS")
-                    expect(context.mocks.sqlExecute.mock.calls[0]).toEqual([`CREATE OR REPLACE CONNECTION "NEW_S3_VS_CONNECTION" TO '' IDENTIFIED BY '${test.expected}'`])
-                })
-            }
-        })
         it("executes expected statements", () => {
             const context = createMockContext();
-            const parameters = [{ name: "base-vs.virtual-schema-name", value: "NEW_S3_VS" }, { name: "MAPPING", value: "my mapping" }, { name: "awsAccessKeyId", value: "id" }]
+            const parameters = [{ name: "base-vs.virtual-schema-name", value: "NEW_ORA_VS" }, { name: "connection", value: "ora-conn-url" }, { name: "username", value: "ora-user" }, { name: "password", value: "ora-password" }]
             const instance = createExtension().addInstance(context, CONFIG.version, { values: parameters });
-            expect(instance.name).toBe("NEW_S3_VS")
+            expect(instance.name).toBe("NEW_ORA_VS")
             const calls = context.mocks.sqlExecute.mock.calls
             expect(calls.length).toBe(4)
-            expect(calls[0]).toEqual([`CREATE OR REPLACE CONNECTION "NEW_S3_VS_CONNECTION" TO '' IDENTIFIED BY '{"awsAccessKeyId":"id"}'`])
-            expect(calls[1]).toEqual([`CREATE VIRTUAL SCHEMA "NEW_S3_VS" USING "ext-schema"."S3_FILES_ADAPTER" WITH CONNECTION_NAME = 'NEW_S3_VS_CONNECTION' MAPPING = 'my mapping'`])
-            const comment = `Created by Extension Manager for S3 Virtual Schema v${CONFIG.version} NEW_S3_VS`
-            expect(calls[2]).toEqual([`COMMENT ON CONNECTION "NEW_S3_VS_CONNECTION" IS '${comment}'`])
-            expect(calls[3]).toEqual([`COMMENT ON SCHEMA "NEW_S3_VS" IS '${comment}'`])
+            expect(calls[0]).toEqual([`CREATE OR REPLACE CONNECTION "NEW_ORA_VS_CONNECTION" TO 'ora-conn-url' USER 'ora-user' IDENTIFIED BY 'ora-password'`])
+            expect(calls[1]).toEqual([`CREATE VIRTUAL SCHEMA "NEW_ORA_VS" USING "ext-schema"."ORACLE_VS_ADAPTER" WITH CONNECTION_NAME = 'NEW_ORA_VS_CONNECTION'`])
+            const comment = `Created by Extension Manager for Oracle Virtual Schema v${CONFIG.version} NEW_ORA_VS`
+            expect(calls[2]).toEqual([`COMMENT ON CONNECTION "NEW_ORA_VS_CONNECTION" IS '${comment}'`])
+            expect(calls[3]).toEqual([`COMMENT ON SCHEMA "NEW_ORA_VS" IS '${comment}'`])
         })
 
         it("returns id and name", () => {
             const context = createMockContext();
-            const parameters = [{ name: "base-vs.virtual-schema-name", value: "NEW_S3_VS" }, { name: "MAPPING", value: "my mapping" }, { name: "awsAccessKeyId", value: "id" }]
+            const parameters = [{ name: "base-vs.virtual-schema-name", value: "NEW_ORA_VS" }, { name: "username", value: "id" }]
             const instance = createExtension().addInstance(context, CONFIG.version, { values: parameters });
-            expect(instance).toStrictEqual({ id: "NEW_S3_VS", name: "NEW_S3_VS" })
+            expect(instance).toStrictEqual({ id: "NEW_ORA_VS", name: "NEW_ORA_VS" })
         })
 
         it("escapes single quotes", () => {
             const context = createMockContext();
-            const parameters = [{ name: "base-vs.virtual-schema-name", value: "vs'name" }, { name: "MAPPING", value: "mapping'with''quotes" }, { name: "awsAccessKeyId", value: "access'key" }]
+            const parameters = [{ name: "base-vs.virtual-schema-name", value: "vs'name" }]
             const instance = createExtension().addInstance(context, CONFIG.version, { values: parameters });
             expect(instance).toStrictEqual({ id: "vs'name", name: "vs'name", })
             const calls = context.mocks.sqlExecute.mock.calls
-            expect(calls[1]).toEqual([`CREATE VIRTUAL SCHEMA "vs'name" USING "ext-schema"."S3_FILES_ADAPTER" WITH CONNECTION_NAME = 'vs''name_CONNECTION' MAPPING = 'mapping''with''''quotes'`])
+            expect(calls[1]).toEqual([`CREATE VIRTUAL SCHEMA "vs'name" USING "ext-schema"."ORACLE_VS_ADAPTER" WITH CONNECTION_NAME = 'vs''name_CONNECTION'`])
         })
 
         it("fails for wrong version", () => {
@@ -217,8 +190,8 @@ describe("Oracle VS Extension", () => {
             expect(findInstances([])).toEqual([])
         })
         it("returns single instance", () => {
-            expect(findInstances([["s3_vs"]]))
-                .toEqual([{ id: "s3_vs", name: "s3_vs" }])
+            expect(findInstances([["ora_vs"]]))
+                .toEqual([{ id: "ora_vs", name: "ora_vs" }])
         })
         it("returns multiple instance", () => {
             expect(findInstances([["vs1"], ["vs2"], ["vs3"]]))
@@ -230,7 +203,7 @@ describe("Oracle VS Extension", () => {
             createExtension().findInstances(context, CONFIG.version)
             const queryCalls = context.mocks.sqlQuery.mock.calls
             expect(queryCalls.length).toEqual(1)
-            expect(queryCalls[0]).toEqual(["SELECT SCHEMA_NAME FROM SYS.EXA_ALL_VIRTUAL_SCHEMAS WHERE ADAPTER_SCRIPT_SCHEMA = ? AND ADAPTER_SCRIPT_NAME = ? ORDER BY SCHEMA_NAME", "ext-schema", "S3_FILES_ADAPTER"])
+            expect(queryCalls[0]).toEqual(["SELECT SCHEMA_NAME FROM SYS.EXA_ALL_VIRTUAL_SCHEMAS WHERE ADAPTER_SCRIPT_SCHEMA = ? AND ADAPTER_SCRIPT_NAME = ? ORDER BY SCHEMA_NAME", "ext-schema", "ORACLE_VS_ADAPTER"])
         })
     })
 
@@ -251,36 +224,32 @@ describe("Oracle VS Extension", () => {
 
     describe("upgrade()", () => {
         function scriptWithVersion(name: string, version: string): ExaScriptsRow {
-            return script({ name, text: `CREATE ... %jar /path/to/document-files-virtual-schema-dist-0.0.0-s3-${version}.jar;` })
+            return script({ name, text: `CREATE ... %jar /path/to/virtual-schema-dist-0.0.0-oracle-${version}.jar;` })
         }
         it("preconditions fail", () => {
             const context = createMockContext()
             context.mocks.simulateScripts(null)
             expect(() => createExtension().upgrade(context))
-                .toThrow("Not all required scripts are installed: Validation failed: Script 'S3_FILES_ADAPTER' is missing, Script 'IMPORT_FROM_S3_DOCUMENT_FILES' is missing")
+                .toThrow("Not all required scripts are installed: Validation failed: Script 'ORACLE_VS_ADAPTER' is missing")
         })
         describe("success", () => {
             it("returns versions", () => {
                 const context = createMockContext()
-                context.mocks.simulateScripts(scriptWithVersion("S3_FILES_ADAPTER", "1.2.3"))
+                context.mocks.simulateScripts(scriptWithVersion("ORACLE_VS_ADAPTER", "1.2.3"))
                 expect(createExtension().upgrade(context)).toStrictEqual({ previousVersion: "1.2.3", newVersion: CONFIG.version, })
             })
             it("executes CREATE SCRIPT statements", () => {
                 const context = createMockContext()
-                context.mocks.simulateScripts(scriptWithVersion("S3_FILES_ADAPTER", "1.2.3"))
+                context.mocks.simulateScripts(scriptWithVersion("ORACLE_VS_ADAPTER", "1.2.3"))
                 createExtension().upgrade(context)
 
                 const executeCalls = context.mocks.sqlExecute.mock.calls
-                expect(executeCalls.length).toBe(4)
+                expect(executeCalls.length).toBe(2)
                 const adapterScript = executeCalls[0][0]
-                const importScript = executeCalls[1][0]
-                expect(adapterScript).toContain(`CREATE OR REPLACE JAVA ADAPTER SCRIPT "ext-schema"."S3_FILES_ADAPTER" AS`)
+                expect(adapterScript).toContain(`CREATE OR REPLACE JAVA ADAPTER SCRIPT "ext-schema"."ORACLE_VS_ADAPTER" AS`)
                 expect(adapterScript).toContain(`%jar /bucketfs/${CONFIG.fileName};`)
-                expect(importScript).toContain(`CREATE OR REPLACE JAVA SET SCRIPT "ext-schema"."IMPORT_FROM_S3_DOCUMENT_FILES"`)
-                expect(importScript).toContain(`%jar /bucketfs/${CONFIG.fileName};`)
-                const expectedComment = `Created by Extension Manager for S3 Virtual Schema ${CONFIG.version}`
-                expect(executeCalls[2]).toEqual([`COMMENT ON SCRIPT "ext-schema"."S3_FILES_ADAPTER" IS '${expectedComment}'`])
-                expect(executeCalls[3]).toEqual([`COMMENT ON SCRIPT "ext-schema"."IMPORT_FROM_S3_DOCUMENT_FILES" IS '${expectedComment}'`])
+                const expectedComment = `Created by Extension Manager for Oracle Virtual Schema ${CONFIG.version}`
+                expect(executeCalls[1]).toEqual([`COMMENT ON SCRIPT "ext-schema"."ORACLE_VS_ADAPTER" IS '${expectedComment}'`])
             })
         })
     })
