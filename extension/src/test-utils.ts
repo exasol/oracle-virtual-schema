@@ -47,11 +47,10 @@ export function createMockContext(): ContextMock {
             getScriptByName: getScriptByName,
             simulateScripts(adapterScript) {
                 getScriptByName.mockImplementation((scriptName) => {
-                    switch (scriptName) {
-                        case ADAPTER_SCRIPT_NAME:
-                            return adapterScript
-                        default:
-                            throw new Error(`Unexpected script name '${scriptName}'`)
+                    if (scriptName === ADAPTER_SCRIPT_NAME) {
+                        return adapterScript
+                    } else {
+                        throw new Error(`Unexpected script name '${scriptName}'`)
                     }
                 })
             },
