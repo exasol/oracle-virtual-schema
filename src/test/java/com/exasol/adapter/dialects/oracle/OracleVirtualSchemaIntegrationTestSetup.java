@@ -1,6 +1,7 @@
 package com.exasol.adapter.dialects.oracle;
 
 import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION;
+import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.VIRTUAL_SCHEMA_JAR;
 import static com.exasol.dbbuilder.dialects.exasol.AdapterScript.Language.JAVA;
 
 import java.io.*;
@@ -80,7 +81,7 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
 
     public static void uploadAdapterToBucket(final Bucket bucket)
             throws BucketAccessException, TimeoutException, FileNotFoundException {
-        bucket.uploadFile(PATH_TO_VIRTUAL_SCHEMAS_JAR, VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
+        bucket.uploadFile(VIRTUAL_SCHEMA_JAR, VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
     }
 
     public static AdapterScript createAdapterScript(final ExasolSchema schema) {
