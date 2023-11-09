@@ -1,7 +1,6 @@
 package com.exasol.adapter.dialects.oracle;
 
-import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.*;
-import static com.exasol.adapter.dialects.oracle.IntegrationTestsHelperfunctions.getPropertyFromFile;
+import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION;
 import static com.exasol.dbbuilder.dialects.exasol.AdapterScript.Language.JAVA;
 
 import java.io.*;
@@ -17,6 +16,7 @@ import com.exasol.containers.ExasolContainer;
 import com.exasol.containers.ExasolService;
 import com.exasol.dbbuilder.dialects.exasol.*;
 import com.exasol.dbbuilder.dialects.oracle.OracleObjectFactory;
+import com.exasol.drivers.JdbcDriver;
 import com.exasol.udfdebugging.UdfTestSetup;
 import com.github.dockerjava.api.model.ContainerNetwork;
 
@@ -27,6 +27,7 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
     private static final String SCHEMA_EXASOL = "SCHEMA_EXASOL";
     private static final String ADAPTER_SCRIPT_EXASOL = "ADAPTER_SCRIPT_EXASOL";
     private static final String ORACLE_CONTAINER_NAME = IntegrationTestConstants.ORACLE_CONTAINER_NAME;
+    private static final String ORACLE_JDBC_DRIVER_NAME = "ojdbc8.jar";
 
     private final Statement oracleStatement;
     private final OracleContainerDBA oracleContainer = new OracleContainerDBA(ORACLE_CONTAINER_NAME);
@@ -45,7 +46,8 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
         try {
             this.exasolContainer.start();
             this.oracleContainer.start();
-            uploadOracleJDBCDriverAndVSToBucket(this.exasolContainer.getDefaultBucket());
+            uploadOracleJDBCDriverToBucket(this.exasolContainer);
+            uploadAdapterToBucket(this.exasolContainer.getDefaultBucket());
             this.exasolConnection = this.exasolContainer.createConnection("");
             this.exasolStatement = this.exasolConnection.createStatement();
             this.oracleConnection = this.oracleContainer.createConnectionDBA("");
@@ -68,25 +70,23 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
         }
     }
 
-    public static void uploadOracleJDBCDriverAndVSToBucket(final Bucket bucket)
+    public static void uploadOracleJDBCDriverToBucket(final ExasolContainer<? extends ExasolContainer<?>> container)
             throws BucketAccessException, TimeoutException, FileNotFoundException {
-        final String driverName = getPropertyFromFile(RESOURCES_FOLDER_DIALECT_NAME, "driver.name");
+        container.getDriverManager()
+                .install(JdbcDriver.builder("ORACLE").enableSecurityManager(false).mainClass("oracle.jdbc.OracleDriver")
+                        .prefix("jdbc:oracle:thin:")
+                        .sourceFile(Path.of("target/oracle-driver", ORACLE_JDBC_DRIVER_NAME)).build());
+    }
 
-        final Path pathToSettingsFile = Path.of("src", "test", "resources", "integration", "driver",
-                RESOURCES_FOLDER_DIALECT_NAME, JDBC_DRIVER_CONFIGURATION_FILE_NAME);
-
-        // Upload the settings.cfg file for the driver that registers the driver.
-        bucket.uploadFile(pathToSettingsFile, "drivers/jdbc/" + JDBC_DRIVER_CONFIGURATION_FILE_NAME);
-        final String driverPath = getPropertyFromFile(RESOURCES_FOLDER_DIALECT_NAME, "driver.path");
-        // Upload the driver itself
-        bucket.uploadFile(Path.of(driverPath, driverName), "drivers/jdbc/" + driverName);
-        // Upload the virtual schema jar to be able to use oracle virtual schemas
-        bucket.uploadFile(VIRTUAL_SCHEMA_JAR, VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
+    public static void uploadAdapterToBucket(final Bucket bucket)
+            throws BucketAccessException, TimeoutException, FileNotFoundException {
+        bucket.uploadFile(PATH_TO_VIRTUAL_SCHEMAS_JAR, VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);
     }
 
     public static AdapterScript createAdapterScript(final ExasolSchema schema) {
         final String content = "%scriptclass com.exasol.adapter.RequestDispatcher;\n" //
-                + "%jar /buckets/bfsdefault/default/" + VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION + ";\n";
+                + "%jar /buckets/bfsdefault/default/" + VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION + ";\n" //
+                + "%jar /buckets/bfsdefault/default/drivers/jdbc/ojdbc8.jar;\n";
         return schema.createAdapterScript(ADAPTER_SCRIPT_EXASOL, JAVA, content);
     }
 

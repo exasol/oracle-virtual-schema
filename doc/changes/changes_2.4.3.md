@@ -6,6 +6,8 @@ Code name: Test with Exasol 8
 
 This release adds integration tests using Exasol 8 and an extension for the Extension Manager.
 
+**Note:** This release removes the Oracle JDBC driver from the adapter JAR file that was accidentally included in version 2.1.0. This means that you will need to define the `ADAPTER SCRIPT` specifying both the adapter JAR and the JDBC driver JAR as described in the [user guide](../user_guide/oracle_user_guide.md#installing-the-adapter-script).
+
 ## Feature
 
 * #33: Added tests with Exasol 8
@@ -13,12 +15,17 @@ This release adds integration tests using Exasol 8 and an extension for the Exte
 
 ## Dependency Updates
 
-### Virtual Schema for Oracle
+### Compile Dependency Updates
+
+* Removed `com.oracle.database.jdbc:ojdbc8:23.3.0.23.09`
+
+### Test Dependency Updates
 
 #### Test Dependency Updates
 
 * Added `com.exasol:extension-manager-integration-test-java:0.5.5`
 * Updated `com.exasol:hamcrest-resultset-matcher:1.6.1` to `1.6.2`
+* Added `com.oracle.database.jdbc:ojdbc8:23.3.0.23.09`
 * Updated `nl.jqno.equalsverifier:equalsverifier:3.15.2` to `3.15.3`
 * Updated `org.jacoco:org.jacoco.agent:0.8.10` to `0.8.11`
 * Updated `org.junit.jupiter:junit-jupiter:5.10.0` to `5.10.1`
