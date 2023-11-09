@@ -132,4 +132,4 @@
 [59]: http://zlika.github.io/reproducible-build-maven-plugin
 [60]: https://maven.apache.org/plugins/maven-clean-plugin/
 [61]: https://www.mojohaus.org/exec-maven-plugin
-[62]: https://registry.npmjs.org/@exasol/extension-manager-interface/-/extension-manager-interface-0.4.0.tgz
+[62]: https://registry.npmjs.org/@exasol/extension-manager-interface/-/extension-manager-interface-0.4.1.tgz

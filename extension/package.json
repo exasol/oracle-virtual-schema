@@ -14,7 +14,7 @@
         "test-watch": "jest --watch --silent"
     },
     "dependencies": {
-        "@exasol/extension-manager-interface": "0.4.0"
+        "@exasol/extension-manager-interface": "0.4.1"
     },
     "devDependencies": {
         "@types/jest": "^29.5.8",
