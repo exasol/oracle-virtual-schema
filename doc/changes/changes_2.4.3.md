@@ -28,6 +28,7 @@ This release adds integration tests using Exasol 8 and an extension for the Exte
 
 #### Test Dependency Updates
 
+* Updated `com.exasol:exasol-testcontainers:6.6.2` to `6.6.3`
 * Added `com.exasol:extension-manager-integration-test-java:0.5.5`
 * Updated `com.exasol:hamcrest-resultset-matcher:1.6.1` to `1.6.2`
 * Added `com.oracle.database.jdbc:ojdbc8:23.3.0.23.09`

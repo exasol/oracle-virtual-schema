@@ -59,8 +59,8 @@
 | [JaCoCo :: Maven Plugin][56]                            | [Eclipse Public License 2.0][33]  |
 | [error-code-crawler-maven-plugin][57]                   | [MIT License][58]                 |
 | [Reproducible Build Maven Plugin][59]                   | [Apache 2.0][43]                  |
-| [Exec Maven Plugin][60]                                 | [Apache License 2][13]            |
-| [Apache Maven Clean Plugin][61]                         | [Apache-2.0][13]                  |
+| [Apache Maven Clean Plugin][60]                         | [Apache-2.0][13]                  |
+| [Exec Maven Plugin][61]                                 | [Apache License 2][13]            |
 
 ## Extension
 
@@ -130,6 +130,6 @@
 [57]: https://github.com/exasol/error-code-crawler-maven-plugin/
 [58]: https://github.com/exasol/error-code-crawler-maven-plugin/blob/main/LICENSE
 [59]: http://zlika.github.io/reproducible-build-maven-plugin
-[60]: https://www.mojohaus.org/exec-maven-plugin
-[61]: https://maven.apache.org/plugins/maven-clean-plugin/
+[60]: https://maven.apache.org/plugins/maven-clean-plugin/
+[61]: https://www.mojohaus.org/exec-maven-plugin
 [62]: https://registry.npmjs.org/@exasol/extension-manager-interface/-/extension-manager-interface-0.4.0.tgz
