@@ -8,6 +8,11 @@ This release adds integration tests using Exasol 8 and an extension for the Exte
 
 **Note:** This release removes the Oracle JDBC driver from the adapter JAR file that was accidentally included in version 2.1.0. This means that you will need to define the `ADAPTER SCRIPT` specifying both the adapter JAR and the JDBC driver JAR as described in the [user guide](../user_guide/oracle_user_guide.md#installing-the-adapter-script).
 
+**Known issues:** After adding integration tests for the extension, this release contains the following vulnerabilities in third party test dependencies:
+
+* CVE-2023-4586 in `io.netty:netty-handler:jar:4.1.94.Final:test`
+* CVE-2020-36641 in `fr.turri:aXMLRPC:jar:1.13.0:test`
+
 ## Feature
 
 * #33: Added tests with Exasol 8

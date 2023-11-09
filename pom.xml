@@ -282,6 +282,21 @@
                     </filesets>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.sonatype.ossindex.maven</groupId>
+                <artifactId>ossindex-maven-plugin</artifactId>
+                <configuration>
+                    <excludeVulnerabilityIds>
+                        <!-- Transitive test dependency fr.turri:aXMLRPC used by com.exasol:bucketfs-java.
+                        CVE-2020-36641 is reported to be fixed in aXMLRPC 1.12.1. We use version 1.13.0, so this is a false
+                        positive. -->
+                        <exclude>CVE-2020-36641</exclude>
+                        <!-- Transitive test dependency io.netty:netty-handler of software.amazon.awssdk:s3.
+                        We assume that the AWS client's usage of `netty-handler` is not affected by the vulnerability. -->
+                        <exclude>CVE-2023-4586</exclude>
+                    </excludeVulnerabilityIds>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <parent>
