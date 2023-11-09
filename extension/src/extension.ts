@@ -24,7 +24,7 @@ export function createExtension(): ExasolExtension {
         description: "Virtual Schema for Oracle",
         category: "jdbc-virtual-schema",
         version: CONFIG.version,
-        file: { name: CONFIG.fileName, size: CONFIG.fileSizeBytes },
+        files: [{ name: CONFIG.fileName, size: CONFIG.fileSizeBytes }, { name: "ojdbc8.jar" }],
         scripts: getUdfScriptDefinitions(),
         virtualSchemaAdapterScript: ADAPTER_SCRIPT_NAME,
         scriptVersionExtractor: jarFileVersionExtractor(/virtual-schema-dist-[\d.]+-oracle-(\d+\.\d+\.\d+).jar/),
