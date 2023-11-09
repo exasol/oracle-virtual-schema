@@ -15,11 +15,11 @@ This release adds integration tests using Exasol 8 and an extension for the Exte
 
 ## Dependency Updates
 
-### Compile Dependency Updates
+### Virtual Schema for Oracle
+
+#### Compile Dependency Updates
 
 * Removed `com.oracle.database.jdbc:ojdbc8:23.3.0.23.09`
-
-### Test Dependency Updates
 
 #### Test Dependency Updates
 
