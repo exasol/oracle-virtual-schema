@@ -1,16 +1,17 @@
 package com.exasol.closeafterall;
 
-import com.exasol.errorreporting.ExaError;
-import org.junit.jupiter.api.extension.AfterAllCallback;
-import org.junit.jupiter.api.extension.ExtensionContext;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Field;
 
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+
+import com.exasol.errorreporting.ExaError;
+
 /**
  * This JUnit extension closes resources in static fields that are annotated with {@code @CloseAfterAll}. You can use it
- * by annotating your class with {@code @ExtendWith({ CloseAfterAllExtension.class })}.
+ * by annotating your class with {@code @ExtendWith(&#123; CloseAfterAllExtension.class &#125;)}.
  */
 public class CloseAfterAllExtension implements AfterAllCallback {
 
@@ -40,7 +41,7 @@ public class CloseAfterAllExtension implements AfterAllCallback {
             ((Closeable) annotatedObject).close();
         } else {
             throw new IllegalStateException(ExaError.messageBuilder("E-VSORA-9").message(
-                    "Could not close the field {{field}} annotated with @CloseAfterAll since it does not implement Closable.")
+                    "Could not close the field {{field}} annotated with @CloseAfterAll since it does not implement java.io.Closeable.")
                     .parameter("field", field.getName()).toString());
         }
     }
