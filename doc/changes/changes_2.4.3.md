@@ -20,6 +20,7 @@ This release adds integration tests using Exasol 8.
 
 ### Test Dependency Updates
 
+* Updated `com.exasol:exasol-testcontainers:6.6.2` to `6.6.3`
 * Updated `com.exasol:hamcrest-resultset-matcher:1.6.1` to `1.6.2`
 * Added `com.oracle.database.jdbc:ojdbc8:23.3.0.23.09`
 * Updated `nl.jqno.equalsverifier:equalsverifier:3.15.2` to `3.15.3`
