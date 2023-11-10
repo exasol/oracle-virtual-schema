@@ -1,9 +1,7 @@
 package com.exasol.adapter.dialects.oracle;
 
 import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.*;
-import static com.exasol.adapter.dialects.oracle.IntegrationTestsHelperfunctions.getPropertyFromFile;
-import static com.exasol.adapter.dialects.oracle.OracleVirtualSchemaIntegrationTestSetup.createAdapterScript;
-import static com.exasol.adapter.dialects.oracle.OracleVirtualSchemaIntegrationTestSetup.uploadOracleJDBCDriverAndVSToBucket;
+import static com.exasol.adapter.dialects.oracle.OracleVirtualSchemaIntegrationTestSetup.*;
 import static com.exasol.matcher.ResultSetMatcher.matchesResultSet;
 import static com.exasol.matcher.ResultSetStructureMatcher.table;
 import static org.hamcrest.CoreMatchers.*;
@@ -75,8 +73,8 @@ class OracleSqlDialectIT {
     private static void uploadInstantClientToBucket()
             throws BucketAccessException, TimeoutException, FileNotFoundException {
         final Bucket bucket = exasolContainer.getDefaultBucket();
-        final String instantClientName = getPropertyFromFile(RESOURCES_FOLDER_DIALECT_NAME, "instant.client.name");
-        final String instantClientPath = getPropertyFromFile(RESOURCES_FOLDER_DIALECT_NAME, "instant.client.path");
+        final String instantClientName = "instantclient-basic-linux.x64-12.1.0.2.0.zip";
+        final String instantClientPath = "src/test/resources/integration/driver/oracle";
         bucket.uploadFile(Path.of(instantClientPath, instantClientName), "drivers/oracle/" + instantClientName);
     }
 
@@ -84,17 +82,19 @@ class OracleSqlDialectIT {
         final Map<String, ContainerNetwork> networks = exasolContainer.getContainerInfo().getNetworkSettings()
                 .getNetworks();
         if (networks.size() == 0) {
-            return null;
+            throw new IllegalStateException("Failed to get host IP from container network settings");
         }
         return networks.values().iterator().next().getGateway();
     }
 
     private static void setupExasolContainer()
             throws BucketAccessException, TimeoutException, FileNotFoundException, SQLException, InterruptedException {
-        uploadOracleJDBCDriverAndVSToBucket(exasolContainer.getDefaultBucket());
+        uploadOracleJDBCDriverToBucket(exasolContainer);
+        uploadAdapterToBucket(exasolContainer.getDefaultBucket());
         uploadInstantClientToBucket();
         final Connection exasolConnection = exasolContainer.createConnectionForUser(exasolContainer.getUsername(),
                 exasolContainer.getPassword());
+        ExasolVersionCheck.assumeExasolVersion7(exasolConnection);
         statementExasol = exasolConnection.createStatement();
 
         final UdfTestSetup udfTestSetup = new UdfTestSetup(getTestHostIpFromInsideExasol(exasolContainer),

@@ -34,6 +34,11 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
         return "ID" + idCounter;
     }
 
+    @BeforeAll
+    static void assumeExasol71() throws SQLException {
+        ExasolVersionCheck.assumeExasolVersion7(SETUP.getExasolContainer().createConnection());
+    }
+
     @Override
     protected TestSetup getTestSetup() {
         final OracleObjectFactory oracleFactory = SETUP.getOracleFactory();
@@ -42,11 +47,11 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
 
     private static class OracleSingleTableVirtualSchemaTestSetup implements VirtualSchemaTestSetup {
         private final VirtualSchema virtualSchema;
-        private final Schema OracleSchema;
+        private final Schema oracleSchema;
 
-        private OracleSingleTableVirtualSchemaTestSetup(final VirtualSchema virtualSchema, final Schema OracleSchema) {
+        private OracleSingleTableVirtualSchemaTestSetup(final VirtualSchema virtualSchema, final Schema oracleSchema) {
             this.virtualSchema = virtualSchema;
-            this.OracleSchema = OracleSchema;
+            this.oracleSchema = oracleSchema;
         }
 
         @Override
@@ -57,7 +62,7 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
         @Override
         public void close() {
             this.virtualSchema.drop();
-            this.OracleSchema.drop();
+            this.oracleSchema.drop();
         }
     }
 
