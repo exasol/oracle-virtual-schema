@@ -1,4 +1,4 @@
-# Virtual Schema for Oracle 2.4.3, released 2023-11-09
+# Virtual Schema for Oracle 2.4.3, released 2023-??-??
 
 Code name: Test with Exasol 8
 
