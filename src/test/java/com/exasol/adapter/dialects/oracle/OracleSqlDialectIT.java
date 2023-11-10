@@ -66,8 +66,8 @@ class OracleSqlDialectIT {
     @BeforeAll
     static void beforeAll()
             throws BucketAccessException, TimeoutException, SQLException, FileNotFoundException, InterruptedException {
-        setupExasolContainer();
         setupOracleDbContainer();
+        setupExasolContainer();
     }
 
     private static void uploadInstantClientToBucket()
