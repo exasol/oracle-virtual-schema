@@ -10,6 +10,12 @@
     <properties>
         <vscjdbc.version>11.0.2</vscjdbc.version>
         <org.testcontainers.version>1.19.1</org.testcontainers.version>
+        <!-- Additional sonar configuration for analyzing TypeScript extension -->
+        <sonar.sources>src/main/,extension/src/</sonar.sources>
+        <sonar.exclusions>extension/src/*.test.ts</sonar.exclusions>
+        <sonar.tests>src/test/,extension/src</sonar.tests>
+        <sonar.test.inclusions>src/test/,*.test.ts</sonar.test.inclusions>
+        <sonar.javascript.lcov.reportPaths>extension/coverage/lcov.info</sonar.javascript.lcov.reportPaths>
     </properties>
     <dependencies>
         <dependency>
@@ -123,14 +129,28 @@
             <classifier>module</classifier>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>com.exasol</groupId>
+            <artifactId>extension-manager-integration-test-java</artifactId>
+            <version>0.5.6</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
+                <groupId>org.sonatype.ossindex.maven</groupId>
+                <artifactId>ossindex-maven-plugin</artifactId>
                 <configuration>
-                    <useModulePath>false</useModulePath>
+                    <excludeVulnerabilityIds>
+                        <!-- Transitive test dependency fr.turri:aXMLRPC used by com.exasol:bucketfs-java.
+                        CVE-2020-36641 is reported to be fixed in aXMLRPC 1.12.1. We use version 1.13.0, so this is a false
+                        positive. -->
+                        <exclude>CVE-2020-36641</exclude>
+                        <!-- Transitive test dependency io.netty:netty-handler of software.amazon.awssdk:s3.
+                        We assume that the AWS client's usage of `netty-handler` is not affected by the vulnerability. -->
+                        <exclude>CVE-2023-4586</exclude>
+                    </excludeVulnerabilityIds>
                 </configuration>
             </plugin>
             <plugin>
@@ -154,6 +174,21 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <configuration>
+                    <useModulePath>false</useModulePath>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- Fix locale dependent tests in case the OS locale is not English -->
+                    <argLine>-Duser.country=US -Duser.language=en ${argLine}</argLine>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
@@ -172,12 +207,95 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.3.2</version>
                 <configuration>
-                    <!-- Fix locale dependent tests in case the OS locale is not English -->
-                    <argLine>-Duser.country=US -Duser.language=en ${argLine}</argLine>
+                    <filesets>
+                        <fileset>
+                            <directory>extension/coverage</directory>
+                            <includes>
+                                <include>**</include>
+                            </includes>
+                        </fileset>
+                        <fileset>
+                            <directory>extension/dist</directory>
+                            <includes>
+                                <include>**</include>
+                            </includes>
+                        </fileset>
+                        <fileset>
+                            <directory>extension/node_modules</directory>
+                            <includes>
+                                <include>**</include>
+                            </includes>
+                        </fileset>
+                        <fileset>
+                            <directory>extension/src</directory>
+                            <includes>
+                                <include>extension-description.ts</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>npm-ci</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>extension/</workingDirectory>
+                            <executable>npm</executable>
+                            <commandlineArgs>ci</commandlineArgs>
+                            <useMavenLogger>false</useMavenLogger>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>build-extension</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>extension/</workingDirectory>
+                            <executable>npm</executable>
+                            <commandlineArgs>run build</commandlineArgs>
+                            <useMavenLogger>false</useMavenLogger>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>unit-test-extension</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>extension/</workingDirectory>
+                            <executable>npm</executable>
+                            <commandlineArgs>test</commandlineArgs>
+                            <useMavenLogger>false</useMavenLogger>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>lint-extension</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>extension/</workingDirectory>
+                            <executable>npm</executable>
+                            <commandlineArgs>run lint</commandlineArgs>
+                            <useMavenLogger>false</useMavenLogger>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
