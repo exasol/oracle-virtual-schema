@@ -8,9 +8,9 @@ import org.testcontainers.containers.OracleContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /**
- * Reason for creating this class on top of oracle container is because this one, differently from the other ones
- * (postgres, mysql, gives back a non-privileged user connection, I've added a method to this class that returns a DBA
- * connection.
+ * This class extends OracleContainer by a method returning a privileged DBA connection. The base class
+ * {@link OracleContainer} only returns a non-privileged user connection which deviates from containers
+ * for other databases like postgres and mysql.
  * <p>
  * More info in the links below: https://github.com/testcontainers/testcontainers-java/issues/4615
  * https://github.com/gvenzl/oci-oracle-xe/issues/41

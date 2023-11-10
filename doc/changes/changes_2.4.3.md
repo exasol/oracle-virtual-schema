@@ -4,7 +4,7 @@ Code name: Test with Exasol 8
 
 ## Summary
 
-This release adds integration tests using Exasol 8 and an extension for the Extension Manager. Please note that the extension expects the Oracle JDBC driver `ojdbc8.jar` in BucketFS. If this file is missing, the extension won't be available in Extension Manager.
+This release adds integration tests using Exasol 8 and the extension code making VSORA available in the [Exasol Extension Manager](https://github.com/exasol/extension-manager). Please note that the VSORA extension expects the Oracle JDBC driver `ojdbc8.jar` in BucketFS. If this file is missing, the extension won't be available in Extension Manager.
 
 **Note:** This release removes the Oracle JDBC driver from the adapter JAR file that was accidentally included in version 2.1.0. This means that you will need to define the `ADAPTER SCRIPT` specifying both the adapter JAR and the JDBC driver JAR as described in the [user guide](../user_guide/oracle_user_guide.md#installing-the-adapter-script).
 
