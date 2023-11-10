@@ -66,8 +66,8 @@ class OracleSqlDialectIT {
     @BeforeAll
     static void beforeAll()
             throws BucketAccessException, TimeoutException, SQLException, FileNotFoundException, InterruptedException {
-        setupOracleDbContainer();
         setupExasolContainer();
+        setupOracleDbContainer();
     }
 
     private static void uploadInstantClientToBucket()
@@ -82,7 +82,7 @@ class OracleSqlDialectIT {
         final Map<String, ContainerNetwork> networks = exasolContainer.getContainerInfo().getNetworkSettings()
                 .getNetworks();
         if (networks.size() == 0) {
-            return null;
+            throw new IllegalStateException("Failed to get host IP from container network settings");
         }
         return networks.values().iterator().next().getGateway();
     }
@@ -94,6 +94,7 @@ class OracleSqlDialectIT {
         uploadInstantClientToBucket();
         final Connection exasolConnection = exasolContainer.createConnectionForUser(exasolContainer.getUsername(),
                 exasolContainer.getPassword());
+        ExasolVersionCheck.assumeExasolVersion7(exasolConnection);
         statementExasol = exasolConnection.createStatement();
 
         final UdfTestSetup udfTestSetup = new UdfTestSetup(getTestHostIpFromInsideExasol(exasolContainer),
