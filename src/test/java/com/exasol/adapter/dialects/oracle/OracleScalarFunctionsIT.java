@@ -34,11 +34,6 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
         return "ID" + idCounter;
     }
 
-    @BeforeAll
-    static void assumeExasol71() throws SQLException {
-        // ExasolVersionCheck.assumeExasolVersion7(SETUP.getExasolContainer().createConnection());
-    }
-
     @Override
     protected TestSetup getTestSetup() {
         final OracleObjectFactory oracleFactory = SETUP.getOracleFactory();
