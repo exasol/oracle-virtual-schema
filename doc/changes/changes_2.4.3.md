@@ -31,6 +31,7 @@ This release adds integration tests using Exasol 8 and the extension code making
 * Updated `com.exasol:exasol-testcontainers:6.6.2` to `6.6.3`
 * Added `com.exasol:extension-manager-integration-test-java:0.5.6`
 * Updated `com.exasol:hamcrest-resultset-matcher:1.6.1` to `1.6.2`
+* Updated `com.exasol:test-db-builder-java:3.5.1` to `3.5.2`
 * Added `com.oracle.database.jdbc:ojdbc8:23.3.0.23.09`
 * Updated `nl.jqno.equalsverifier:equalsverifier:3.15.2` to `3.15.3`
 * Updated `org.jacoco:org.jacoco.agent:0.8.10` to `0.8.11`
@@ -40,9 +41,12 @@ This release adds integration tests using Exasol 8 and the extension code making
 #### Plugin Dependency Updates
 
 * Updated `com.exasol:error-code-crawler-maven-plugin:1.3.0` to `1.3.1`
-* Updated `com.exasol:project-keeper-maven-plugin:2.9.12` to `2.9.15`
+* Updated `com.exasol:project-keeper-maven-plugin:2.9.12` to `2.9.16`
 * Updated `org.apache.maven.plugins:maven-clean-plugin:2.5` to `3.3.2`
+* Updated `org.apache.maven.plugins:maven-dependency-plugin:3.6.0` to `3.6.1`
 * Updated `org.apache.maven.plugins:maven-enforcer-plugin:3.4.0` to `3.4.1`
+* Updated `org.apache.maven.plugins:maven-failsafe-plugin:3.1.2` to `3.2.2`
+* Updated `org.apache.maven.plugins:maven-surefire-plugin:3.1.2` to `3.2.2`
 * Added `org.codehaus.mojo:exec-maven-plugin:3.1.0`
 * Updated `org.codehaus.mojo:versions-maven-plugin:2.16.0` to `2.16.1`
 * Updated `org.jacoco:jacoco-maven-plugin:0.8.10` to `0.8.11`
