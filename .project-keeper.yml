@@ -7,6 +7,8 @@ sources:
       - jar_artifact
   - type: npm
     path: extension/package.json
+version:
+  fromSource: pom.xml
 build:
   runnerOs: ubuntu-20.04
   freeDiskSpace: false
