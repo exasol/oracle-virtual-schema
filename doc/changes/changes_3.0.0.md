@@ -20,16 +20,20 @@ Code name:
 #### Test Dependency Updates
 
 * Updated `com.exasol:exasol-testcontainers:6.6.2` to `7.0.0`
-* Added `com.exasol:extension-manager-integration-test-java:0.5.6`
-* Updated `com.exasol:hamcrest-resultset-matcher:1.6.1` to `1.6.2`
+* Added `com.exasol:extension-manager-integration-test-java:0.5.7`
+* Updated `com.exasol:hamcrest-resultset-matcher:1.6.1` to `1.6.4`
 * Added `com.exasol:maven-project-version-getter:1.2.0`
 * Updated `com.exasol:test-db-builder-java:3.5.1` to `3.5.3`
 * Updated `com.exasol:virtual-schema-common-jdbc:11.0.2` to `12.0.0`
+* Updated `com.exasol:virtual-schema-shared-integration-tests:2.2.5` to `2.2.6`
 * Added `com.oracle.database.jdbc:ojdbc8:23.3.0.23.09`
-* Updated `nl.jqno.equalsverifier:equalsverifier:3.15.2` to `3.15.3`
+* Updated `nl.jqno.equalsverifier:equalsverifier:3.15.2` to `3.15.6`
 * Updated `org.jacoco:org.jacoco.agent:0.8.10` to `0.8.11`
 * Updated `org.junit.jupiter:junit-jupiter:5.10.0` to `5.10.1`
-* Updated `org.mockito:mockito-junit-jupiter:5.5.0` to `5.7.0`
+* Updated `org.mockito:mockito-junit-jupiter:5.5.0` to `5.10.0`
+* Updated `org.slf4j:slf4j-jdk14:2.0.9` to `2.0.11`
+* Updated `org.testcontainers:junit-jupiter:1.19.1` to `1.19.3`
+* Updated `org.testcontainers:oracle-xe:1.19.1` to `1.19.3`
 
 #### Plugin Dependency Updates
 
