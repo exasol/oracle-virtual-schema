@@ -1,26 +1,26 @@
 # Oracle Virtual Schema 3.0.0, released 2024-02-22
 
-Code name: Char set is always `utf-8`, deprecated IMPORT_DATA_TYPES `FROM_RESULT_SET` value .
+Code name: Char set is always `utf-8`, deprecated IMPORT_DATA_TYPES `FROM_RESULT_SET` value
 
 ## Summary
 
 The behaviour when it comes to character sets is now simplified,
 The target char set is now always UTF-8.
 The `IMPORT_DATA_TYPES` property (and value `FROM_RESULT_SET`) are now deprecated (change in vs-common-jdbc):
-An exception will be thrown when users use`FROM_RESULT_SET`. The exception message warns the user that the value is no longer supported and the property itself is also deprecated.
+An exception will be thrown when users use `FROM_RESULT_SET`. The exception message warns the user that the value is no longer supported and the property itself is also deprecated.
 
-We also updated dependencies and resolved the following 2 CVEs:
-- CVE-2024-26308: org.apache.commons:commons-compress:jar:1.24.0:test
-- CVE-2024-25710: org.apache.commons:commons-compress:jar:1.24.0:test
+We also updated dependencies and resolved the following 2 CVEs in test dependency `org.apache.commons:commons-compress`:
+- CVE-2024-26308
+- CVE-2024-25710
 
 ## Features
 
-* #42: Update vs-common-jdbc to v12.0.0 for Exasol V8 changes + adapt tests refactoring
+* #42: Updated vs-common-jdbc to v12.0.0 for Exasol V8 changes + adapt tests refactoring
 
 ## Security
 
-* #43: CVE-2024-25710: org.apache.commons:commons-compress:jar:1.24.0:test
-* #44: CVE-2024-26308: org.apache.commons:commons-compress:jar:1.24.0:test
+* #43: Fixed CVE-2024-25710 in `org.apache.commons:commons-compress:jar:1.24.0:test`
+* #44: Fixed CVE-2024-26308 in `org.apache.commons:commons-compress:jar:1.24.0:test`
 
 ## Dependency Updates
 
