@@ -1,12 +1,26 @@
-# Oracle Virtual Schema 3.0.0, released 2024-??-??
+# Oracle Virtual Schema 3.0.0, released 2024-02-22
 
-Code name:
+Code name: Char set is always `utf-8`, deprecated IMPORT_DATA_TYPES `FROM_RESULT_SET` value .
 
 ## Summary
 
+The behaviour when it comes to character sets is now simplified,
+The target char set is now always UTF-8.
+The `IMPORT_DATA_TYPES` property (and value `FROM_RESULT_SET`) are now deprecated (change in vs-common-jdbc):
+An exception will be thrown when users use`FROM_RESULT_SET`. The exception message warns the user that the value is no longer supported and the property itself is also deprecated.
+
+We also updated dependencies and resolved the following 2 CVEs:
+- CVE-2024-26308: org.apache.commons:commons-compress:jar:1.24.0:test
+- CVE-2024-25710: org.apache.commons:commons-compress:jar:1.24.0:test
+
 ## Features
 
-* ISSUE_NUMBER: description
+* #42: Update vs-common-jdbc to v12.0.0 for Exasol V8 changes + adapt tests refactoring
+
+## Security
+
+* #43: CVE-2024-25710: org.apache.commons:commons-compress:jar:1.24.0:test
+* #44: CVE-2024-26308: org.apache.commons:commons-compress:jar:1.24.0:test
 
 ## Dependency Updates
 
@@ -19,13 +33,13 @@ Code name:
 
 #### Test Dependency Updates
 
-* Updated `com.exasol:exasol-testcontainers:6.6.2` to `7.0.0`
+* Updated `com.exasol:exasol-testcontainers:6.6.2` to `7.0.1`
 * Added `com.exasol:extension-manager-integration-test-java:0.5.7`
 * Updated `com.exasol:hamcrest-resultset-matcher:1.6.1` to `1.6.4`
 * Added `com.exasol:maven-project-version-getter:1.2.0`
 * Updated `com.exasol:test-db-builder-java:3.5.1` to `3.5.3`
 * Updated `com.exasol:virtual-schema-common-jdbc:11.0.2` to `12.0.0`
-* Updated `com.exasol:virtual-schema-shared-integration-tests:2.2.5` to `2.2.6`
+* Updated `com.exasol:virtual-schema-shared-integration-tests:2.2.5` to `3.0.0`
 * Added `com.oracle.database.jdbc:ojdbc8:23.3.0.23.09`
 * Updated `nl.jqno.equalsverifier:equalsverifier:3.15.2` to `3.15.6`
 * Updated `org.jacoco:org.jacoco.agent:0.8.10` to `0.8.11`

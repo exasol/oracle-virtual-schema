@@ -6,7 +6,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.exasol.adapter.commontests.scalarfunction.ScalarFunctionsTestBase;
@@ -59,11 +58,6 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
             this.virtualSchema.drop();
             this.oracleSchema.drop();
         }
-    }
-
-    @BeforeAll
-    static void beforeAll() {
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
 
     public class OracleTestSetup implements TestSetup {
@@ -152,5 +146,15 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
         public Connection createExasolConnection() throws SQLException {
             return SETUP.getExasolContainer().createConnection();
         }
+    }
+
+    @Override
+    protected void beforeAllSetup() throws SQLException {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    }
+
+    @Override
+    protected void afterAllTeardown() throws SQLException {
+
     }
 }

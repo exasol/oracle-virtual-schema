@@ -400,9 +400,6 @@ class OracleSqlDialectIT {
         void testSelectAllColsNumberFromOraWithJDBCTypemapping() throws SQLException {
             final String qualifiedTableNameActual = VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING + "."
                     + TABLE_ORACLE_NUMBER_HANDLING;
-            // previously final ResultSet expected = getExpectedResultSet("(A VARCHAR(100), B VARCHAR(100),
-            // C
-            // VARCHAR(100))",
             final ResultSet expected = getExpectedResultSet("(A DECIMAL(36,1), B DECIMAL(36,1), C DECIMAL(36,2))",
                     "('12.3456789012345678901234567890123460E32', '12.3456789012345678901234567890E26', '12.3456789012345678901234567890123456E32')");
             assertThat(statementExasol.executeQuery("SELECT * FROM " + qualifiedTableNameActual), //
