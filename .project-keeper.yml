@@ -9,8 +9,10 @@ sources:
     path: extension/package.json
 version:
   fromSource: pom.xml
-excludes:
-  - "E-PK-CORE-18: Outdated content: '.github/workflows/ci-build.yml'"
-  - "E-PK-CORE-18: Outdated content: '.github/workflows/release_droid_upload_github_release_assets.yml'"
-  - "E-PK-CORE-18: Outdated content: '.github/workflows/release_droid_prepare_original_checksum.yml'"
+build:
+  runnerOs: ubuntu-20.04
+  freeDiskSpace: true
+  exasolDbVersions:
+    - "7.1.25"
+    - "8.24.0"
 
