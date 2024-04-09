@@ -16,7 +16,7 @@ This release fixes vulnerabilities by updating dependencies.
 
 #### Test Dependency Updates
 
-* Updated `com.exasol:extension-manager-integration-test-java:0.5.7` to `0.5.10`
+* Updated `com.exasol:extension-manager-integration-test-java:0.5.7` to `0.5.9`
 * Updated `com.exasol:hamcrest-resultset-matcher:1.6.4` to `1.6.5`
 * Updated `com.exasol:test-db-builder-java:3.5.3` to `3.5.4`
 * Updated `com.exasol:udf-debugging-java:0.6.11` to `0.6.13`
