@@ -6,7 +6,7 @@ Code name: Fix vulnerability CVE-2024-29025
 
 This release fixes vulnerabilities by updating dependencies.
 
-## Features
+## Security
 
 * #46: Fixed vulnerability CVE-2024-29025 in test dependency `io.netty:netty-codec-http:jar:4.1.100.Final`
 
