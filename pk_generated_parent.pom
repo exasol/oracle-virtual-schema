@@ -77,8 +77,9 @@
                     <target>${java.version}</target>
                     <showWarnings>true</showWarnings>
                     <compilerArgs>
-                        <arg>-Xlint:all</arg>
-                        <arg>-Werror</arg>
+                        <!-- We turn off `processing` because it complains about every annotation -->
+                        <arg>-Xlint:all,-processing</arg>
+                        <!-- Don't add -Werror as this will let the build fail for linter warnings -->
                     </compilerArgs>
                 </configuration>
             </plugin>
