@@ -3,13 +3,13 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.exasol</groupId>
     <artifactId>oracle-virtual-schema</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1</version>
     <name>Virtual Schema for Oracle</name>
     <description>Virtual Schema for Oracle</description>
     <url>https://github.com/exasol/oracle-virtual-schema/</url>
     <properties>
         <vscjdbc.version>12.0.0</vscjdbc.version>
-        <org.testcontainers.version>1.19.3</org.testcontainers.version>
+        <org.testcontainers.version>1.19.7</org.testcontainers.version>
         <!-- Additional sonar configuration for analyzing TypeScript extension -->
         <sonar.sources>src/main/,extension/src/</sonar.sources>
         <sonar.exclusions>extension/src/*.test.ts</sonar.exclusions>
@@ -57,26 +57,26 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.10.1</version>
+            <version>5.10.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
-            <version>5.10.0</version>
+            <version>5.11.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>nl.jqno.equalsverifier</groupId>
             <artifactId>equalsverifier</artifactId>
-            <version>3.15.6</version>
+            <version>3.16.1</version>
             <scope>test</scope>
         </dependency>
         <!--Integration test dependencies -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-jdk14</artifactId>
-            <version>2.0.11</version>
+            <version>2.0.12</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -107,19 +107,19 @@
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>test-db-builder-java</artifactId>
-            <version>3.5.3</version>
+            <version>3.5.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>udf-debugging-java</artifactId>
-            <version>0.6.11</version>
+            <version>0.6.13</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>hamcrest-resultset-matcher</artifactId>
-            <version>1.6.4</version>
+            <version>1.6.5</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -139,31 +139,16 @@
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>extension-manager-integration-test-java</artifactId>
-            <version>0.5.7</version>
+            <version>0.5.10</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
     <build>
         <plugins>
             <plugin>
-                <groupId>org.sonatype.ossindex.maven</groupId>
-                <artifactId>ossindex-maven-plugin</artifactId>
-                <configuration>
-                    <excludeVulnerabilityIds>
-                        <!-- Transitive test dependency fr.turri:aXMLRPC used by com.exasol:bucketfs-java.
-                        CVE-2020-36641 is reported to be fixed in aXMLRPC 1.12.1. We use version 1.13.0, so this is a false
-                        positive. -->
-                        <exclude>CVE-2020-36641</exclude>
-                        <!-- Transitive test dependency io.netty:netty-handler of software.amazon.awssdk:s3.
-                        We assume that the AWS client's usage of `netty-handler` is not affected by the vulnerability. -->
-                        <exclude>CVE-2023-4586</exclude>
-                    </excludeVulnerabilityIds>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>com.exasol</groupId>
                 <artifactId>project-keeper-maven-plugin</artifactId>
-                <version>3.0.1</version>
+                <version>4.3.0</version>
                 <executions>
                     <execution>
                         <goals>
@@ -309,7 +294,7 @@
     <parent>
         <artifactId>oracle-virtual-schema-generated-parent</artifactId>
         <groupId>com.exasol</groupId>
-        <version>3.0.0</version>
+        <version>3.0.1</version>
         <relativePath>pk_generated_parent.pom</relativePath>
     </parent>
 </project>
