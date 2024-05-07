@@ -7,13 +7,15 @@ sources:
       - jar_artifact
   - type: npm
     path: extension/package.json
+    artifacts:
+      - dist/oracle-vs-extension.js
 version:
   fromSource: pom.xml
 build:
-  runnerOs: ubuntu-20.04
+  runnerOs: ubuntu-22.04
   freeDiskSpace: true
   exasolDbVersions:
-    - "8.24.0"
+    - "8.26.0"
     - "7.1.26"
 excludes:
   - "E-PK-CORE-17: Missing required file: 'release_config.yml'"

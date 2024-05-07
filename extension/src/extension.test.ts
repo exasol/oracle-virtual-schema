@@ -146,6 +146,7 @@ describe("Oracle VS Extension", () => {
     describe("addInstance()", () => {
         it("executes expected statements", () => {
             const context = createMockContext();
+            context.mocks.sqlQuery.mockReturnValue({ columns: [], rows: [] });
             const parameters = [{ name: "base-vs.virtual-schema-name", value: "NEW_ORA_VS" }, { name: "connection", value: "ora-conn-url" }, { name: "username", value: "ora-user" }, { name: "password", value: "ora-password" }]
             const instance = createExtension().addInstance(context, CONFIG.version, { values: parameters });
             expect(instance.name).toBe("NEW_ORA_VS")
@@ -160,6 +161,7 @@ describe("Oracle VS Extension", () => {
 
         it("returns id and name", () => {
             const context = createMockContext();
+            context.mocks.sqlQuery.mockReturnValue({ columns: [], rows: [] });
             const parameters = [{ name: "base-vs.virtual-schema-name", value: "NEW_ORA_VS" }, { name: "username", value: "id" }]
             const instance = createExtension().addInstance(context, CONFIG.version, { values: parameters });
             expect(instance).toStrictEqual({ id: "NEW_ORA_VS", name: "NEW_ORA_VS" })
@@ -167,11 +169,12 @@ describe("Oracle VS Extension", () => {
 
         it("escapes single quotes", () => {
             const context = createMockContext();
+            context.mocks.sqlQuery.mockReturnValue({ columns: [], rows: [] });
             const parameters = [{ name: "base-vs.virtual-schema-name", value: "vs'name" }]
             const instance = createExtension().addInstance(context, CONFIG.version, { values: parameters });
             expect(instance).toStrictEqual({ id: "vs'name", name: "vs'name", })
             const calls = context.mocks.sqlExecute.mock.calls
-            expect(calls[1]).toEqual([`CREATE VIRTUAL SCHEMA "vs'name" USING "ext-schema"."ORACLE_VS_ADAPTER" WITH CONNECTION_NAME = 'vs''name_CONNECTION'`])
+            expect(calls[1]).toEqual([`CREATE VIRTUAL SCHEMA "vs'name" USING "ext-schema"."ORACLE_VS_ADAPTER" WITH CONNECTION_NAME = 'VS''NAME_CONNECTION'`])
         })
 
         it("fails for wrong version", () => {
@@ -214,7 +217,7 @@ describe("Oracle VS Extension", () => {
             const executeCalls = context.mocks.sqlExecute.mock.calls
             expect(executeCalls.length).toEqual(2)
             expect(executeCalls[0]).toEqual(["DROP VIRTUAL SCHEMA IF EXISTS \"instId\" CASCADE"])
-            expect(executeCalls[1]).toEqual(["DROP CONNECTION IF EXISTS \"instId_CONNECTION\""])
+            expect(executeCalls[1]).toEqual(["DROP CONNECTION IF EXISTS \"INSTID_CONNECTION\""])
         })
         it("fails for wrong version", () => {
             expect(() => { createExtension().deleteInstance(createMockContext(), "wrongVersion", "instId") })
