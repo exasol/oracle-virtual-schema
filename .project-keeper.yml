@@ -12,7 +12,7 @@ sources:
 version:
   fromSource: pom.xml
 build:
-  runnerOs: ubuntu-22.04
+  runnerOs: ubuntu-20.04
   freeDiskSpace: true
   exasolDbVersions:
     - "8.26.0"
