@@ -149,4 +149,4 @@
 [69]: https://github.com/exasol/error-code-crawler-maven-plugin/blob/main/LICENSE
 [70]: http://zlika.github.io/reproducible-build-maven-plugin
 [71]: https://www.mojohaus.org/exec-maven-plugin
-[72]: https://registry.npmjs.org/@exasol/extension-manager-interface/-/extension-manager-interface-0.4.2.tgz
+[72]: https://registry.npmjs.org/@exasol/extension-manager-interface/-/extension-manager-interface-0.4.3.tgz

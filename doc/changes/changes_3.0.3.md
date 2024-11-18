@@ -55,3 +55,22 @@ Netty is an asynchronous event-driven network application framework for rapid de
 * Updated `org.apache.maven.plugins:maven-toolchains-plugin:3.1.0` to `3.2.0`
 * Updated `org.codehaus.mojo:versions-maven-plugin:2.16.2` to `2.17.1`
 * Updated `org.sonarsource.scanner.maven:sonar-maven-plugin:3.11.0.3922` to `4.0.0.4121`
+
+### Extension
+
+#### Compile Dependency Updates
+
+* Updated `@exasol/extension-manager-interface:0.4.2` to `0.4.3`
+
+#### Development Dependency Updates
+
+* Updated `eslint:^8.54.0` to `9.14.0`
+* Added `@types/eslint__js:^8.42.3`
+* Added `@eslint/js:^9.15.0`
+* Updated `ts-jest:^29.1.2` to `^29.2.5`
+* Updated `@types/jest:^29.5.12` to `^29.5.14`
+* Added `typescript-eslint:^8.14.0`
+* Updated `typescript:^5.4.5` to `^5.6.3`
+* Updated `@typescript-eslint/eslint-plugin:^7.8.0` to `^8.14.1-alpha.6`
+* Updated `esbuild:^0.21.0` to `^0.24.0`
+* Removed `@typescript-eslint/parser:^7.8.0`
