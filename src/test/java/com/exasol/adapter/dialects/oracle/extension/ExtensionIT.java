@@ -70,7 +70,7 @@ class ExtensionIT extends AbstractVirtualSchemaExtensionIT {
 
     @BeforeEach
     void generateOracleSchemaName() {
-        oracleSchemaName = "EXTENSION_TEST_" + System.currentTimeMillis();
+        this.oracleSchemaName = "EXTENSION_TEST_" + System.currentTimeMillis();
     }
 
     @AfterAll
@@ -129,7 +129,7 @@ class ExtensionIT extends AbstractVirtualSchemaExtensionIT {
 
     @Override
     protected void prepareInstance() {
-        final Schema schema = oracleSetup.createSchema(oracleSchemaName);
+        final Schema schema = oracleSetup.createSchema(this.oracleSchemaName);
         schema.createTable(MAPPING_DESTINATION_TABLE, "ID", "DECIMAL", "NAME", "VARCHAR(10)").insert(1, "abc").insert(2,
                 "xyz");
     }
@@ -151,9 +151,9 @@ class ExtensionIT extends AbstractVirtualSchemaExtensionIT {
     }
 
     @Override
-    protected Collection<ParameterValue> createValidParameterValues() {
+    protected Collection<ParameterValue> createValidParameterValues(final String extensionVersion) {
         return List.of( //
-                param("SCHEMA_NAME", oracleSchemaName), //
+                param("SCHEMA_NAME", this.oracleSchemaName), //
                 param("connection", oracleSetup.getJdbcConnectionString()), //
                 param("username", oracleSetup.getUsername()), //
                 param("password", oracleSetup.getPassword()), //
