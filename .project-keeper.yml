@@ -15,7 +15,7 @@ build:
   runnerOs: ubuntu-20.04
   freeDiskSpace: true
   exasolDbVersions:
-    - "8.26.0"
-    - "7.1.26"
+    - "8.32.0"
+    - "7.1.30"
 excludes:
   - "E-PK-CORE-17: Missing required file: 'release_config.yml'"
