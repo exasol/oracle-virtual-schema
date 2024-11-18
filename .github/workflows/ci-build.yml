@@ -15,8 +15,7 @@ jobs:
         shell: bash
       }
     permissions: {
-      contents: read,
-      checks: write
+      contents: read
     }
     concurrency: {
       group: '${{ github.workflow }}-${{ github.ref }}-${{ matrix.exasol_db_version }}',
@@ -51,7 +50,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: |
+          java-version: |-
             11
             17
           cache: maven
@@ -128,7 +127,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: |
+          java-version: |-
             11
             17
           cache: maven
