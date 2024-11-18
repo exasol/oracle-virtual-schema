@@ -89,7 +89,7 @@ describe("Oracle VS Extension", () => {
             const actual = createExtension().getInstanceParameters(createMockContext(), CONFIG.version)
             expect(actual).toHaveLength(12)
             expect(actual[0]).toStrictEqual({
-                id: "base-vs.virtual-schema-name", name: "Virtual Schema name", required: true, type: "string",
+                id: "baseVirtualSchemaName", name: "Virtual Schema name", required: true, type: "string",
                 description: "Name for the new virtual schema",
                 placeholder: "MY_VIRTUAL_SCHEMA", regex: "[a-zA-Z_]+"
             })
@@ -147,7 +147,7 @@ describe("Oracle VS Extension", () => {
         it("executes expected statements", () => {
             const context = createMockContext();
             context.mocks.sqlQuery.mockReturnValue({ columns: [], rows: [] });
-            const parameters = [{ name: "base-vs.virtual-schema-name", value: "NEW_ORA_VS" }, { name: "connection", value: "ora-conn-url" }, { name: "username", value: "ora-user" }, { name: "password", value: "ora-password" }]
+            const parameters = [{ name: "baseVirtualSchemaName", value: "NEW_ORA_VS" }, { name: "connection", value: "ora-conn-url" }, { name: "username", value: "ora-user" }, { name: "password", value: "ora-password" }]
             const instance = createExtension().addInstance(context, CONFIG.version, { values: parameters });
             expect(instance.name).toBe("NEW_ORA_VS")
             const calls = context.mocks.sqlExecute.mock.calls
@@ -162,7 +162,7 @@ describe("Oracle VS Extension", () => {
         it("returns id and name", () => {
             const context = createMockContext();
             context.mocks.sqlQuery.mockReturnValue({ columns: [], rows: [] });
-            const parameters = [{ name: "base-vs.virtual-schema-name", value: "NEW_ORA_VS" }, { name: "username", value: "id" }]
+            const parameters = [{ name: "baseVirtualSchemaName", value: "NEW_ORA_VS" }, { name: "username", value: "id" }]
             const instance = createExtension().addInstance(context, CONFIG.version, { values: parameters });
             expect(instance).toStrictEqual({ id: "NEW_ORA_VS", name: "NEW_ORA_VS" })
         })
@@ -170,7 +170,7 @@ describe("Oracle VS Extension", () => {
         it("escapes single quotes", () => {
             const context = createMockContext();
             context.mocks.sqlQuery.mockReturnValue({ columns: [], rows: [] });
-            const parameters = [{ name: "base-vs.virtual-schema-name", value: "vs'name" }]
+            const parameters = [{ name: "baseVirtualSchemaName", value: "vs'name" }]
             const instance = createExtension().addInstance(context, CONFIG.version, { values: parameters });
             expect(instance).toStrictEqual({ id: "vs'name", name: "vs'name", })
             const calls = context.mocks.sqlExecute.mock.calls
