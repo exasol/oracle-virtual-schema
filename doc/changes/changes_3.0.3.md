@@ -28,6 +28,7 @@ Netty is an asynchronous event-driven network application framework for rapid de
 * Updated `com.exasol:hamcrest-resultset-matcher:1.6.5` to `1.7.0`
 * Updated `com.exasol:test-db-builder-java:3.5.4` to `3.6.0`
 * Updated `com.oracle.database.jdbc:ojdbc8:23.4.0.24.05` to `23.6.0.24.10`
+* Added `io.netty:netty-common:4.1.115.Final`
 * Updated `nl.jqno.equalsverifier:equalsverifier:3.16.1` to `3.17.3`
 * Updated `org.hamcrest:hamcrest:2.2` to `3.0`
 * Updated `org.jacoco:org.jacoco.agent:0.8.11` to `0.8.12`

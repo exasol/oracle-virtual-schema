@@ -142,6 +142,13 @@
             <version>0.5.12</version>
             <scope>test</scope>
         </dependency>
+        <!-- update transitive dependency com.exasol:extension-manager-client-java to fix vulnerability CVE-2024-47535 -->
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-common</artifactId>
+            <version>4.1.115.Final</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
