@@ -16,6 +16,7 @@ Netty is an asynchronous event-driven network application framework for rapid de
 ## Security
 
 * #50: Fixed vulnerability CVE-2024-47535 in dependency `io.netty:netty-common:jar:4.1.104.Final:test`
+
 ## Dependency Updates
 
 ### Virtual Schema for Oracle
