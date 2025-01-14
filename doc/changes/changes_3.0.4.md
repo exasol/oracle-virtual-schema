@@ -1,4 +1,4 @@
-# Oracle Virtual Schema 3.0.4, released 2025-01-??
+# Oracle Virtual Schema 3.0.4, released 2025-01-14
 
 Code name: Fixed CVE-2024-4068
 
