@@ -36,14 +36,3 @@ We updated the JavaScript Library "braces" to 3.0.3 to fix CVE-2024-4068. This f
 * Updated `org.apache.maven.plugins:maven-surefire-plugin:3.5.1` to `3.5.2`
 * Updated `org.codehaus.mojo:versions-maven-plugin:2.17.1` to `2.18.0`
 * Updated `org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121` to `5.0.0.4389`
-
-### Extension
-
-#### Development Dependency Updates
-
-* Updated `eslint:9.14.0` to `9.18.0`
-* Updated `@eslint/js:^9.15.0` to `^9.18.0`
-* Updated `typescript-eslint:^8.14.0` to `^8.20.0`
-* Updated `typescript:^5.6.3` to `^5.7.3`
-* Updated `@typescript-eslint/eslint-plugin:^8.14.1-alpha.6` to `^8.20.0`
-* Updated `esbuild:^0.24.0` to `^0.24.2`
