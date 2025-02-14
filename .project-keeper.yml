@@ -12,7 +12,7 @@ sources:
 version:
   fromSource: pom.xml
 build:
-  runnerOs: ubuntu-20.04
+  runnerOs: ubuntu-20.04 # required to prevent VM crash with Exasol 7.1
   freeDiskSpace: true
   exasolDbVersions:
     - "8.32.0"
