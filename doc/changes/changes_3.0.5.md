@@ -1,4 +1,4 @@
-# Oracle Virtual Schema 3.0.5, released 2025-01-14
+# Oracle Virtual Schema 3.0.5, released 2025-02-14
 
 Code name: Fixed CVE-2025-24970 and CVE-2025-25193
 
