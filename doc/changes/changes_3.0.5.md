@@ -21,7 +21,7 @@ Also, please note that the vulnerable package was in the test code only, so a pr
 #### Test Dependency Updates
 
 * Updated `com.exasol:exasol-testcontainers:7.1.2` to `7.1.3`
-* Updated `com.exasol:extension-manager-integration-test-java:0.5.13` to `0.5.14`
+* Updated `com.exasol:extension-manager-integration-test-java:0.5.13` to `0.5.15`
 * Updated `com.exasol:udf-debugging-java:0.6.14` to `0.6.15`
 * Updated `com.oracle.database.jdbc:ojdbc8:23.6.0.24.10` to `23.7.0.25.01`
 * Updated `io.netty:netty-common:4.1.116.Final` to `4.1.118.Final`
