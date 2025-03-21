@@ -21,7 +21,7 @@
 | [JUnit Jupiter (Aggregator)][10]                | [Eclipse Public License v2.0][11]                 |
 | [mockito-junit-jupiter][12]                     | [MIT][13]                                         |
 | [EqualsVerifier \| release normal jar][14]      | [Apache License, Version 2.0][15]                 |
-| [SLF4J JDK14 Provider][16]                      | [MIT License][17]                                 |
+| [SLF4J JDK14 Provider][16]                      | [MIT][17]                                         |
 | [Test containers for Exasol on Docker][18]      | [MIT License][19]                                 |
 | [Testcontainers :: JUnit Jupiter Extension][20] | [MIT][21]                                         |
 | [Testcontainers :: JDBC :: Oracle XE][20]       | [MIT][21]                                         |
@@ -94,7 +94,7 @@
 [14]: https://www.jqno.nl/equalsverifier
 [15]: https://www.apache.org/licenses/LICENSE-2.0.txt
 [16]: http://www.slf4j.org
-[17]: http://www.opensource.org/licenses/mit-license.php
+[17]: https://opensource.org/license/mit
 [18]: https://github.com/exasol/exasol-testcontainers/
 [19]: https://github.com/exasol/exasol-testcontainers/blob/main/LICENSE
 [20]: https://java.testcontainers.org
