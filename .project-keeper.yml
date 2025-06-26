@@ -12,10 +12,21 @@ sources:
 version:
   fromSource: pom.xml
 build:
-  runnerOs: ubuntu-20.04 # required to prevent VM crash with Exasol 7.1
-  freeDiskSpace: true
+  runnerOs: ubuntu-24.04
+  freeDiskSpace: false
   exasolDbVersions:
-    - "8.32.0"
-    - "7.1.30"
+    - "8.34.0"
+    - "8.29.9" # Added to test support for TIMESTAMP without nano precision. Remove if/when 7.1 is re-enabled
+  # - "7.1.30" # Exasol 7.1.x does not yet support the latest Ubuntu version
+  workflows:
+    - name: ci-build.yml
+      stepCustomizations:
+        - action: INSERT_AFTER
+          job: matrix-build
+          stepId: enable-testcontainer-reuse
+          content:
+            name: Fix VM Crash in UDFs
+            id: fix-vm-crash
+            run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 excludes:
   - "E-PK-CORE-17: Missing required file: 'release_config.yml'"
