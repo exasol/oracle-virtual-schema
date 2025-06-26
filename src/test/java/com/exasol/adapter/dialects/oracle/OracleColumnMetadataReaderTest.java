@@ -3,12 +3,15 @@ package com.exasol.adapter.dialects.oracle;
 import static com.exasol.adapter.metadata.DataType.createMaximumSizeVarChar;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.Mockito.lenient;
 
 import java.sql.Types;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
+import com.exasol.ExaMetadata;
 import com.exasol.adapter.AdapterProperties;
 import com.exasol.adapter.dialects.BaseIdentifierConverter;
 import com.exasol.adapter.jdbc.JDBCTypeDescription;
@@ -17,14 +20,18 @@ import com.exasol.adapter.metadata.DataType;
 class OracleColumnMetadataReaderTest {
     private OracleColumnMetadataReader columnMetadataReader;
 
+    private ExaMetadata exaMetadataMock;
+
     @BeforeEach
     void beforeEach() {
+        this.exaMetadataMock = Mockito.mock(ExaMetadata.class);
+        lenient().when(exaMetadataMock.getDatabaseVersion()).thenReturn("8.34.0");
         this.columnMetadataReader = createDefaultOracleColumnMetadataReader();
     }
 
     protected OracleColumnMetadataReader createDefaultOracleColumnMetadataReader() {
         return new OracleColumnMetadataReader(null, AdapterProperties.emptyProperties(),
-                null, BaseIdentifierConverter.createDefault());
+                exaMetadataMock, BaseIdentifierConverter.createDefault());
     }
 
     private JDBCTypeDescription createTypeDescriptionForNumeric(final int precision, final int scale) {
