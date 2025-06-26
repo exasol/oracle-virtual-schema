@@ -1,5 +1,6 @@
 package com.exasol.adapter.dialects.oracle;
 
+import com.exasol.ExaMetadata;
 import com.exasol.adapter.AdapterProperties;
 import com.exasol.adapter.dialects.SqlDialect;
 import com.exasol.adapter.dialects.SqlDialectFactory;
@@ -16,8 +17,8 @@ public class OracleSqlDialectFactory implements SqlDialectFactory {
     }
 
     @Override
-    public SqlDialect createSqlDialect(final ConnectionFactory connectionFactory, final AdapterProperties properties) {
-        return new OracleSqlDialect(connectionFactory, properties);
+    public SqlDialect createSqlDialect(final ConnectionFactory connectionFactory, final AdapterProperties properties, final ExaMetadata exaMetadata) {
+        return new OracleSqlDialect(connectionFactory, properties, exaMetadata);
     }
 
     @Override

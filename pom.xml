@@ -3,12 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.exasol</groupId>
     <artifactId>oracle-virtual-schema</artifactId>
-    <version>3.0.5</version>
+    <version>3.0.6</version>
     <name>Virtual Schema for Oracle</name>
     <description>Virtual Schema for Oracle</description>
     <url>https://github.com/exasol/oracle-virtual-schema/</url>
     <properties>
-        <vscjdbc.version>12.0.0</vscjdbc.version>
+        <virtual-schema-common-jdbc.version>13.0.0</virtual-schema-common-jdbc.version>
         <!-- Additional sonar configuration for analyzing TypeScript extension -->
         <sonar.sources>src/main/,extension/src/</sonar.sources>
         <sonar.exclusions>extension/src/*.test.ts</sonar.exclusions>
@@ -20,7 +20,7 @@
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>virtual-schema-common-jdbc</artifactId>
-            <version>${vscjdbc.version}</version>
+            <version>${virtual-schema-common-jdbc.version}</version>
         </dependency>
         <dependency>
             <groupId>com.exasol</groupId>
@@ -43,7 +43,7 @@
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>virtual-schema-common-jdbc</artifactId>
-            <version>${vscjdbc.version}</version>
+            <version>${virtual-schema-common-jdbc.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
@@ -156,7 +156,10 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <compilerArgs>
-                        <arg>-Xlint:all,-path</arg>
+                        <!-- We turn off `processing` because it complains about every annotation -->
+                        <!-- Disable 'path' warning because compiler fails with error
+                            "[path] bad path element "~/.m2/repository/org/apache/derby/derbyclient/10.14.2.0/derbyLocale_cs.jar": no such file or directory" -->
+                        <arg>-Xlint:all,-processing,-path</arg>
                         <arg>-Werror</arg>
                     </compilerArgs>
                 </configuration>
@@ -164,7 +167,7 @@
             <plugin>
                 <groupId>com.exasol</groupId>
                 <artifactId>project-keeper-maven-plugin</artifactId>
-                <version>4.5.0</version>
+                <version>5.2.2</version>
                 <executions>
                     <execution>
                         <goals>
@@ -174,11 +177,20 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
-                    <finalName>virtual-schema-dist-${vscjdbc.version}-oracle-${project.version}</finalName>
+                    <finalName>virtual-schema-dist-${virtual-schema-common-jdbc.version}-oracle-${project.version}</finalName>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <groupId>org.apache.maven.plugins</groupId>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -305,12 +317,22 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.sonatype.ossindex.maven</groupId>
+                <artifactId>ossindex-maven-plugin</artifactId>
+                <configuration>
+                    <excludeVulnerabilityIds>
+                        <!-- Exasol's JDBC driver was fixed in version 24.2.1, but OSSIndex does not reflect that yet -->
+                        <exclude>CVE-2024-55551</exclude>
+                    </excludeVulnerabilityIds>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <parent>
         <artifactId>oracle-virtual-schema-generated-parent</artifactId>
         <groupId>com.exasol</groupId>
-        <version>3.0.5</version>
+        <version>3.0.6</version>
         <relativePath>pk_generated_parent.pom</relativePath>
     </parent>
 </project>

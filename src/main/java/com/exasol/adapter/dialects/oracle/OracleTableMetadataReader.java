@@ -2,6 +2,7 @@ package com.exasol.adapter.dialects.oracle;
 
 import java.sql.Connection;
 
+import com.exasol.ExaMetadata;
 import com.exasol.adapter.AdapterProperties;
 import com.exasol.adapter.dialects.IdentifierConverter;
 import com.exasol.adapter.jdbc.BaseTableMetadataReader;
@@ -22,8 +23,8 @@ public class OracleTableMetadataReader extends BaseTableMetadataReader {
      * @param identifierConverter  converter between source and Exasol identifiers
      */
     public OracleTableMetadataReader(final Connection connection, final ColumnMetadataReader columnMetadataReader,
-            final AdapterProperties properties, final IdentifierConverter identifierConverter) {
-        super(connection, columnMetadataReader, properties, identifierConverter);
+                                     final AdapterProperties properties, final ExaMetadata exaMetadata, final IdentifierConverter identifierConverter) {
+        super(connection, columnMetadataReader, properties, exaMetadata, identifierConverter);
     }
 
     @Override

@@ -37,7 +37,7 @@ class OracleTableMetadataReaderTest {
     @BeforeEach
     void beforeEach() {
         this.reader = new OracleTableMetadataReader(null, this.columnMetadataReaderMock,
-                AdapterProperties.emptyProperties(), BaseIdentifierConverter.createDefault());
+                AdapterProperties.emptyProperties(), null, BaseIdentifierConverter.createDefault());
     }
 
     @CsvSource({ "ANY_TABLE_NAME, true", "BIN$FOO, false" })

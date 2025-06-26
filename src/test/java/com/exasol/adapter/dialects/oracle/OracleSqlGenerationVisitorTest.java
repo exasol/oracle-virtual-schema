@@ -9,7 +9,10 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -26,7 +29,9 @@ import com.exasol.adapter.adapternotes.ColumnAdapterNotes;
 import com.exasol.adapter.adapternotes.ColumnAdapterNotesJsonConverter;
 import com.exasol.adapter.dialects.SqlDialect;
 import com.exasol.adapter.dialects.rewriting.SqlGenerationContext;
-import com.exasol.adapter.metadata.*;
+import com.exasol.adapter.metadata.ColumnMetadata;
+import com.exasol.adapter.metadata.DataType;
+import com.exasol.adapter.metadata.TableMetadata;
 import com.exasol.adapter.sql.*;
 import com.exasol.sql.SqlNormalizer;
 
@@ -37,7 +42,7 @@ class OracleSqlGenerationVisitorTest {
     @BeforeEach
     void beforeEach() {
         final SqlDialect dialect = new OracleSqlDialectFactory().createSqlDialect(null,
-                AdapterProperties.emptyProperties());
+                AdapterProperties.emptyProperties(), null);
         final SqlGenerationContext context = new SqlGenerationContext("test_catalog", "test_schema", false);
         this.visitor = new OracleSqlGenerationVisitor(dialect, context);
     }

@@ -1,7 +1,7 @@
 package com.exasol.adapter.dialects.oracle;
 
-import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,7 +13,7 @@ class OracleMetadataReaderTest {
 
     @BeforeEach
     void beforeEach() {
-        this.reader = new OracleMetadataReader(null, AdapterProperties.emptyProperties());
+        this.reader = new OracleMetadataReader(null, AdapterProperties.emptyProperties(), null);
     }
 
     @Test

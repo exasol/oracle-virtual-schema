@@ -24,7 +24,7 @@ class OracleColumnMetadataReaderTest {
 
     protected OracleColumnMetadataReader createDefaultOracleColumnMetadataReader() {
         return new OracleColumnMetadataReader(null, AdapterProperties.emptyProperties(),
-                BaseIdentifierConverter.createDefault());
+                null, BaseIdentifierConverter.createDefault());
     }
 
     private JDBCTypeDescription createTypeDescriptionForNumeric(final int precision, final int scale) {

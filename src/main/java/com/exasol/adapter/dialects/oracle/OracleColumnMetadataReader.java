@@ -5,6 +5,7 @@ import static com.exasol.adapter.dialects.oracle.OracleProperties.ORACLE_CAST_NU
 import java.sql.Connection;
 import java.sql.Types;
 
+import com.exasol.ExaMetadata;
 import com.exasol.adapter.AdapterProperties;
 import com.exasol.adapter.dialects.IdentifierConverter;
 import com.exasol.adapter.jdbc.BaseColumnMetadataReader;
@@ -31,8 +32,8 @@ public class OracleColumnMetadataReader extends BaseColumnMetadataReader {
      * @param identifierConverter converter between source and Exasol identifiers
      */
     public OracleColumnMetadataReader(final Connection connection, final AdapterProperties properties,
-            final IdentifierConverter identifierConverter) {
-        super(connection, properties, identifierConverter);
+                                      final ExaMetadata exaMetadata, final IdentifierConverter identifierConverter) {
+        super(connection, properties, exaMetadata, identifierConverter);
     }
 
     @Override
@@ -43,7 +44,7 @@ public class OracleColumnMetadataReader extends BaseColumnMetadataReader {
             return mapNumericType(jdbcTypeDescription);
         case ORACLE_TIMESTAMP_WITH_TIME_ZONE:
         case ORACLE_TIMESTAMP_WITH_LOCAL_TIME_ZONE:
-            return DataType.createTimestamp(false);
+            return convertExasolTimestamp(jdbcTypeDescription.getDecimalScale());
         case INTERVAL_YEAR_TO_MONTH:
         case INTERVAL_DAY_TO_SECOND:
         case ORACLE_BINARY_FLOAT:
@@ -84,5 +85,24 @@ public class OracleColumnMetadataReader extends BaseColumnMetadataReader {
         } else {
             return DataType.createMaximumSizeVarChar(DataType.ExaCharset.UTF8);
         }
+    }
+
+    /**
+     * Converts a given decimal scale into an Exasol {@link DataType} representing a TIMESTAMP.
+     * <p>
+     * If the system supports timestamps with nanosecond precision, the fractional precision
+     * of the timestamp will be set to the minimum of the provided decimal scale and 9
+     * (since nanosecond precision supports up to 9 fractional digits).
+     * Otherwise, a default fractional precision of 3 (milliseconds) is used.
+     *
+     * @param decimalScale the number of fractional digits to use for the TIMESTAMP precision
+     * @return a {@link DataType} representing a TIMESTAMP with the appropriate fractional precision
+     */
+    private DataType convertExasolTimestamp(final int decimalScale) {
+        if (supportsTimestampsWithNanoPrecision()) {
+            final int fractionalPrecision = Math.min(decimalScale, 9);
+            return DataType.createTimestamp(true, fractionalPrecision);
+        }
+        return DataType.createTimestamp(true, 3);
     }
 }
