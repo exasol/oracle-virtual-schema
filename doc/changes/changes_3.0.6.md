@@ -19,6 +19,7 @@ Code name:
 #### Test Dependency Updates
 
 * Updated `com.exasol:virtual-schema-common-jdbc:12.0.0` to `13.0.0`
+* Updated `com.exasol:virtual-schema-shared-integration-tests:3.0.0` to `3.0.1`
 * Updated `org.jacoco:org.jacoco.agent:0.8.12` to `0.8.13`
 
 #### Plugin Dependency Updates

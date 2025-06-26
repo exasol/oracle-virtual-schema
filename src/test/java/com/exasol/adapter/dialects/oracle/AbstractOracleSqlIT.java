@@ -6,11 +6,15 @@ import static com.exasol.adapter.dialects.oracle.OracleVirtualSchemaIntegrationT
 import static com.exasol.adapter.dialects.oracle.OracleVirtualSchemaIntegrationTestSetup.uploadOracleJDBCDriverToBucket;
 
 import java.io.FileNotFoundException;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
@@ -58,13 +62,50 @@ abstract class AbstractOracleSqlIT {
         bucket.uploadFile(Path.of(instantClientPath, instantClientName), "drivers/oracle/" + instantClientName);
     }
 
-    protected static String getTestHostIpFromInsideExasol(final ExasolContainer<?> exasolContainer) {
-        final Map<String, ContainerNetwork> networks = exasolContainer.getContainerInfo().getNetworkSettings()
-                .getNetworks();
-        if (networks.size() == 0) {
-            throw new IllegalStateException("Failed to get host IP from container network settings");
+    /**
+     * Determines the host IP address that should be used inside the Exasol container
+     * to refer to the test host (typically the machine running the integration tests).
+     * <p>
+     * This method supports two environments:
+     * <ul>
+     *     <li><b>CI environments (e.g., GitHub Actions):</b> It retrieves the Docker gateway IP address
+     *         from the Exasol container's network settings.</li>
+     *     <li><b>Local macOS environments:</b> If the environment variable {@code LOCAL_MACOS_ENV=true}
+     *         is set, it attempts to find the first available non-loopback IPv4 address of the local machine.</li>
+     * </ul>
+     *
+     * @return the IP address as seen from inside the Exasol container, or {@code null} if it cannot be determined
+     */
+    public static String getTestHostIpFromInsideExasol(final ExasolContainer<?> exasolContainer) {
+        String localMacosEnv = System.getenv("LOCAL_MACOS_ENV");
+
+        if (localMacosEnv == null || !localMacosEnv.equalsIgnoreCase("true")) {
+            // This works inside GitHub Actions container environment
+            final Map<String, ContainerNetwork> networks = exasolContainer.getContainerInfo().getNetworkSettings().getNetworks();
+            if (networks.isEmpty()) {
+                throw new IllegalStateException("Failed to get host IP from container network settings");
+            }
+            return networks.values().iterator().next().getGateway();
+        } else {
+            // Fallback for local machine: find a non-loopback IPv4 address
+            try {
+                Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
+                for (NetworkInterface netint : Collections.list(nets)) {
+                    if (netint.isUp() && !netint.isLoopback()) {
+                        Enumeration<InetAddress> inetAddresses = netint.getInetAddresses();
+                        for (InetAddress inetAddress : Collections.list(inetAddresses)) {
+                            if (!inetAddress.isLoopbackAddress() && inetAddress instanceof java.net.Inet4Address) {
+                                return inetAddress.getHostAddress();
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                throw new IllegalStateException("Failed to determine local host IP address in macOS environment", e);
+            }
+            // If everything fails, return null or throw
+            return null;
         }
-        return networks.values().iterator().next().getGateway();
     }
 
     private static void setupCommonExasolContainer()

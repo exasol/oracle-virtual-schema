@@ -1,12 +1,17 @@
 package com.exasol.adapter.dialects.oracle;
 
+import static com.exasol.adapter.dialects.oracle.AbstractOracleSqlIT.getTestHostIpFromInsideExasol;
 import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION;
 import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.VIRTUAL_SCHEMA_JAR;
 import static com.exasol.dbbuilder.dialects.exasol.AdapterScript.Language.JAVA;
 
-import java.io.*;
+import java.io.Closeable;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Path;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
@@ -19,7 +24,6 @@ import com.exasol.dbbuilder.dialects.exasol.*;
 import com.exasol.dbbuilder.dialects.oracle.OracleObjectFactory;
 import com.exasol.drivers.JdbcDriver;
 import com.exasol.udfdebugging.UdfTestSetup;
-import com.github.dockerjava.api.model.ContainerNetwork;
 
 /**
  * This class contains the common integration test setup for all Oracle virtual schemas.
@@ -53,7 +57,7 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
             this.exasolStatement = this.exasolConnection.createStatement();
             this.oracleConnection = this.oracleContainer.createConnectionDBA("");
             this.oracleStatement = this.oracleConnection.createStatement();
-            final UdfTestSetup udfTestSetup = new UdfTestSetup(getTestHostIpFromInsideExasol(),
+            final UdfTestSetup udfTestSetup = new UdfTestSetup(getTestHostIpFromInsideExasol(this.exasolContainer),
                     this.exasolContainer.getDefaultBucket(), this.exasolConnection);
             this.exasolFactory = new ExasolObjectFactory(this.exasolContainer.createConnection(""),
                     ExasolObjectConfiguration.builder().withJvmOptions(udfTestSetup.getJvmOptions()).build());
@@ -130,14 +134,5 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
         } catch (final SQLException exception) {
             throw new IllegalStateException("Failed to stop test setup.", exception);
         }
-    }
-
-    private String getTestHostIpFromInsideExasol() {
-        final Map<String, ContainerNetwork> networks = this.exasolContainer.getContainerInfo().getNetworkSettings()
-                .getNetworks();
-        if (networks.size() == 0) {
-            return null;
-        }
-        return networks.values().iterator().next().getGateway();
     }
 }
