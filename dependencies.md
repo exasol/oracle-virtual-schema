@@ -18,7 +18,8 @@
 | [Maven Project Version Getter][6]               | [MIT License][7]                                  |
 | [Virtual Schema Common JDBC][0]                 | [MIT License][1]                                  |
 | [Hamcrest][8]                                   | [BSD-3-Clause][9]                                 |
-| [JUnit Jupiter (Aggregator)][10]                | [Eclipse Public License v2.0][11]                 |
+| [JUnit Jupiter API][10]                         | [Eclipse Public License v2.0][11]                 |
+| [JUnit Jupiter Params][10]                      | [Eclipse Public License v2.0][11]                 |
 | [mockito-junit-jupiter][12]                     | [MIT][13]                                         |
 | [EqualsVerifier \| release normal jar][14]      | [Apache License, Version 2.0][15]                 |
 | [SLF4J JDK14 Provider][16]                      | [MIT License][17]                                 |
