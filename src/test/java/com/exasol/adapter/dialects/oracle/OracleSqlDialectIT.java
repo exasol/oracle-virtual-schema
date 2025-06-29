@@ -60,8 +60,6 @@ class OracleSqlDialectIT {
     @Container
     private static final OracleContainerDBA oracleContainer = new OracleContainerDBA(ORACLE_CONTAINER_NAME);
 
-    private static Statement statementExasol;
-
     @BeforeAll
     static void beforeAll()
             throws BucketAccessException, TimeoutException, SQLException, FileNotFoundException, InterruptedException {
@@ -69,26 +67,24 @@ class OracleSqlDialectIT {
         setupExasolContainer();
     }
 
-    private static void uploadInstantClientToBucket()
+    private static Bucket uploadInstantClientToBucket(Bucket bucket)
             throws BucketAccessException, TimeoutException, FileNotFoundException {
-        final Bucket bucket = exasolContainer.getDefaultBucket();
         final String instantClientName = "instantclient-basic-linux.x64-12.1.0.2.0.zip";
         final String instantClientPath = "src/test/resources/integration/driver/oracle";
         bucket.uploadFile(Path.of(instantClientPath, instantClientName), "drivers/oracle/" + instantClientName);
+        return bucket;
     }
 
     private static void setupExasolContainer()
             throws BucketAccessException, TimeoutException, FileNotFoundException, SQLException, InterruptedException {
         final Connection exasolConnection = exasolContainer.createConnectionForUser(exasolContainer.getUsername(),
                 exasolContainer.getPassword());
-        ExasolVersionCheck.assumeExasolVersion7(exasolConnection);
+        Bucket bucket = uploadInstantClientToBucket(exasolContainer.getDefaultBucket());
         uploadOracleJDBCDriverToBucket(exasolContainer);
-        uploadAdapterToBucket(exasolContainer.getDefaultBucket());
-        uploadInstantClientToBucket();
-        statementExasol = exasolConnection.createStatement();
+        uploadAdapterToBucket(bucket);
 
         final UdfTestSetup udfTestSetup = new UdfTestSetup(getTestHostIpFromInsideExasol(exasolContainer),
-                exasolContainer.getDefaultBucket(), exasolConnection);
+                bucket, exasolConnection);
         final ExasolObjectFactory exasolFactory = new ExasolObjectFactory(exasolContainer.createConnection(""),
                 ExasolObjectConfiguration.builder().withJvmOptions(udfTestSetup.getJvmOptions()).build());
         final ExasolSchema schema = exasolFactory.createSchema(SCHEMA_EXASOL);
@@ -107,10 +103,11 @@ class OracleSqlDialectIT {
 
     private static ConnectionDefinition createOracleOCIConnection(final ExasolObjectFactory exasolFactory,
                                                                   final Integer mappedPort, final String oracleUsername, final String oraclePassword) {
+        final String hostIp = getTestHostIpFromInsideExasol(exasolContainer);
         final String oraConnectionString = "(DESCRIPTION =" //
                 + "(ADDRESS_LIST = (ADDRESS = (PROTOCOL = TCP)" //
-                + "(HOST = " + exasolContainer.getHostIp() + " )" //
-                + "(PORT = " + oracleContainer.getOraclePort() + ")))" //
+                + "(HOST = " + hostIp + " )" //
+                + "(PORT = " + mappedPort + ")))" //
                 + "(CONNECT_DATA = (SERVER = DEDICATED)" //
                 + "(SERVICE_NAME = " + oracleContainer.getDatabaseName() + ")))";
         return exasolFactory.createConnectionDefinition(ORACLE_OCI_CONNECTION_NAME, oraConnectionString, oracleUsername,
@@ -163,14 +160,15 @@ class OracleSqlDialectIT {
     }
 
     private static void setupOracleDbContainer() throws SQLException {
-        final var oracleConnection = oracleContainer.createConnectionDBA("");
-        final Statement statementOracle = oracleConnection.createStatement();
-        createOracleUser(statementOracle);
-        grantAdditionalRights(statementOracle);
-        createOracleTableAllDataTypes(statementOracle);
-        createOracleTableNumberHandling(statementOracle);
-        createOracleTableTimestamps(statementOracle);
-        createTestTablesForJoinTests(oracleContainer.createConnectionDBA(""), SCHEMA_ORACLE);
+        try (Connection oracleConnection = oracleContainer.createConnectionDBA("");
+             Statement statementOracle = oracleConnection.createStatement()) {
+            createOracleUser(statementOracle);
+            grantAdditionalRights(statementOracle);
+            createOracleTableAllDataTypes(statementOracle);
+            createOracleTableNumberHandling(statementOracle);
+            createOracleTableTimestamps(statementOracle);
+            createTestTablesForJoinTests(statementOracle, SCHEMA_ORACLE);
+        }
     }
 
     private static void grantAdditionalRights(final Statement statementOracle) throws SQLException {
@@ -279,37 +277,29 @@ class OracleSqlDialectIT {
                 + ")");
     }
 
-    private static void createTestTablesForJoinTests(final Connection connection, final String schemaName)
+    private static void createTestTablesForJoinTests(final Statement statementOracle, final String schemaName)
             throws SQLException {
-        try (final Statement statement = connection.createStatement()) {
-            statement.execute("CREATE TABLE " + schemaName + "." + TABLE_JOIN_1 + "(x INT, y VARCHAR(100))");
-            statement.execute("INSERT INTO " + schemaName + "." + TABLE_JOIN_1 + " VALUES (1,'aaa')");
-            statement.execute("INSERT INTO " + schemaName + "." + TABLE_JOIN_1 + " VALUES (2,'bbb')");
-            statement.execute("CREATE TABLE " + schemaName + "." + TABLE_JOIN_2 + "(x INT, y VARCHAR(100))");
-            statement.execute("INSERT INTO " + schemaName + "." + TABLE_JOIN_2 + " VALUES (2,'bbb')");
-            statement.execute("INSERT INTO " + schemaName + "." + TABLE_JOIN_2 + " VALUES (3,'ccc')");
-        }
+            statementOracle.execute("CREATE TABLE " + schemaName + "." + TABLE_JOIN_1 + "(x INT, y VARCHAR(100))");
+            statementOracle.execute("INSERT INTO " + schemaName + "." + TABLE_JOIN_1 + " VALUES (1,'aaa')");
+            statementOracle.execute("INSERT INTO " + schemaName + "." + TABLE_JOIN_1 + " VALUES (2,'bbb')");
+            statementOracle.execute("CREATE TABLE " + schemaName + "." + TABLE_JOIN_2 + "(x INT, y VARCHAR(100))");
+            statementOracle.execute("INSERT INTO " + schemaName + "." + TABLE_JOIN_2 + " VALUES (2,'bbb')");
+            statementOracle.execute("INSERT INTO " + schemaName + "." + TABLE_JOIN_2 + " VALUES (3,'ccc')");
     }
 
-    private ResultSet getExpectedResultSet(final List<String> expectedColumns, final List<String> expectedRows)
+    private ResultSet getExpectedResultSet(Statement statementExasol, final List<String> expectedColumns, final List<String> expectedRows)
             throws SQLException {
-        final Connection connection = getExasolConnection();
-        try (final Statement statement = connection.createStatement()) {
-            final String expectedValues = expectedRows.stream().map(row -> "(" + row + ")")
-                    .collect(Collectors.joining(","));
-            final String qualifiedExpectedTableName = SCHEMA_EXASOL + ".EXPECTED";
-            statement.execute("CREATE OR REPLACE TABLE " + qualifiedExpectedTableName + "("
-                    + String.join(", ", expectedColumns) + ")");
-            statement.execute("INSERT INTO " + qualifiedExpectedTableName + " VALUES" + expectedValues);
-            return statement.executeQuery("SELECT * FROM " + qualifiedExpectedTableName);
-        }
+        final String expectedValues = expectedRows.stream().map(row -> "(" + row + ")")
+                .collect(Collectors.joining(","));
+        final String qualifiedExpectedTableName = SCHEMA_EXASOL + ".EXPECTED";
+        statementExasol.execute("CREATE OR REPLACE TABLE " + qualifiedExpectedTableName + "("
+                + String.join(", ", expectedColumns) + ")");
+        statementExasol.execute("INSERT INTO " + qualifiedExpectedTableName + " VALUES" + expectedValues);
+        return statementExasol.executeQuery("SELECT * FROM " + qualifiedExpectedTableName);
     }
 
-    private ResultSet getActualResultSet(final String query) throws SQLException {
-        final Connection connection = getExasolConnection();
-        try (final Statement statement = connection.createStatement()) {
-            return statement.executeQuery(query);
-        }
+    private ResultSet getActualResultSet(Statement statementExasol, final String query) throws SQLException {
+        return statementExasol.executeQuery(query);
     }
 
     private Connection getExasolConnection() throws SQLException {
@@ -318,9 +308,12 @@ class OracleSqlDialectIT {
 
     @Test
     void testCountAll() throws SQLException {
-        final String qualifiedTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_NUMBER_HANDLING;
-        final String query = "SELECT COUNT(*) FROM " + qualifiedTableName;
-        assertThat(getActualResultSet(query), table("BIGINT").row(1L).matches());
+        try (Connection connection = getExasolConnection();
+             Statement statementExasol = connection.createStatement()) {
+            final String qualifiedTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_NUMBER_HANDLING;
+            final String query = "SELECT COUNT(*) FROM " + qualifiedTableName;
+            assertThat(getActualResultSet(statementExasol, query), table("BIGINT").row(1L).matches());
+        }
     }
 
     @Nested
@@ -328,99 +321,126 @@ class OracleSqlDialectIT {
     class NumberHandlingTest {
         @ParameterizedTest
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
-        void testNumberToDecimalThrowsException(final String virtualSchemaName) {
-            final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT c5 FROM " + qualifiedTableName;
-            final SQLException exception = assertThrows(SQLException.class, () -> statementExasol.execute(query));
-            assertThat(exception.getMessage(),
-                    containsString("value larger than specified precision allowed for this column"));
+        void testNumberToDecimalThrowsException(final String virtualSchemaName) throws SQLException {
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT c5 FROM " + qualifiedTableName;
+                final SQLException exception = assertThrows(SQLException.class, () -> statementExasol.execute(query));
+                assertThat(exception.getMessage(),
+                        containsString("value larger than specified precision allowed for this column"));
+            }
         }
 
         @ParameterizedTest
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
         void testNumber36ToDecimal(final String virtualSchemaName) throws SQLException {
-            final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT c_number36 FROM " + qualifiedTableName;
-            assertAll(
-                    () -> assertExpressionExecutionBigDecimalResult(query,
-                            new BigDecimal("123456789012345678901234567890123456")),
-                    () -> assertThat(getColumnTypesOfTable(qualifiedTableName, "C_NUMBER36"),
-                            equalTo("DECIMAL(36,0)")));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT c_number36 FROM " + qualifiedTableName;
+                assertAll(
+                        () -> assertExpressionExecutionBigDecimalResult(statementExasol, query,
+                                new BigDecimal("123456789012345678901234567890123456")),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "C_NUMBER36"),
+                                equalTo("DECIMAL(36,0)")));
+            }
         }
 
         @ParameterizedTest
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
-        void testNumber38ToDecimalThrowsException(final String virtualSchemaName) {
-            final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT c6 FROM " + qualifiedTableName;
-            final SQLException exception = assertThrows(SQLException.class, () -> statementExasol.execute(query));
-            assertThat(exception.getMessage(),
-                    containsString("value larger than specified precision allowed for this column"));
+        void testNumber38ToDecimalThrowsException(final String virtualSchemaName) throws SQLException {
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT c6 FROM " + qualifiedTableName;
+                final SQLException exception = assertThrows(SQLException.class, () -> statementExasol.execute(query));
+                assertThat(exception.getMessage(),
+                        containsString("value larger than specified precision allowed for this column"));
+            }
         }
 
         @ParameterizedTest
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
-        void testNumber10S5ToDecimal(final String virtualSchemaName) {
-            final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT C7 FROM " + qualifiedTableName;
-            assertAll(() -> assertExpressionExecutionBigDecimalResult(query, new BigDecimal("12345.12345")),
-                    () -> assertThat(getColumnTypesOfTable(qualifiedTableName, "C7"), equalTo("DECIMAL(10,5)")));
+        void testNumber10S5ToDecimal(final String virtualSchemaName) throws SQLException {
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT C7 FROM " + qualifiedTableName;
+                assertAll(() -> assertExpressionExecutionBigDecimalResult(statementExasol, query, new BigDecimal("12345.12345")),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "C7"), equalTo("DECIMAL(10,5)")));
+            }
         }
 
         @Test
         void testSelectAllColsNumberFromJDBC() throws SQLException {
-            final String qualifiedTableNameActual = VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL + "."
-                    + TABLE_ORACLE_NUMBER_HANDLING;
-            final ResultSet expected = getExpectedResultSet("(A DECIMAL(36,1), B DECIMAL(36,1), C DECIMAL(36,2))",
-                    "(1234567890123456789012345678901234.6, 1234567890123456789012345678.9, 1234567890123456789012345678901234.56)");
-            assertThat(statementExasol.executeQuery("SELECT * FROM " + qualifiedTableNameActual), //
-                    matchesResultSet(expected));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableNameActual = VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL + "."
+                        + TABLE_ORACLE_NUMBER_HANDLING;
+                final ResultSet expected = getExpectedResultSet(statementExasol, "(A DECIMAL(36,1), B DECIMAL(36,1), C DECIMAL(36,2))",
+                        "(1234567890123456789012345678901234.6, 1234567890123456789012345678.9, 1234567890123456789012345678901234.56)");
+                assertThat(statementExasol.executeQuery("SELECT * FROM " + qualifiedTableNameActual), //
+                        matchesResultSet(expected));
+            }
         }
 
         @Test
         void testSelectAllColsNumberFromOra() throws SQLException {
-            final String qualifiedTableNameActual = VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL + "."
-                    + TABLE_ORACLE_NUMBER_HANDLING;
-            final ResultSet expected = getExpectedResultSet("(A VARCHAR(100), B VARCHAR(100), C VARCHAR(100))",
-                    "('12.3456789012345678901234567890123460E32', '12.3456789012345678901234567890E26', '12.3456789012345678901234567890123456E32')");
-            assertThat(statementExasol.executeQuery("SELECT * FROM " + qualifiedTableNameActual), //
-                    matchesResultSet(expected));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableNameActual = VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL + "."
+                        + TABLE_ORACLE_NUMBER_HANDLING;
+                final ResultSet expected = getExpectedResultSet(statementExasol, "(A VARCHAR(100), B VARCHAR(100), C VARCHAR(100))",
+                        "('12.3456789012345678901234567890123460E32', '12.3456789012345678901234567890E26', '12.3456789012345678901234567890123456E32')");
+                assertThat(statementExasol.executeQuery("SELECT * FROM " + qualifiedTableNameActual), //
+                        matchesResultSet(expected));
+            }
         }
 
         @Test
         void testSelectAllColsNumberFromOraWithJDBCTypemapping() throws SQLException {
-            final String qualifiedTableNameActual = VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING + "."
-                    + TABLE_ORACLE_NUMBER_HANDLING;
-            final ResultSet expected = getExpectedResultSet("(A DECIMAL(36,1), B DECIMAL(36,1), C DECIMAL(36,2))",
-                    "('12.3456789012345678901234567890123460E32', '12.3456789012345678901234567890E26', '12.3456789012345678901234567890123456E32')");
-            assertThat(statementExasol.executeQuery("SELECT * FROM " + qualifiedTableNameActual), //
-                    matchesResultSet(expected));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableNameActual = VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING + "."
+                        + TABLE_ORACLE_NUMBER_HANDLING;
+                final ResultSet expected = getExpectedResultSet(statementExasol, "(A DECIMAL(36,1), B DECIMAL(36,1), C DECIMAL(36,2))",
+                        "('12.3456789012345678901234567890123460E32', '12.3456789012345678901234567890E26', '12.3456789012345678901234567890123456E32')");
+                    assertThat(statementExasol.executeQuery("SELECT * FROM " + qualifiedTableNameActual), //
+                            matchesResultSet(expected));
+            }
         }
 
         @ParameterizedTest
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
-        void testNumberDataTypes(final String virtualSchemaName) {
-            final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_NUMBER_HANDLING;
-            assertAll(() -> assertThat(getColumnTypesOfTable(qualifiedTableName, "A"), equalTo("DECIMAL(36,1)")),
-                    () -> assertThat(getColumnTypesOfTable(qualifiedTableName, "B"), equalTo("DECIMAL(36,1)")),
-                    () -> assertThat(getColumnTypesOfTable(qualifiedTableName, "C"), equalTo("DECIMAL(36,2)")));
+        void testNumberDataTypes(final String virtualSchemaName) throws SQLException {
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_NUMBER_HANDLING;
+                assertAll(() -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "A"), equalTo("DECIMAL(36,1)")),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "B"), equalTo("DECIMAL(36,1)")),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "C"), equalTo("DECIMAL(36,2)")));
+            }
         }
 
         @ParameterizedTest
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
-        void testSelectOneNumberColumn(final String virtualSchemaName) {
-            final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_NUMBER_HANDLING;
-            assertAll(
-                    () -> assertExpressionExecutionBigDecimalResult("SELECT A FROM " + qualifiedTableName,
-                            new BigDecimal("1234567890123456789012345678901234.6")),
-                    () -> assertExpressionExecutionBigDecimalResult("SELECT B FROM " + qualifiedTableName,
-                            new BigDecimal("1234567890123456789012345678.9")),
-                    () -> assertExpressionExecutionBigDecimalResult("SELECT C FROM " + qualifiedTableName,
-                            new BigDecimal("1234567890123456789012345678901234.56")));
+        void testSelectOneNumberColumn(final String virtualSchemaName) throws SQLException {
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_NUMBER_HANDLING;
+                assertAll(
+                        () -> assertExpressionExecutionBigDecimalResult(statementExasol, "SELECT A FROM " + qualifiedTableName,
+                                new BigDecimal("1234567890123456789012345678901234.6")),
+                        () -> assertExpressionExecutionBigDecimalResult(statementExasol, "SELECT B FROM " + qualifiedTableName,
+                                new BigDecimal("1234567890123456789012345678.9")),
+                        () -> assertExpressionExecutionBigDecimalResult(statementExasol, "SELECT C FROM " + qualifiedTableName,
+                                new BigDecimal("1234567890123456789012345678901234.56")));
+            }
         }
     }
 
-    private String getColumnTypesOfTable(final String tableName, final String columnName) throws SQLException {
+    private String getColumnTypesOfTable(Statement statementExasol, final String tableName, final String columnName) throws SQLException {
         final ResultSet result = statementExasol.executeQuery("DESCRIBE " + tableName);
         while (result.next()) {
             if (result.getString("COLUMN_NAME").toUpperCase().equals(columnName)) {
@@ -430,7 +450,7 @@ class OracleSqlDialectIT {
         throw new IllegalArgumentException("Type for column " + columnName + " not found");
     }
 
-    private ResultSet getExpectedResultSet(final String expectedColumnTypes, final String expectedValues)
+    private ResultSet getExpectedResultSet(Statement statementExasol, final String expectedColumnTypes, final String expectedValues)
             throws SQLException {
         final String qualifiedExpectedTableName = SCHEMA_EXASOL + "." + "EXPECTED";
         statementExasol.execute("CREATE OR REPLACE TABLE " + qualifiedExpectedTableName + expectedColumnTypes);
@@ -438,7 +458,7 @@ class OracleSqlDialectIT {
         return statementExasol.executeQuery("SELECT * FROM " + qualifiedExpectedTableName);
     }
 
-    private void assertExpressionExecutionBigDecimalResult(final String query, final BigDecimal expectedValue)
+    private void assertExpressionExecutionBigDecimalResult(Statement statementExasol, final String query, final BigDecimal expectedValue)
             throws SQLException {
         final ResultSet result = statementExasol.executeQuery(query);
         result.next();
@@ -446,7 +466,7 @@ class OracleSqlDialectIT {
         assertThat(actualResult.stripTrailingZeros(), equalTo(expectedValue));
     }
 
-    private void assertExplainVirtual(final String query, final String expected) throws SQLException {
+    private void assertExplainVirtual(Statement statementExasol, final String query, final String expected) throws SQLException {
         final ResultSet explainVirtual = statementExasol.executeQuery("EXPLAIN VIRTUAL " + query);
         explainVirtual.next();
         final String explainVirtualStringActual = explainVirtual.getString("PUSHDOWN_SQL");
@@ -459,96 +479,117 @@ class OracleSqlDialectIT {
         @ParameterizedTest
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testInnerJoin(final String virtualSchema) throws SQLException {
-            final String query = "SELECT * FROM " + virtualSchema + "." + TABLE_JOIN_1 + " a INNER JOIN  "
-                    + virtualSchema + "." + TABLE_JOIN_2 + " b ON a.x=b.x";
-            final ResultSet expected = getExpectedResultSet(
-                    List.of("x VARCHAR(100)", "y VARCHAR(100)", "a VARCHAR(100)", "b VARCHAR(100)"), //
-                    List.of("'2','bbb', '2','bbb'"));
-            assertThat(getActualResultSet(query), matchesResultSet(expected));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String query = "SELECT * FROM " + virtualSchema + "." + TABLE_JOIN_1 + " a INNER JOIN  "
+                        + virtualSchema + "." + TABLE_JOIN_2 + " b ON a.x=b.x";
+                final ResultSet expected = getExpectedResultSet(statementExasol,
+                        List.of("x VARCHAR(100)", "y VARCHAR(100)", "a VARCHAR(100)", "b VARCHAR(100)"), //
+                        List.of("'2','bbb', '2','bbb'"));
+                assertThat(getActualResultSet(statementExasol, query), matchesResultSet(expected));
+            }
         }
 
         @ParameterizedTest
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testInnerJoinWithProjection(final String virtualSchemaName) throws SQLException {
-            final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
-            final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
-            final String query = "SELECT b.y || " + qualifiedJoinTableName1 + ".y FROM " + qualifiedJoinTableName1
-                    + " INNER JOIN  " + qualifiedJoinTableName2 + " b ON " + qualifiedJoinTableName1 + ".x=b.x";
-            final ResultSet expected = getExpectedResultSet(List.of("y VARCHAR(100)"), //
-                    List.of("'bbbbbb'"));
-            assertThat(getActualResultSet(query), matchesResultSet(expected));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
+                final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
+                final String query = "SELECT b.y || " + qualifiedJoinTableName1 + ".y FROM " + qualifiedJoinTableName1
+                        + " INNER JOIN  " + qualifiedJoinTableName2 + " b ON " + qualifiedJoinTableName1 + ".x=b.x";
+                final ResultSet expected = getExpectedResultSet(statementExasol, List.of("y VARCHAR(100)"), //
+                        List.of("'bbbbbb'"));
+                assertThat(getActualResultSet(statementExasol, query), matchesResultSet(expected));
+            }
         }
 
         @ParameterizedTest
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testLeftJoin(final String virtualSchemaName) throws SQLException {
-            final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
-            final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
-            final String query = "SELECT * FROM " + qualifiedJoinTableName1 + " a LEFT OUTER JOIN  "
-                    + qualifiedJoinTableName2 + " b ON a.x=b.x ORDER BY a.x";
-            final ResultSet expected = getExpectedResultSet(
-                    List.of("x VARCHAR(100)", "y VARCHAR(100)", "a VARCHAR(100)", "b VARCHAR(100)"), //
-                    List.of("'1', 'aaa', null, null", //
-                            "'2', 'bbb', '2', 'bbb'"));
-            assertThat(getActualResultSet(query), matchesResultSet(expected));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
+                final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
+                final String query = "SELECT * FROM " + qualifiedJoinTableName1 + " a LEFT OUTER JOIN  "
+                        + qualifiedJoinTableName2 + " b ON a.x=b.x ORDER BY a.x";
+                final ResultSet expected = getExpectedResultSet(statementExasol,
+                        List.of("x VARCHAR(100)", "y VARCHAR(100)", "a VARCHAR(100)", "b VARCHAR(100)"), //
+                        List.of("'1', 'aaa', null, null", //
+                                "'2', 'bbb', '2', 'bbb'"));
+                assertThat(getActualResultSet(statementExasol, query), matchesResultSet(expected));
+            }
         }
 
         @ParameterizedTest
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testRightJoin(final String virtualSchemaName) throws SQLException {
-            final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
-            final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
-            final String query = "SELECT * FROM " + qualifiedJoinTableName1 + " a RIGHT OUTER JOIN  "
-                    + qualifiedJoinTableName2 + " b ON a.x=b.x ORDER BY a.x";
-            final ResultSet expected = getExpectedResultSet(
-                    List.of("x VARCHAR(100)", "y VARCHAR(100)", "a VARCHAR(100)", "b VARCHAR(100)"), //
-                    List.of("'2', 'bbb', '2', 'bbb'", //
-                            "null, null, '3', 'ccc'"));
-            assertThat(getActualResultSet(query), matchesResultSet(expected));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
+                final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
+                final String query = "SELECT * FROM " + qualifiedJoinTableName1 + " a RIGHT OUTER JOIN  "
+                        + qualifiedJoinTableName2 + " b ON a.x=b.x ORDER BY a.x";
+                final ResultSet expected = getExpectedResultSet(statementExasol,
+                        List.of("x VARCHAR(100)", "y VARCHAR(100)", "a VARCHAR(100)", "b VARCHAR(100)"), //
+                        List.of("'2', 'bbb', '2', 'bbb'", //
+                                "null, null, '3', 'ccc'"));
+                assertThat(getActualResultSet(statementExasol, query), matchesResultSet(expected));
+            }
         }
 
         @ParameterizedTest
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testFullOuterJoin(final String virtualSchemaName) throws SQLException {
-            final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
-            final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
-            final String query = "SELECT * FROM " + qualifiedJoinTableName1 + " a FULL OUTER JOIN  "
-                    + qualifiedJoinTableName2 + " b ON a.x=b.x ORDER BY a.x";
-            final ResultSet expected = getExpectedResultSet(
-                    List.of("x VARCHAR(100)", "y VARCHAR(100)", "a VARCHAR(100)", "b VARCHAR(100)"), //
-                    List.of("1, 'aaa', null, null", //
-                            "'2', 'bbb', '2', 'bbb'", //
-                            "null, null, '3', 'ccc'"));
-            assertThat(getActualResultSet(query), matchesResultSet(expected));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
+                final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
+                final String query = "SELECT * FROM " + qualifiedJoinTableName1 + " a FULL OUTER JOIN  "
+                        + qualifiedJoinTableName2 + " b ON a.x=b.x ORDER BY a.x";
+                final ResultSet expected = getExpectedResultSet(statementExasol,
+                        List.of("x VARCHAR(100)", "y VARCHAR(100)", "a VARCHAR(100)", "b VARCHAR(100)"), //
+                        List.of("1, 'aaa', null, null", //
+                                "'2', 'bbb', '2', 'bbb'", //
+                                "null, null, '3', 'ccc'"));
+                assertThat(getActualResultSet(statementExasol, query), matchesResultSet(expected));
+            }
         }
 
         @ParameterizedTest
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testRightJoinWithComplexCondition(final String virtualSchemaName) throws SQLException {
-            final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
-            final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
-            final String query = "SELECT * FROM " + qualifiedJoinTableName1 + " a RIGHT OUTER JOIN  "
-                    + qualifiedJoinTableName2 + " b ON a.x||a.y=b.x||b.y ORDER BY a.x";
-            final ResultSet expected = getExpectedResultSet(
-                    List.of("x VARCHAR(100)", "y VARCHAR(100)", "a VARCHAR(100)", "b VARCHAR(100)"), //
-                    List.of("'2', 'bbb', '2', 'bbb'", //
-                            "null, null, '3', 'ccc'"));
-            assertThat(getActualResultSet(query), matchesResultSet(expected));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
+                final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
+                final String query = "SELECT * FROM " + qualifiedJoinTableName1 + " a RIGHT OUTER JOIN  "
+                        + qualifiedJoinTableName2 + " b ON a.x||a.y=b.x||b.y ORDER BY a.x";
+                final ResultSet expected = getExpectedResultSet(statementExasol,
+                        List.of("x VARCHAR(100)", "y VARCHAR(100)", "a VARCHAR(100)", "b VARCHAR(100)"), //
+                        List.of("'2', 'bbb', '2', 'bbb'", //
+                                "null, null, '3', 'ccc'"));
+                assertThat(getActualResultSet(statementExasol, query), matchesResultSet(expected));
+            }
         }
 
         @ParameterizedTest
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testFullOuterJoinWithComplexCondition(final String virtualSchemaName) throws SQLException {
-            final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
-            final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
-            final String query = "SELECT * FROM " + qualifiedJoinTableName1 + " a FULL OUTER JOIN  "
-                    + qualifiedJoinTableName2 + " b ON a.x-b.x=0 ORDER BY a.x";
-            final ResultSet expected = getExpectedResultSet(
-                    List.of("x VARCHAR(100)", "y VARCHAR(100)", "a VARCHAR(100)", "b VARCHAR(100)"), //
-                    List.of("1, 'aaa', null, null", //
-                            "'2', 'bbb', '2', 'bbb'", //
-                            "null, null, '3', 'ccc'"));
-            assertThat(getActualResultSet(query), matchesResultSet(expected));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
+                final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
+                final String query = "SELECT * FROM " + qualifiedJoinTableName1 + " a FULL OUTER JOIN  "
+                        + qualifiedJoinTableName2 + " b ON a.x-b.x=0 ORDER BY a.x";
+                final ResultSet expected = getExpectedResultSet(statementExasol,
+                        List.of("x VARCHAR(100)", "y VARCHAR(100)", "a VARCHAR(100)", "b VARCHAR(100)"), //
+                        List.of("1, 'aaa', null, null", //
+                                "'2', 'bbb', '2', 'bbb'", //
+                                "null, null, '3', 'ccc'"));
+                assertThat(getActualResultSet(statementExasol, query), matchesResultSet(expected));
+            }
         }
     }
 
@@ -558,17 +599,20 @@ class OracleSqlDialectIT {
         @ParameterizedTest
         @CsvSource(value = { "VIRTUAL_SCHEMA_JDBC, 12346.12345", //
                 "VIRTUAL_SCHEMA_ORACLE, 01.2346123450E4" })
-        void testSelectExpression(final String virtualSchemaName, final String expectedColumnValue) {
-            final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT C7 + 1 FROM " + qualifiedTableNameActual + " ORDER BY 1";
-            final String expectedExplainVirtual = "SELECT CAST((\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                    + "\".\"C7\" + 1) AS FLOAT) FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                    + "\" ORDER BY (\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\" + 1)";
-            assertAll(() -> assertExpressionExecutionStringResult(query, expectedColumnValue),
-                    () -> assertExplainVirtual(query, expectedExplainVirtual));
+        void testSelectExpression(final String virtualSchemaName, final String expectedColumnValue) throws SQLException {
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT C7 + 1 FROM " + qualifiedTableNameActual + " ORDER BY 1";
+                final String expectedExplainVirtual = "SELECT CAST((\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C7\" + 1) AS FLOAT) FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\" ORDER BY (\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\" + 1)";
+                assertAll(() -> assertExpressionExecutionStringResult(statementExasol, query, expectedColumnValue),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
+            }
         }
 
-        private void assertExpressionExecutionStringResult(final String query, final String expected)
+        private void assertExpressionExecutionStringResult(Statement statementExasol, final String query, final String expected)
                 throws SQLException {
             final ResultSet result = statementExasol.executeQuery(query);
             result.next();
@@ -579,153 +623,184 @@ class OracleSqlDialectIT {
         @ParameterizedTest
         @CsvSource(value = { "VIRTUAL_SCHEMA_JDBC, 12355.12345", //
                 "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, 12355.12345", "VIRTUAL_SCHEMA_ORACLE, 01.2355123450E4" })
-        void testFilterExpression(final String virtualSchemaName, final String expectedColumnValue) {
-            final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT C7 FROM " + qualifiedTableNameActual + " WHERE C7 > 12346";
-            final String expectedExplainVirtual = "SELECT \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\" FROM \""
-                    + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" WHERE 12346 < \""
-                    + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\"";
-            assertAll(() -> assertExpressionExecutionStringResult(query, expectedColumnValue),
-                    () -> assertExplainVirtual(query, expectedExplainVirtual));
+        void testFilterExpression(final String virtualSchemaName, final String expectedColumnValue) throws SQLException {
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT C7 FROM " + qualifiedTableNameActual + " WHERE C7 > 12346";
+                final String expectedExplainVirtual = "SELECT \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\" FROM \""
+                        + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" WHERE 12346 < \""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\"";
+                assertAll(() -> assertExpressionExecutionStringResult(statementExasol, query, expectedColumnValue),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
+            }
         }
 
         @ParameterizedTest
         @CsvSource(value = { "VIRTUAL_SCHEMA_JDBC, 12345.12345", //
                 "VIRTUAL_SCHEMA_ORACLE, 01.2345123450E4" })
-        void testAggregateSingleGroup(final String virtualSchemaName, final String expectedColumnValue) {
-            final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT min(C7) FROM " + qualifiedTableNameActual;
-            final String expectedExplainVirtual = "SELECT CAST(MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                    + "\".\"C7\") AS FLOAT) FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\"";
-            assertAll(() -> assertExpressionExecutionStringResult(query, expectedColumnValue),
-                    () -> assertExplainVirtual(query, expectedExplainVirtual));
+        void testAggregateSingleGroup(final String virtualSchemaName, final String expectedColumnValue) throws SQLException {
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT min(C7) FROM " + qualifiedTableNameActual;
+                final String expectedExplainVirtual = "SELECT CAST(MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C7\") AS FLOAT) FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\"";
+                assertAll(() -> assertExpressionExecutionStringResult(statementExasol, query, expectedColumnValue),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
+            }
         }
 
         @Test
         void testAggregateGroupByColumnJdbc() throws SQLException {
-            final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT C5, min(C7) FROM " + qualifiedActualTableName + " GROUP BY C5 ORDER BY 1 DESC";
-            final ResultSet actual = statementExasol.executeQuery(query);
-            final String expectedExplainVirtual = "SELECT TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                    + "\".\"C5\"), CAST(MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") AS FLOAT) FROM \""
-                    + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY \""
-                    + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\" ORDER BY \"" + TABLE_ORACLE_ALL_DATA_TYPES
-                    + "\".\"C5\" DESC";
-            assertAll(
-                    () -> assertThat(actual,
-                            table("VARCHAR", "DECIMAL")
-                                    .row("123456789012345678901234567890123456", new BigDecimal("12345.12345"))
-                                    .row("1234567890.123456789", new BigDecimal("12355.12345")).matches()),
-                    () -> assertExplainVirtual(query, expectedExplainVirtual));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT C5, min(C7) FROM " + qualifiedActualTableName + " GROUP BY C5 ORDER BY 1 DESC";
+                final ResultSet actual = statementExasol.executeQuery(query);
+                final String expectedExplainVirtual = "SELECT TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C5\"), CAST(MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") AS FLOAT) FROM \""
+                        + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY \""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\" ORDER BY \"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C5\" DESC";
+                assertAll(
+                        () -> assertThat(actual,
+                                table("VARCHAR", "DECIMAL")
+                                        .row("123456789012345678901234567890123456", new BigDecimal("12345.12345"))
+                                        .row("1234567890.123456789", new BigDecimal("12355.12345")).matches()),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
+            }
         }
 
         @Test
         void testAggregateGroupByExpressionOra() throws SQLException {
-            final String qualifiedActualTableName = VIRTUAL_SCHEMA_ORACLE + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT C5 + 1, min(C7) FROM " + qualifiedActualTableName
-                    + " GROUP BY C5 + 1 ORDER BY 1 DESC";
-            final ResultSet expected = getExpectedResultSet("(A VARCHAR(100), B VARCHAR(100))",
-                    "('12.3456789012345678901234567890123457E34', '01.2345123450E4')," //
-                            + "('12.345678911234567890E8', '01.2355123450E4')");
-            final ResultSet actual = statementExasol.executeQuery(query);
-            final String expectedExplainVirtual = "SELECT CAST((\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                    + "\".\"C5\" + 1) AS FLOAT), CAST(MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                    + "\".\"C7\") AS FLOAT) FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                    + "\" GROUP BY (\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\" + 1) ORDER BY (\""
-                    + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\" + 1) DESC";
-            assertAll(() -> assertThat(actual, matchesResultSet(expected)),
-                    () -> assertExplainVirtual(query, expectedExplainVirtual));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedActualTableName = VIRTUAL_SCHEMA_ORACLE + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT C5 + 1, min(C7) FROM " + qualifiedActualTableName
+                        + " GROUP BY C5 + 1 ORDER BY 1 DESC";
+                final ResultSet expected = getExpectedResultSet(statementExasol, "(A VARCHAR(100), B VARCHAR(100))",
+                        "('12.3456789012345678901234567890123457E34', '01.2345123450E4')," //
+                                + "('12.345678911234567890E8', '01.2355123450E4')");
+                final ResultSet actual = statementExasol.executeQuery(query);
+                final String expectedExplainVirtual = "SELECT CAST((\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C5\" + 1) AS FLOAT), CAST(MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C7\") AS FLOAT) FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\" GROUP BY (\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\" + 1) ORDER BY (\""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\" + 1) DESC";
+                assertAll(() -> assertThat(actual, matchesResultSet(expected)),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
+            }
         }
 
         @Test
         void testAggregateGroupByTuple() throws SQLException {
-            final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT C_NUMBER36, C5, min(C7) FROM " + qualifiedActualTableName
-                    + " GROUP BY C_NUMBER36, C5 ORDER BY C5 DESC";
-            final ResultSet actual = statementExasol.executeQuery(query);
-            final String expectedExplainVirtual = "SELECT \"" + TABLE_ORACLE_ALL_DATA_TYPES
-                    + "\".\"C_NUMBER36\", TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\"), CAST(MIN(\""
-                    + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") AS FLOAT) FROM \"" + SCHEMA_ORACLE + "\".\""
-                    + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\", \""
-                    + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C_NUMBER36\" ORDER BY \"" + TABLE_ORACLE_ALL_DATA_TYPES
-                    + "\".\"C5\" DESC";
-            assertAll(
-                    () -> assertThat(actual,
-                            table("DECIMAL", "VARCHAR", "DECIMAL")
-                                    .row(new BigDecimal("123456789012345678901234567890123456"),
-                                            "123456789012345678901234567890123456", new BigDecimal("12345.12345"))
-                                    .row(null, "1234567890.123456789", new BigDecimal("12355.12345")).matches()),
-                    () -> assertExplainVirtual(query, expectedExplainVirtual));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT C_NUMBER36, C5, min(C7) FROM " + qualifiedActualTableName
+                        + " GROUP BY C_NUMBER36, C5 ORDER BY C5 DESC";
+                final ResultSet actual = statementExasol.executeQuery(query);
+                final String expectedExplainVirtual = "SELECT \"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C_NUMBER36\", TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\"), CAST(MIN(\""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") AS FLOAT) FROM \"" + SCHEMA_ORACLE + "\".\""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\", \""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C_NUMBER36\" ORDER BY \"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C5\" DESC";
+                assertAll(
+                        () -> assertThat(actual,
+                                table("DECIMAL", "VARCHAR", "DECIMAL")
+                                        .row(new BigDecimal("123456789012345678901234567890123456"),
+                                                "123456789012345678901234567890123456", new BigDecimal("12345.12345"))
+                                        .row(null, "1234567890.123456789", new BigDecimal("12355.12345")).matches()),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
+            }
+
         }
 
         @Test
         void testAggregateHaving() throws SQLException {
-            final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT C5, min(C7) FROM " + qualifiedActualTableName
-                    + " GROUP BY C5 HAVING MIN(C7) > 12350";
-            final ResultSet actual = statementExasol.executeQuery(query);
-            final String expectedExplainVirtual = "SELECT TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                    + "\".\"C5\"), CAST(MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") AS FLOAT) FROM \""
-                    + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY \""
-                    + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\" HAVING 12350 < MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                    + "\".\"C7\")";
-            assertAll(
-                    () -> assertThat(actual, table("VARCHAR", "DECIMAL")
-                            .row("1234567890.123456789", new BigDecimal("12355.12345")).matches()),
-                    () -> assertExplainVirtual(query, expectedExplainVirtual));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT C5, min(C7) FROM " + qualifiedActualTableName
+                        + " GROUP BY C5 HAVING MIN(C7) > 12350";
+                final ResultSet actual = statementExasol.executeQuery(query);
+                final String expectedExplainVirtual = "SELECT TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C5\"), CAST(MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") AS FLOAT) FROM \""
+                        + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY \""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\" HAVING 12350 < MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C7\")";
+                assertAll(
+                        () -> assertThat(actual, table("VARCHAR", "DECIMAL")
+                                .row("1234567890.123456789", new BigDecimal("12355.12345")).matches()),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
+            }
         }
 
         @ParameterizedTest
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
-        void testOrderByColumn(final String virtualSchemaName) {
-            final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT C1 FROM " + qualifiedTableNameActual + " ORDER BY C1 DESC NULLS LAST";
-            final String expectedExplainVirtual = "SELECT \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C1\" FROM \""
-                    + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" ORDER BY \""
-                    + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C1\" DESC NULLS LAST";
-            assertAll(() -> assertExpressionExecutionStringResult(query, "aaaaaaaaaaaaaaaaaaaa"),
-                    () -> assertExplainVirtual(query, expectedExplainVirtual));
+        void testOrderByColumn(final String virtualSchemaName) throws SQLException {
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT C1 FROM " + qualifiedTableNameActual + " ORDER BY C1 DESC NULLS LAST";
+                final String expectedExplainVirtual = "SELECT \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C1\" FROM \""
+                        + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" ORDER BY \""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C1\" DESC NULLS LAST";
+                assertAll(() -> assertExpressionExecutionStringResult(statementExasol, query, "aaaaaaaaaaaaaaaaaaaa"),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
+            }
         }
 
         @Test
         void testOrderByExpressionJdbc() throws SQLException {
-            final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT C7 FROM " + qualifiedActualTableName + " ORDER BY ABS(C7) DESC NULLS FIRST";
-            final ResultSet expected = getExpectedResultSet("(A DECIMAL(36,5))", "(12355.12345), (12345.12345)");
-            final ResultSet actual = statementExasol.executeQuery(query);
-            final String expectedExplainVirtual = "SELECT \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\" FROM \""
-                    + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" ORDER BY ABS(\""
-                    + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") DESC";
-            assertAll(() -> assertThat(actual, matchesResultSet(expected)),
-                    () -> assertExplainVirtual(query, expectedExplainVirtual));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT C7 FROM " + qualifiedActualTableName + " ORDER BY ABS(C7) DESC NULLS FIRST";
+                final ResultSet expected = getExpectedResultSet(statementExasol, "(A DECIMAL(36,5))", "(12355.12345), (12345.12345)");
+                final ResultSet actual = statementExasol.executeQuery(query);
+                final String expectedExplainVirtual = "SELECT \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\" FROM \""
+                        + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" ORDER BY ABS(\""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") DESC";
+                assertAll(() -> assertThat(actual, matchesResultSet(expected)),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
+            }
         }
 
         @Test
         void testLimit() throws SQLException {
-            final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT C7 FROM " + qualifiedActualTableName + " ORDER BY C7 LIMIT 2";
-            final ResultSet expected = getExpectedResultSet("(A DECIMAL(36,5))", "(12345.12345), (12355.12345)");
-            final ResultSet actual = statementExasol.executeQuery(query);
-            final String expectedExplainVirtual = "SELECT LIMIT_SUBSELECT.* FROM ( SELECT \""
-                    + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\" FROM \"" + SCHEMA_ORACLE + "\".\""
-                    + TABLE_ORACLE_ALL_DATA_TYPES + "\" ORDER BY \"" + TABLE_ORACLE_ALL_DATA_TYPES
-                    + "\".\"C7\"  ) LIMIT_SUBSELECT WHERE ROWNUM <= 2";
-            assertAll(() -> assertThat(actual, matchesResultSet(expected)),
-                    () -> assertExplainVirtual(query, expectedExplainVirtual));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT C7 FROM " + qualifiedActualTableName + " ORDER BY C7 LIMIT 2";
+                final ResultSet expected = getExpectedResultSet(statementExasol, "(A DECIMAL(36,5))", "(12345.12345), (12355.12345)");
+                final ResultSet actual = statementExasol.executeQuery(query);
+                final String expectedExplainVirtual = "SELECT LIMIT_SUBSELECT.* FROM ( SELECT \""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\" FROM \"" + SCHEMA_ORACLE + "\".\""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\" ORDER BY \"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C7\"  ) LIMIT_SUBSELECT WHERE ROWNUM <= 2";
+                assertAll(() -> assertThat(actual, matchesResultSet(expected)),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
+            }
         }
 
         @Test
         void testLimitOffset() throws SQLException {
-            final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT C7 FROM " + qualifiedActualTableName + " ORDER BY C7 LIMIT 1 OFFSET 1";
-            final ResultSet expected = getExpectedResultSet("(A DECIMAL(36,5))", "(12355.12345)");
-            final ResultSet actual = statementExasol.executeQuery(query);
-            final String expectedExplainVirtual = "SELECT LIMIT_SUBSELECT.*, ROWNUM ROWNUM_SUB FROM ( SELECT \""
-                    + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\" AS c0 FROM \"" + SCHEMA_ORACLE + "\".\""
-                    + TABLE_ORACLE_ALL_DATA_TYPES + "\" ORDER BY \"" + TABLE_ORACLE_ALL_DATA_TYPES
-                    + "\".\"C7\"  ) LIMIT_SUBSELECT WHERE ROWNUM <= 2 ) WHERE ROWNUM_SUB > 1";
-            assertAll(() -> assertThat(actual, matchesResultSet(expected)),
-                    () -> assertExplainVirtual(query, expectedExplainVirtual));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT C7 FROM " + qualifiedActualTableName + " ORDER BY C7 LIMIT 1 OFFSET 1";
+                final ResultSet expected = getExpectedResultSet(statementExasol, "(A DECIMAL(36,5))", "(12355.12345)");
+                final ResultSet actual = statementExasol.executeQuery(query);
+                final String expectedExplainVirtual = "SELECT LIMIT_SUBSELECT.*, ROWNUM ROWNUM_SUB FROM ( SELECT \""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\" AS c0 FROM \"" + SCHEMA_ORACLE + "\".\""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\" ORDER BY \"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C7\"  ) LIMIT_SUBSELECT WHERE ROWNUM <= 2 ) WHERE ROWNUM_SUB > 1";
+                assertAll(() -> assertThat(actual, matchesResultSet(expected)),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
+            }
         }
 
         @ParameterizedTest
@@ -740,12 +815,15 @@ class OracleSqlDialectIT {
                 "VIRTUAL_SCHEMA_ORACLE, C4, VARCHAR(50) UTF8, dddddddddddddddddddd" //
         })
         void testCharactersColumns(final String virtualSchemaName, final String columnName,
-                                   final String expectedColumnType, final String expectedColumnValue) {
-            final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
-            assertAll(() -> assertExpressionExecutionStringResult(query, expectedColumnValue),
-                    () -> assertThat(getColumnTypesOfTable(qualifiedTableName, columnName),
-                            equalTo(expectedColumnType)));
+                                   final String expectedColumnType, final String expectedColumnValue) throws SQLException {
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
+                assertAll(() -> assertExpressionExecutionStringResult(statementExasol, query, expectedColumnValue),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, columnName),
+                                equalTo(expectedColumnType)));
+            }
         }
 
         @ParameterizedTest
@@ -757,11 +835,14 @@ class OracleSqlDialectIT {
                 "VIRTUAL_SCHEMA_ORACLE, C19", //
                 "VIRTUAL_SCHEMA_ORACLE, C20",//
         })
-        void testBlobColumns(final String virtualSchemaName, final String columnName) {
-            final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
-            final SQLException exception = assertThrows(SQLException.class, () -> statementExasol.execute(query));
-            assertThat(exception.getMessage(), startsWith("object " + columnName + " not found"));
+        void testBlobColumns(final String virtualSchemaName, final String columnName) throws SQLException {
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
+                final SQLException exception = assertThrows(SQLException.class, () -> statementExasol.execute(query));
+                assertThat(exception.getMessage(), startsWith("object " + columnName + " not found"));
+            }
         }
 
         @ParameterizedTest
@@ -776,12 +857,15 @@ class OracleSqlDialectIT {
                 "VIRTUAL_SCHEMA_ORACLE | C7 | DECIMAL(10,5) | 12345.12345" //
         }, delimiter = '|')
         void testNumberColumns(final String virtualSchemaName, final String columnName, final String expectedColumnType,
-                               final String expectedValue) {
-            final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
-            assertAll(() -> assertExpressionExecutionBigDecimalResult(query, new BigDecimal(expectedValue)),
-                    () -> assertThat(getColumnTypesOfTable(qualifiedTableName, columnName),
-                            equalTo(expectedColumnType)));
+                               final String expectedValue) throws SQLException {
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
+                assertAll(() -> assertExpressionExecutionBigDecimalResult(statementExasol, query, new BigDecimal(expectedValue)),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, columnName),
+                                equalTo(expectedColumnType)));
+            }
         }
 
         @ParameterizedTest
@@ -794,15 +878,18 @@ class OracleSqlDialectIT {
                 "VIRTUAL_SCHEMA_ORACLE | C_FLOAT126 | DOUBLE | 12345678.01234567901234567890123456789" //
         }, delimiter = '|')
         void testFloatNumbers(final String virtualSchemaName, final String columnName, final String expectedColumnType,
-                              final String expectedValue) {
-            final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
-            assertAll(() -> assertExpressionExecutionFloatResult(query, Float.parseFloat(expectedValue)),
-                    () -> assertThat(getColumnTypesOfTable(qualifiedTableName, columnName),
-                            equalTo(expectedColumnType)));
+                              final String expectedValue) throws SQLException {
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
+                assertAll(() -> assertExpressionExecutionFloatResult(statementExasol, query, Float.parseFloat(expectedValue)),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, columnName),
+                                equalTo(expectedColumnType)));
+            }
         }
 
-        private void assertExpressionExecutionFloatResult(final String query, final float expected)
+        private void assertExpressionExecutionFloatResult(Statement statementExasol, final String query, final float expected)
                 throws SQLException {
             final ResultSet result = statementExasol.executeQuery(query);
             result.next();
@@ -812,15 +899,18 @@ class OracleSqlDialectIT {
 
         @ParameterizedTest
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
-        void testBinaryDouble(final String virtualSchemaName) {
-            final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT C_BINDOUBLE FROM " + qualifiedTableName;
-            assertAll(() -> assertExpressionExecutionDoubleResult(query, Double.parseDouble("1234987.120871234")),
-                    () -> assertThat(getColumnTypesOfTable(qualifiedTableName, "C_BINDOUBLE"),
-                            equalTo("VARCHAR(2000000) UTF8")));
+        void testBinaryDouble(final String virtualSchemaName) throws SQLException {
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT C_BINDOUBLE FROM " + qualifiedTableName;
+                assertAll(() -> assertExpressionExecutionDoubleResult(statementExasol, query, Double.parseDouble("1234987.120871234")),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "C_BINDOUBLE"),
+                                equalTo("VARCHAR(2000000) UTF8")));
+            }
         }
 
-        private void assertExpressionExecutionDoubleResult(final String query, final double expected)
+        private void assertExpressionExecutionDoubleResult(Statement statementExasol, final String query, final double expected)
                 throws SQLException {
             final ResultSet result = statementExasol.executeQuery(query);
             result.next();
@@ -829,33 +919,42 @@ class OracleSqlDialectIT {
         }
 
         @Test
-        void testLongJdbc() {
-            final String qualifiedTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT C_LONG FROM " + qualifiedTableName;
-            assertAll(() -> assertExpressionExecutionStringResult(query, "test long 123"),
-                    () -> assertThat(getColumnTypesOfTable(qualifiedTableName, "C_LONG"),
-                            equalTo("VARCHAR(2000000) UTF8")));
+        void testLongJdbc() throws SQLException {
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT C_LONG FROM " + qualifiedTableName;
+                assertAll(() -> assertExpressionExecutionStringResult(statementExasol, query, "test long 123"),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "C_LONG"),
+                                equalTo("VARCHAR(2000000) UTF8")));
+            }
         }
 
         @Test
-        void testLongOra() {
-            final String qualifiedTableName = VIRTUAL_SCHEMA_ORACLE + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT C_LONG FROM " + qualifiedTableName;
-            final SQLException exception = assertThrows(SQLException.class, () -> statementExasol.execute(query));
-            assertThat(exception.getMessage(),
-                    containsString("Unknown Oracle OCI column data type (8) found for column 'C_LONG'"));
+        void testLongOra() throws SQLException {
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableName = VIRTUAL_SCHEMA_ORACLE + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT C_LONG FROM " + qualifiedTableName;
+                final SQLException exception = assertThrows(SQLException.class, () -> statementExasol.execute(query));
+                assertThat(exception.getMessage(),
+                        containsString("Unknown Oracle OCI column data type (8) found for column 'C_LONG'"));
+            }
         }
 
         @ParameterizedTest
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
-        void testDate(final String virtualSchemaName) {
-            final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT C10 FROM " + qualifiedTableName;
-            assertAll(() -> assertExpressionExecutionDateResult(query, Date.valueOf("2016-08-19")),
-                    () -> assertThat(getColumnTypesOfTable(qualifiedTableName, "C10"), equalTo("TIMESTAMP")));
+        void testDate(final String virtualSchemaName) throws SQLException {
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT C10 FROM " + qualifiedTableName;
+                assertAll(() -> assertExpressionExecutionDateResult(statementExasol, query, Date.valueOf("2016-08-19")),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "C10"), equalTo("TIMESTAMP")));
+            }
         }
 
-        private void assertExpressionExecutionDateResult(final String query, final Date expected) throws SQLException {
+        private void assertExpressionExecutionDateResult(Statement statementExasol, final String query, final Date expected) throws SQLException {
             final ResultSet result = statementExasol.executeQuery(query);
             result.next();
             final Date actualResult = result.getDate(1);
@@ -870,16 +969,19 @@ class OracleSqlDialectIT {
                 "C14, 2016-08-19 11:28:05.0", //
                 "C15, 2018-04-30 19:00:05.0" //
         })
-        void testTimestampsJdbc(final String columnName, final String expectedColumnValue) {
-            final String qualifiedTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
-            final String expectedExplainVirtual = "SELECT TO_TIMESTAMP(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                    + "\".\"" + columnName + "\", ''YYYY-MM-DD HH24:MI:SS.FF3''), "
-                    + "''YYYY-MM-DD HH24:MI:SS.FF3'') FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                    + "\"";
-            assertAll(() -> assertExpressionExecutionTimestampResult(query, Timestamp.valueOf(expectedColumnValue)),
-                    () -> assertThat(getColumnTypesOfTable(qualifiedTableName, columnName), equalTo("TIMESTAMP")),
-                    () -> assertExplainVirtual(query, expectedExplainVirtual));
+        void testTimestampsJdbc(final String columnName, final String expectedColumnValue) throws SQLException {
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
+                final String expectedExplainVirtual = "SELECT TO_TIMESTAMP(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"" + columnName + "\", ''YYYY-MM-DD HH24:MI:SS.FF3''), "
+                        + "''YYYY-MM-DD HH24:MI:SS.FF3'') FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\"";
+                assertAll(() -> assertExpressionExecutionTimestampResult(statementExasol, query, Timestamp.valueOf(expectedColumnValue)),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, columnName), equalTo("TIMESTAMP")),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
+            }
         }
 
         @ParameterizedTest
@@ -891,17 +993,20 @@ class OracleSqlDialectIT {
                 "C15, 2018-04-30 18:00:05.0" //
         })
         void testTimestampOra(final String columnName, final String expectedColumnValue) throws SQLException {
-            statementExasol.execute("ALTER SESSION SET TIME_ZONE = 'UTC'");
-            final String qualifiedTableName = VIRTUAL_SCHEMA_ORACLE + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
-            final String expectedExplainVirtual = "SELECT \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"" + columnName
-                    + "\" FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\"";
-            assertAll(() -> assertExpressionExecutionTimestampResult(query, Timestamp.valueOf(expectedColumnValue)),
-                    () -> assertThat(getColumnTypesOfTable(qualifiedTableName, columnName), equalTo("TIMESTAMP")),
-                    () -> assertExplainVirtual(query, expectedExplainVirtual));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                statementExasol.execute("ALTER SESSION SET TIME_ZONE = 'UTC'");
+                final String qualifiedTableName = VIRTUAL_SCHEMA_ORACLE + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
+                final String expectedExplainVirtual = "SELECT \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"" + columnName
+                        + "\" FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\"";
+                assertAll(() -> assertExpressionExecutionTimestampResult(statementExasol, query, Timestamp.valueOf(expectedColumnValue)),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, columnName), equalTo("TIMESTAMP")),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
+            }
         }
 
-        private void assertExpressionExecutionTimestampResult(final String query, final Timestamp expected)
+        private void assertExpressionExecutionTimestampResult(Statement statementExasol, final String query, final Timestamp expected)
                 throws SQLException {
             final ResultSet result = statementExasol.executeQuery(query);
             result.next();
@@ -911,32 +1016,38 @@ class OracleSqlDialectIT {
 
         @ParameterizedTest
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
-        void testIntervalYear(final String virtualSchemaName) {
-            final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT C16 FROM " + qualifiedTableName;
-            final String expectedExplainVirtual = "SELECT TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                    + "\".\"C16\") FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\"";
-            assertAll(() -> assertExpressionExecutionStringResult(query, "+54-02"),
-                    () -> assertThat(getColumnTypesOfTable(qualifiedTableName, "C16"),
-                            equalTo("VARCHAR(2000000) UTF8")),
-                    () -> assertExplainVirtual(query, expectedExplainVirtual));
+        void testIntervalYear(final String virtualSchemaName) throws SQLException {
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT C16 FROM " + qualifiedTableName;
+                final String expectedExplainVirtual = "SELECT TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C16\") FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\"";
+                assertAll(() -> assertExpressionExecutionStringResult(statementExasol, query, "+54-02"),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "C16"),
+                                equalTo("VARCHAR(2000000) UTF8")),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
+            }
         }
 
         @ParameterizedTest
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testIntervalDay(final String virtualSchemaName) throws SQLException {
-            final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-            final String query = "SELECT C17 FROM " + qualifiedTableName + " ORDER BY 1";
-            final ResultSet expected = getExpectedResultSet("(A VARCHAR(2000000) UTF8)",
-                    "('+01 11:12:10.123000'), ('+02 02:03:04.123456')");
-            final ResultSet actual = statementExasol.executeQuery(query);
-            final String expectedExplainVirtual = "SELECT TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                    + "\".\"C17\") FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" ORDER BY \""
-                    + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C17\"";
-            assertAll(() -> assertThat(actual, matchesResultSet(expected)),
-                    () -> assertThat(getColumnTypesOfTable(qualifiedTableName, "C17"),
-                            equalTo("VARCHAR(2000000) UTF8")),
-                    () -> assertExplainVirtual(query, expectedExplainVirtual));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT C17 FROM " + qualifiedTableName + " ORDER BY 1";
+                final ResultSet expected = getExpectedResultSet(statementExasol, "(A VARCHAR(2000000) UTF8)",
+                        "('+01 11:12:10.123000'), ('+02 02:03:04.123456')");
+                final ResultSet actual = statementExasol.executeQuery(query);
+                final String expectedExplainVirtual = "SELECT TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C17\") FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" ORDER BY \""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C17\"";
+                assertAll(() -> assertThat(actual, matchesResultSet(expected)),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "C17"),
+                                equalTo("VARCHAR(2000000) UTF8")),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
+            }
         }
 
         @ParameterizedTest
@@ -946,16 +1057,19 @@ class OracleSqlDialectIT {
                 delimiter = '!')
         void testSelectAllTimestampColumns(final String virtualSchemaName, final String expectedColumnValue)
                 throws SQLException {
-            statementExasol.execute("ALTER SESSION SET TIME_ZONE = 'UTC'");
-            final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_TIMESTAMPS;
-            final String query = "SELECT * FROM " + qualifiedTableName;
-            final ResultSet expected = getExpectedResultSet("(A TIMESTAMP, B TIMESTAMP, C TIMESTAMP)",
-                    expectedColumnValue);
-            final ResultSet actual = statementExasol.executeQuery(query);
-            assertAll(() -> assertThat(actual, matchesResultSet(expected)),
-                    () -> assertThat(getColumnTypesOfTable(qualifiedTableName, "A"), equalTo("TIMESTAMP")),
-                    () -> assertThat(getColumnTypesOfTable(qualifiedTableName, "B"), equalTo("TIMESTAMP")),
-                    () -> assertThat(getColumnTypesOfTable(qualifiedTableName, "C"), equalTo("TIMESTAMP")));
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                statementExasol.execute("ALTER SESSION SET TIME_ZONE = 'UTC'");
+                final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_TIMESTAMPS;
+                final String query = "SELECT * FROM " + qualifiedTableName;
+                final ResultSet expected = getExpectedResultSet(statementExasol, "(A TIMESTAMP, B TIMESTAMP, C TIMESTAMP)",
+                        expectedColumnValue);
+                final ResultSet actual = statementExasol.executeQuery(query);
+                assertAll(() -> assertThat(actual, matchesResultSet(expected)),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "A"), equalTo("TIMESTAMP")),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "B"), equalTo("TIMESTAMP")),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "C"), equalTo("TIMESTAMP")));
+            }
         }
     }
 }

@@ -1,7 +1,6 @@
 package com.exasol.adapter.dialects.oracle;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -12,14 +11,6 @@ class ExasolVersionCheck {
 
     private ExasolVersionCheck() {
         // Not instantiable
-    }
-
-    /**
-     * This is a temporary workaround until integration tests work with Exasol 8.
-     */
-    static void assumeExasolVersion7(final Connection connection) {
-        final String version = getExasolMajorVersion(connection);
-        assumeTrue("7".equals(version), "Expected Exasol version 7 but got '" + version + "'");
     }
 
     static String getExasolMajorVersion(final Connection connection) {
