@@ -73,15 +73,15 @@ class OracleSqlDialectIT {
     private static Bucket uploadInstantClientToBucket(Bucket bucket)
             throws BucketAccessException, TimeoutException, IOException {
         if (is832OrLater()) {
-            return uploadInstantClient12(bucket);
-        } else {
             return uploadInstantClient23(bucket);
+        } else {
+            return uploadInstantClient12(bucket);
         }
     }
 
     private static Bucket uploadInstantClient12(Bucket bucket)
             throws BucketAccessException, TimeoutException, FileNotFoundException {
-        final String instantClientName = "instantclient-basic-linux.x64-23.5.0.24.07.zip";
+        final String instantClientName = "instantclient-basic-linux.x64-12.1.0.2.0.zip";
         final String instantClientPath = "src/test/resources/integration/driver/oracle";
         bucket.uploadFile(Path.of(instantClientPath, instantClientName), "drivers/oracle/" + instantClientName);
         return bucket;
@@ -262,7 +262,7 @@ class OracleSqlDialectIT {
                 + "1234.1241723, " // C_BINFLOAT
                 + "1234987.120871234, " // C_BINDOUBLE
                 + "TO_DATE('2016-08-19', 'YYYY-MM-DD'), " // C10
-                + "TO_TIMESTAMP('2013-03-11 17:30:15.123', 'YYYY-MM-DD HH24:MI:SS.FF'), " // C11
+                + "TO_TIMESTAMP('2013-03-11 17:30:15.123', 'YYYY-MM-DD HH24:MI:SS.FF3'), " // C11
                 + "TO_TIMESTAMP('2013-03-11 17:30:15.123456', 'YYYY-MM-DD HH24:MI:SS.FF'), " // C12
                 + "TO_TIMESTAMP('2013-03-11 17:30:15.123456789', 'YYYY-MM-DD HH24:MI:SS.FF'), " // C13
                 + "TO_TIMESTAMP_TZ('2016-08-19 11:28:05 -08:00', 'YYYY-MM-DD HH24:MI:SS TZH:TZM'), " // C14
