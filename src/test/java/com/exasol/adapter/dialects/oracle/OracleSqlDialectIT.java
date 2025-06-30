@@ -10,8 +10,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.math.BigDecimal;
+import java.net.URL;
 import java.nio.file.Path;
 import java.sql.*;
 import java.util.List;
@@ -27,9 +28,11 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import com.exasol.adapter.dialects.oracle.release.ExasolDbVersion;
 import com.exasol.bucketfs.Bucket;
 import com.exasol.bucketfs.BucketAccessException;
 import com.exasol.containers.ExasolContainer;
+import com.exasol.containers.ExasolDockerImageReference;
 import com.exasol.containers.ExasolService;
 import com.exasol.dbbuilder.dialects.exasol.*;
 import com.exasol.udfdebugging.UdfTestSetup;
@@ -62,21 +65,54 @@ class OracleSqlDialectIT {
 
     @BeforeAll
     static void beforeAll()
-            throws BucketAccessException, TimeoutException, SQLException, FileNotFoundException, InterruptedException {
+            throws BucketAccessException, TimeoutException, SQLException, IOException {
         setupOracleDbContainer();
         setupExasolContainer();
     }
 
     private static Bucket uploadInstantClientToBucket(Bucket bucket)
+            throws BucketAccessException, TimeoutException, IOException {
+        if (is832OrLater()) {
+            return uploadInstantClient12(bucket);
+        } else {
+            return uploadInstantClient23(bucket);
+        }
+    }
+
+    private static Bucket uploadInstantClient12(Bucket bucket)
             throws BucketAccessException, TimeoutException, FileNotFoundException {
-        final String instantClientName = "instantclient-basic-linux.x64-12.1.0.2.0.zip";
+        final String instantClientName = "instantclient-basic-linux.x64-23.5.0.24.07.zip";
         final String instantClientPath = "src/test/resources/integration/driver/oracle";
         bucket.uploadFile(Path.of(instantClientPath, instantClientName), "drivers/oracle/" + instantClientName);
         return bucket;
     }
 
+    private static Bucket uploadInstantClient23(Bucket bucket)
+            throws BucketAccessException, TimeoutException, IOException {
+        final String fileName = "instantclient-basic-linux.x64-23.5.0.24.07.zip";
+        final String downloadUrl = "https://download.oracle.com/otn_software/linux/instantclient/2350000/" + fileName;
+
+        // Download to a temporary file
+        final File tempFile = File.createTempFile("instantclient", ".zip");
+        tempFile.deleteOnExit();
+
+        try (BufferedInputStream in = new BufferedInputStream(new URL(downloadUrl).openStream());
+             FileOutputStream fileOutputStream = new FileOutputStream(tempFile)) {
+            byte[] dataBuffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
+                fileOutputStream.write(dataBuffer, 0, bytesRead);
+            }
+        }
+
+        // Upload to BucketFS path: drivers/oracle/<filename>
+        bucket.uploadFile(tempFile.toPath(), Path.of("drivers", "oracle", fileName).toString());
+
+        return bucket;
+    }
+
     private static void setupExasolContainer()
-            throws BucketAccessException, TimeoutException, FileNotFoundException, SQLException, InterruptedException {
+            throws BucketAccessException, TimeoutException, FileNotFoundException, SQLException, IOException {
         final Connection exasolConnection = exasolContainer.createConnectionForUser(exasolContainer.getUsername(),
                 exasolContainer.getPassword());
         Bucket bucket = uploadInstantClientToBucket(exasolContainer.getDefaultBucket());
@@ -304,6 +340,22 @@ class OracleSqlDialectIT {
 
     private Connection getExasolConnection() throws SQLException {
         return exasolContainer.createConnection("");
+    }
+
+    private static boolean is832OrLater() {
+        return supportTimestampPrecision();
+    }
+
+    private static boolean supportTimestampPrecision() {
+        final ExasolDockerImageReference dockerImage = exasolContainer.getDockerImageReference();
+        if (!dockerImage.hasMajor() || !dockerImage.hasMinor() || !dockerImage.hasFix()) {
+            return false;
+        }
+        final ExasolDbVersion exasolDbVersion = ExasolDbVersion.of(dockerImage.getMajor(), dockerImage.getMinor(), dockerImage.getFixVersion());
+        if ((dockerImage.getMajor() == 8) && exasolDbVersion.isGreaterOrEqualThan(ExasolDbVersion.parse("8.32.0"))) {
+            return true;
+        }
+        return false;
     }
 
     @Test
