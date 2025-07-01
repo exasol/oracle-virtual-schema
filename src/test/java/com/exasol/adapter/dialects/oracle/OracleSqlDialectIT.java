@@ -7,8 +7,10 @@ import static com.exasol.matcher.ResultSetStructureMatcher.table;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -106,7 +108,7 @@ class OracleSqlDialectIT {
         }
 
         // Upload to BucketFS path: drivers/oracle/<filename>
-        bucket.uploadFile(tempFile.toPath(), Path.of("drivers", "oracle", fileName).toString());
+        bucket.uploadFile(tempFile.toPath(), "drivers/oracle/" + fileName);
 
         return bucket;
     }
@@ -262,7 +264,7 @@ class OracleSqlDialectIT {
                 + "1234.1241723, " // C_BINFLOAT
                 + "1234987.120871234, " // C_BINDOUBLE
                 + "TO_DATE('2016-08-19', 'YYYY-MM-DD'), " // C10
-                + "TO_TIMESTAMP('2013-03-11 17:30:15.123', 'YYYY-MM-DD HH24:MI:SS.FF3'), " // C11
+                + "TO_TIMESTAMP('2013-03-11 17:30:15.123', 'YYYY-MM-DD HH24:MI:SS.FF'), " // C11
                 + "TO_TIMESTAMP('2013-03-11 17:30:15.123456', 'YYYY-MM-DD HH24:MI:SS.FF'), " // C12
                 + "TO_TIMESTAMP('2013-03-11 17:30:15.123456789', 'YYYY-MM-DD HH24:MI:SS.FF'), " // C13
                 + "TO_TIMESTAMP_TZ('2016-08-19 11:28:05 -08:00', 'YYYY-MM-DD HH24:MI:SS TZH:TZM'), " // C14
@@ -1015,13 +1017,38 @@ class OracleSqlDialectIT {
 
         @ParameterizedTest
         @CsvSource(value = { //
+                "C11, 2013-03-11 17:30:15.123, TIMESTAMP(3)", //
+                "C12, 2013-03-11 17:30:15.123, TIMESTAMP(6)", //
+                "C13, 2013-03-11 17:30:15.123, TIMESTAMP(9)", //
+                "C14, 2016-08-19 11:28:05.0, TIMESTAMP(9) WITH LOCAL TIME ZONE", //
+                "C15, 2018-04-30 19:00:05.0, TIMESTAMP(9) WITH LOCAL TIME ZONE" //
+        })
+        void testTimestampsJdbc(final String columnName, final String expectedColumnValue, final String expectedColumnType) throws SQLException {
+            assumeTrue(supportTimestampPrecision());
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                final String qualifiedTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
+                final String expectedExplainVirtual = "SELECT TO_TIMESTAMP(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"" + columnName + "\", ''YYYY-MM-DD HH24:MI:SS.FF3''), "
+                        + "''YYYY-MM-DD HH24:MI:SS.FF3'') FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\"";
+                assertAll(() -> assertExpressionExecutionTimestampResult(statementExasol, query, Timestamp.valueOf(expectedColumnValue)),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, columnName), equalTo(expectedColumnType)),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
+            }
+        }
+
+        @ParameterizedTest
+        @CsvSource(value = { //
                 "C11, 2013-03-11 17:30:15.123", //
                 "C12, 2013-03-11 17:30:15.123", //
                 "C13, 2013-03-11 17:30:15.123", //
                 "C14, 2016-08-19 11:28:05.0", //
                 "C15, 2018-04-30 19:00:05.0" //
         })
-        void testTimestampsJdbc(final String columnName, final String expectedColumnValue) throws SQLException {
+        void testTimestampsJdbcWithoutTimestampPrecision(final String columnName, final String expectedColumnValue) throws SQLException {
+            assumeFalse(supportTimestampPrecision());
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
@@ -1038,13 +1065,37 @@ class OracleSqlDialectIT {
 
         @ParameterizedTest
         @CsvSource(value = { //
+                "C11, 2013-03-11 17:30:15.123, TIMESTAMP(3)", //
+                "C12, 2013-03-11 17:30:15.123456, TIMESTAMP(6)", //
+                "C13, 2013-03-11 17:30:15.123456789, TIMESTAMP(9)", //
+                "C14, 2016-08-19 19:28:05.0, TIMESTAMP(6) WITH LOCAL TIME ZONE", //
+                "C15, 2018-04-30 18:00:05.0, TIMESTAMP(6) WITH LOCAL TIME ZONE" //
+        })
+        void testTimestampOra(final String columnName, final String expectedColumnValue, final String expectedColumnType) throws SQLException {
+            assumeTrue(supportTimestampPrecision());
+            try (Connection connection = getExasolConnection();
+                 Statement statementExasol = connection.createStatement()) {
+                statementExasol.execute("ALTER SESSION SET TIME_ZONE = 'UTC'");
+                final String qualifiedTableName = VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
+                final String expectedExplainVirtual = "SELECT \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"" + columnName
+                        + "\" FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\"";
+                assertAll(() -> assertExpressionExecutionTimestampResult(statementExasol, query, Timestamp.valueOf(expectedColumnValue)),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, columnName), equalTo(expectedColumnType)),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
+            }
+        }
+
+        @ParameterizedTest
+        @CsvSource(value = { //
                 "C11, 2013-03-11 17:30:15.123", //
                 "C12, 2013-03-11 17:30:15.123", //
                 "C13, 2013-03-11 17:30:15.123", //
                 "C14, 2016-08-19 19:28:05.0", //
                 "C15, 2018-04-30 18:00:05.0" //
         })
-        void testTimestampOra(final String columnName, final String expectedColumnValue) throws SQLException {
+        void testTimestampOraWithoutTimestampPrecision(final String columnName, final String expectedColumnValue) throws SQLException {
+            assumeTrue(supportTimestampPrecision());
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
                 statementExasol.execute("ALTER SESSION SET TIME_ZONE = 'UTC'");
