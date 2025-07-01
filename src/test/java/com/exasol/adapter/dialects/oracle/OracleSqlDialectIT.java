@@ -171,7 +171,7 @@ class OracleSqlDialectIT {
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL).adapterScript(adapterScript)
                 .connectionDefinition(jdbcConnectionDefinition).properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE))
                 .properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE,
-                        "oracle_cast_number_to_decimal_with_precision_and_scale", "36,1"))
+                        "ORACLE_CAST_NUMBER_TO_DECIMAL_WITH_PRECISION_AND_SCALE", "36,1"))
                 .build();
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_ORACLE).adapterScript(adapterScript)
                 .connectionDefinition(jdbcConnectionDefinition).properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE,
@@ -374,7 +374,7 @@ class OracleSqlDialectIT {
     @DisplayName("Number handling test")
     class NumberHandlingTest {
         @ParameterizedTest
-        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
         void testNumberToDecimalThrowsException(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
@@ -387,7 +387,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
         void testNumber36ToDecimal(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
@@ -402,7 +402,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
         void testNumber38ToDecimalThrowsException(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
@@ -415,7 +415,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
         void testNumber10S5ToDecimal(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
@@ -443,7 +443,7 @@ class OracleSqlDialectIT {
         void testSelectAllColsNumberFromOra() throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
-                final String qualifiedTableNameActual = VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL + "."
+                final String qualifiedTableNameActual = VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING + "."
                         + TABLE_ORACLE_NUMBER_HANDLING;
                 final ResultSet expected = getExpectedResultSet(statementExasol, "(A VARCHAR(100), B VARCHAR(100), C VARCHAR(100))",
                         "('12.3456789012345678901234567890123460E32', '12.3456789012345678901234567890E26', '12.3456789012345678901234567890123456E32')");
@@ -478,7 +478,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
         void testSelectOneNumberColumn(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
@@ -531,7 +531,7 @@ class OracleSqlDialectIT {
     @DisplayName("Join test")
     class JoinTest {
         @ParameterizedTest
-        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testInnerJoin(final String virtualSchema) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
@@ -560,7 +560,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testLeftJoin(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
@@ -577,7 +577,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testRightJoin(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
@@ -594,7 +594,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testFullOuterJoin(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
@@ -612,7 +612,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testRightJoinWithComplexCondition(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
@@ -629,7 +629,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testFullOuterJoinWithComplexCondition(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
@@ -652,7 +652,7 @@ class OracleSqlDialectIT {
     class DatatypeTest {
         @ParameterizedTest
         @CsvSource(value = { "VIRTUAL_SCHEMA_JDBC, 12346.12345", //
-                "VIRTUAL_SCHEMA_ORACLE, 01.2346123450E4" })
+                "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING, 01.2346123450E4" })
         void testSelectExpression(final String virtualSchemaName, final String expectedColumnValue) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
@@ -676,7 +676,7 @@ class OracleSqlDialectIT {
 
         @ParameterizedTest
         @CsvSource(value = { "VIRTUAL_SCHEMA_JDBC, 12355.12345", //
-                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, 12355.12345", "VIRTUAL_SCHEMA_ORACLE, 01.2355123450E4" })
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, 12355.12345", "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL, 01.2355123450E4" })
         void testFilterExpression(final String virtualSchemaName, final String expectedColumnValue) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
@@ -692,7 +692,7 @@ class OracleSqlDialectIT {
 
         @ParameterizedTest
         @CsvSource(value = { "VIRTUAL_SCHEMA_JDBC, 12345.12345", //
-                "VIRTUAL_SCHEMA_ORACLE, 01.2345123450E4" })
+                "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL, 01.2345123450E4" })
         void testAggregateSingleGroup(final String virtualSchemaName, final String expectedColumnValue) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
@@ -730,7 +730,7 @@ class OracleSqlDialectIT {
         void testAggregateGroupByExpressionOra() throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
-                final String qualifiedActualTableName = VIRTUAL_SCHEMA_ORACLE + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String qualifiedActualTableName = VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C5 + 1, min(C7) FROM " + qualifiedActualTableName
                         + " GROUP BY C5 + 1 ORDER BY 1 DESC";
                 final ResultSet expected = getExpectedResultSet(statementExasol, "(A VARCHAR(100), B VARCHAR(100))",
@@ -793,7 +793,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testOrderByColumn(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
@@ -863,10 +863,10 @@ class OracleSqlDialectIT {
                 "VIRTUAL_SCHEMA_JDBC, C2, CHAR(50) UTF8, bbbbbbbbbbbbbbbbbbbb", //
                 "VIRTUAL_SCHEMA_JDBC, C3, VARCHAR(50) UTF8, cccccccccccccccccccc", //
                 "VIRTUAL_SCHEMA_JDBC, C4, VARCHAR(50) UTF8, dddddddddddddddddddd", //
-                "VIRTUAL_SCHEMA_ORACLE, C1, CHAR(50) UTF8, aaaaaaaaaaaaaaaaaaaa", //
-                "VIRTUAL_SCHEMA_ORACLE, C2, CHAR(50) UTF8, bbbbbbbbbbbbbbbbbbbb", //
-                "VIRTUAL_SCHEMA_ORACLE, C3, VARCHAR(50) UTF8, cccccccccccccccccccc", //
-                "VIRTUAL_SCHEMA_ORACLE, C4, VARCHAR(50) UTF8, dddddddddddddddddddd" //
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, C1, CHAR(50) UTF8, aaaaaaaaaaaaaaaaaaaa", //
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, C2, CHAR(50) UTF8, bbbbbbbbbbbbbbbbbbbb", //
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, C3, VARCHAR(50) UTF8, cccccccccccccccccccc", //
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, C4, VARCHAR(50) UTF8, dddddddddddddddddddd" //
         })
         void testCharactersColumns(final String virtualSchemaName, final String columnName,
                                    final String expectedColumnType, final String expectedColumnValue) throws SQLException {
@@ -906,9 +906,9 @@ class OracleSqlDialectIT {
                 "VIRTUAL_SCHEMA_JDBC | C6 | VARCHAR(2000000) UTF8 | 12345678901234567890123456789012345678", //
                 "VIRTUAL_SCHEMA_JDBC | C7 | DECIMAL(10,5) | 12345.12345", //
                 "VIRTUAL_SCHEMA_ORACLE | C5 | VARCHAR(2000000) UTF8 | 123456789012345678901234567890123456", //
-                "VIRTUAL_SCHEMA_ORACLE | C_NUMBER36 | DECIMAL(36,0) | 123456789012345678901234567890123456", //
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C_NUMBER36 | DECIMAL(36,0) | 123456789012345678901234567890123456", //
                 "VIRTUAL_SCHEMA_ORACLE | C6 | VARCHAR(2000000) UTF8 | 12345678901234567890123456789012345678", //
-                "VIRTUAL_SCHEMA_ORACLE | C7 | DECIMAL(10,5) | 12345.12345" //
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C7 | DECIMAL(10,5) | 12345.12345" //
         }, delimiter = '|')
         void testNumberColumns(final String virtualSchemaName, final String columnName, final String expectedColumnType,
                                final String expectedValue) throws SQLException {
@@ -927,9 +927,9 @@ class OracleSqlDialectIT {
                 "VIRTUAL_SCHEMA_JDBC | C_BINFLOAT | VARCHAR(2000000) UTF8 | 1234.1241723", //
                 "VIRTUAL_SCHEMA_JDBC | C_FLOAT | DOUBLE | 12345.01982348239", //
                 "VIRTUAL_SCHEMA_JDBC | C_FLOAT126 | DOUBLE | 12345678.01234567901234567890123456789", //
-                "VIRTUAL_SCHEMA_ORACLE | C_BINFLOAT | VARCHAR(2000000) UTF8 | 1234.1241723", //
-                "VIRTUAL_SCHEMA_ORACLE | C_FLOAT | DOUBLE | 12345.01982348239", //
-                "VIRTUAL_SCHEMA_ORACLE | C_FLOAT126 | DOUBLE | 12345678.01234567901234567890123456789" //
+                "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL | C_BINFLOAT | VARCHAR(2000000) UTF8 | 1234.1241723", //
+                "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL | C_FLOAT | DECIMAL(36,1) | 12345.01982348239", //
+                "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL | C_FLOAT126 | DECIMAL(36,1) | 12345678.01234567901234567890123456789" //
         }, delimiter = '|')
         void testFloatNumbers(final String virtualSchemaName, final String columnName, final String expectedColumnType,
                               final String expectedValue) throws SQLException {
@@ -952,7 +952,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testBinaryDouble(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
@@ -997,14 +997,14 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testDate(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C10 FROM " + qualifiedTableName;
                 assertAll(() -> assertExpressionExecutionDateResult(statementExasol, query, Date.valueOf("2016-08-19")),
-                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "C10"), equalTo("TIMESTAMP")));
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "C10"), equalTo("TIMESTAMP(0)")));
             }
         }
 
@@ -1020,8 +1020,8 @@ class OracleSqlDialectIT {
                 "C11, 2013-03-11 17:30:15.123, TIMESTAMP(3)", //
                 "C12, 2013-03-11 17:30:15.123, TIMESTAMP(6)", //
                 "C13, 2013-03-11 17:30:15.123, TIMESTAMP(9)", //
-                "C14, 2016-08-19 11:28:05.0, TIMESTAMP(9) WITH LOCAL TIME ZONE", //
-                "C15, 2018-04-30 19:00:05.0, TIMESTAMP(9) WITH LOCAL TIME ZONE" //
+                "C14, 2016-08-19 11:28:05.0, TIMESTAMP(6) WITH LOCAL TIME ZONE", //
+                "C15, 2018-04-30 19:00:05.0, TIMESTAMP(6) WITH LOCAL TIME ZONE" //
         })
         void testTimestampsJdbc(final String columnName, final String expectedColumnValue, final String expectedColumnType) throws SQLException {
             assumeTrue(supportTimestampPrecision());
@@ -1118,7 +1118,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testIntervalYear(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
@@ -1134,7 +1134,7 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
         void testIntervalDay(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
@@ -1156,7 +1156,7 @@ class OracleSqlDialectIT {
         @ParameterizedTest
         @CsvSource(value = {
                 "VIRTUAL_SCHEMA_JDBC ! ('2018-01-01 11:00:00.0', '2018-01-01 11:00:00.0', '2018-01-01 11:00:00.000')", //
-                "VIRTUAL_SCHEMA_ORACLE ! ('2018-01-01 11:00:00.0', '2018-01-01 10:00:00.0', '2018-01-01 10:00:00.000')" }, //
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING ! ('2018-01-01 11:00:00.0', '2018-01-01 10:00:00.0', '2018-01-01 10:00:00.000')" }, //
                 delimiter = '!')
         void testSelectAllTimestampColumns(final String virtualSchemaName, final String expectedColumnValue)
                 throws SQLException {
@@ -1169,9 +1169,9 @@ class OracleSqlDialectIT {
                         expectedColumnValue);
                 final ResultSet actual = statementExasol.executeQuery(query);
                 assertAll(() -> assertThat(actual, matchesResultSet(expected)),
-                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "A"), equalTo("TIMESTAMP")),
-                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "B"), equalTo("TIMESTAMP")),
-                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "C"), equalTo("TIMESTAMP")));
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "A"), equalTo("TIMESTAMP(6)")),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "B"), equalTo("TIMESTAMP(6) WITH LOCAL TIME ZONE")),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "C"), equalTo("TIMESTAMP(6) WITH LOCAL TIME ZONE")));
             }
         }
     }
