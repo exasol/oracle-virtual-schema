@@ -1095,7 +1095,7 @@ class OracleSqlDialectIT {
                 "C15, 2018-04-30 18:00:05.0" //
         })
         void testTimestampOraWithoutTimestampPrecision(final String columnName, final String expectedColumnValue) throws SQLException {
-            assumeTrue(supportTimestampPrecision());
+            assumeFalse(supportTimestampPrecision());
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
                 statementExasol.execute("ALTER SESSION SET TIME_ZONE = 'UTC'");
