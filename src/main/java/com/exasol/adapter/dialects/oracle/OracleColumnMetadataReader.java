@@ -1,6 +1,9 @@
 package com.exasol.adapter.dialects.oracle;
 
 import static com.exasol.adapter.dialects.oracle.OracleProperties.ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY;
+import static com.exasol.adapter.metadata.DataType.createChar;
+import static com.exasol.adapter.metadata.DataType.createVarChar;
+import static com.exasol.adapter.metadata.DataType.ExaCharset.UTF8;
 
 import java.sql.Connection;
 import java.sql.Types;
@@ -24,6 +27,8 @@ public class OracleColumnMetadataReader extends BaseColumnMetadataReader {
     private static final int INTERVAL_YEAR_TO_MONTH = -103;
     static final int ORACLE_MAGIC_NUMBER_SCALE = -127;
 
+    static final int MAX_ORACLE_VARCHAR_SIZE = 4000;
+
     /**
      * Create a new instance of the {@link OracleColumnMetadataReader}
      *
@@ -39,19 +44,54 @@ public class OracleColumnMetadataReader extends BaseColumnMetadataReader {
     @Override
     public DataType mapJdbcType(final JDBCTypeDescription jdbcTypeDescription) {
         switch (jdbcTypeDescription.getJdbcType()) {
-        case Types.DECIMAL:
-        case Types.NUMERIC:
-            return mapNumericType(jdbcTypeDescription);
-        case ORACLE_TIMESTAMP_WITH_TIME_ZONE:
-        case ORACLE_TIMESTAMP_WITH_LOCAL_TIME_ZONE:
-            return convertExasolTimestamp(jdbcTypeDescription.getDecimalScale());
-        case INTERVAL_YEAR_TO_MONTH:
-        case INTERVAL_DAY_TO_SECOND:
-        case ORACLE_BINARY_FLOAT:
-        case ORACLE_BINARY_DOUBLE:
-            return DataType.createMaximumSizeVarChar(DataType.ExaCharset.UTF8);
-        default:
-            return super.mapJdbcType(jdbcTypeDescription);
+            case Types.VARCHAR:
+            case Types.NVARCHAR:
+            case Types.LONGVARCHAR:
+            case Types.LONGNVARCHAR:
+                return convertOracleVarChar(jdbcTypeDescription.getPrecisionOrSize());
+            case Types.CHAR:
+            case Types.NCHAR:
+                return convertOracleChar(jdbcTypeDescription.getPrecisionOrSize());
+            case Types.DECIMAL:
+            case Types.NUMERIC:
+                return mapNumericType(jdbcTypeDescription);
+            case ORACLE_TIMESTAMP_WITH_TIME_ZONE:
+            case ORACLE_TIMESTAMP_WITH_LOCAL_TIME_ZONE:
+                return convertExasolTimestamp(jdbcTypeDescription.getDecimalScale());
+            case INTERVAL_YEAR_TO_MONTH:
+            case INTERVAL_DAY_TO_SECOND:
+            case ORACLE_BINARY_FLOAT:
+            case ORACLE_BINARY_DOUBLE:
+                return createOracleMaximumSizeVarChar();
+            default:
+                return super.mapJdbcType(jdbcTypeDescription);
+        }
+    }
+
+    private DataType createOracleMaximumSizeVarChar() {
+        return createVarChar(MAX_ORACLE_VARCHAR_SIZE, DataType.ExaCharset.UTF8);
+    }
+
+    private DataType convertOracleVarChar(final int size) {
+        final DataType.ExaCharset charset = UTF8;
+        if (size <= MAX_ORACLE_VARCHAR_SIZE) {
+            final int precision = size == 0 ? MAX_ORACLE_VARCHAR_SIZE : size;
+            return createVarChar(precision, charset);
+        } else {
+            return createVarChar(MAX_ORACLE_VARCHAR_SIZE, charset);
+        }
+    }
+
+    private DataType convertOracleChar(final int size) {
+        final DataType.ExaCharset charset = UTF8;
+        if (size <= MAX_ORACLE_VARCHAR_SIZE) {
+            return createChar(size, charset);
+        } else {
+            if (size <= MAX_ORACLE_VARCHAR_SIZE) {
+                return createVarChar(size, charset);
+            } else {
+                return createVarChar(MAX_ORACLE_VARCHAR_SIZE, charset);
+            }
         }
     }
 
@@ -83,7 +123,7 @@ public class OracleColumnMetadataReader extends BaseColumnMetadataReader {
         if (this.properties.containsKey(ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY)) {
             return getNumberTypeFromProperty(ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY);
         } else {
-            return DataType.createMaximumSizeVarChar(DataType.ExaCharset.UTF8);
+            return createOracleMaximumSizeVarChar();
         }
     }
 

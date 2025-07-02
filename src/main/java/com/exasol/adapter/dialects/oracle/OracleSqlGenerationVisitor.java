@@ -1,12 +1,15 @@
 package com.exasol.adapter.dialects.oracle;
 
+import static com.exasol.adapter.dialects.oracle.OracleColumnMetadataReader.MAX_ORACLE_VARCHAR_SIZE;
 import static com.exasol.adapter.sql.AggregateFunction.*;
 import static com.exasol.adapter.sql.ScalarFunction.*;
 
 import java.util.*;
 
 import com.exasol.adapter.AdapterException;
-import com.exasol.adapter.dialects.*;
+import com.exasol.adapter.dialects.AbstractSqlDialect;
+import com.exasol.adapter.dialects.ImportType;
+import com.exasol.adapter.dialects.SqlDialect;
 import com.exasol.adapter.dialects.rewriting.SqlGenerationContext;
 import com.exasol.adapter.dialects.rewriting.SqlGenerationVisitor;
 import com.exasol.adapter.metadata.DataType;
@@ -208,7 +211,7 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
     }
 
     public String castToChar(final String operand) {
-        return "TO_CHAR(" + operand + ")";
+        return String.format("CAST(TO_CHAR(%s) AS VARCHAR(%d))", operand, MAX_ORACLE_VARCHAR_SIZE);
     }
 
     private String getNumberProjectionString(final SqlColumn column, final String projectionString,
