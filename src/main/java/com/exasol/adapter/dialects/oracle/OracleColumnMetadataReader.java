@@ -5,8 +5,7 @@ import static com.exasol.adapter.metadata.DataType.createChar;
 import static com.exasol.adapter.metadata.DataType.createVarChar;
 import static com.exasol.adapter.metadata.DataType.ExaCharset.UTF8;
 
-import java.sql.Connection;
-import java.sql.Types;
+import java.sql.*;
 
 import com.exasol.ExaMetadata;
 import com.exasol.adapter.AdapterProperties;
@@ -68,6 +67,32 @@ public class OracleColumnMetadataReader extends BaseColumnMetadataReader {
         }
     }
 
+    @Override
+    public JDBCTypeDescription readJdbcTypeDescription(final ResultSet remoteColumn) throws SQLException {
+        JDBCTypeDescription result = super.readJdbcTypeDescription(remoteColumn);
+        String column = remoteColumn.getString(NAME_COLUMN);
+        return new JdbcColumnDescription(result, column, buildRemoteColumnMetadata(remoteColumn));
+    }
+
+    private String buildRemoteColumnMetadata(ResultSet remoteColumn) throws SQLException {
+        ResultSetMetaData meta = remoteColumn.getMetaData();
+        int columnCount = meta.getColumnCount();
+        StringBuilder remoteColumnStringBuilder = new StringBuilder("Column Metadata: [");
+
+        for (int i = 1; i <= columnCount; i++) {
+            String columnName = meta.getColumnName(i);
+            Object value = remoteColumn.getObject(i);
+            remoteColumnStringBuilder.append(columnName)
+                    .append("=")
+                    .append(value)
+                    .append(i < columnCount ? ", " : "");
+        }
+
+        remoteColumnStringBuilder.append("]");
+        return remoteColumnStringBuilder.toString();
+    }
+
+
     private DataType createOracleMaximumSizeVarChar() {
         return createVarChar(MAX_ORACLE_VARCHAR_SIZE, DataType.ExaCharset.UTF8);
     }
@@ -96,13 +121,14 @@ public class OracleColumnMetadataReader extends BaseColumnMetadataReader {
     }
 
     protected DataType mapNumericType(final JDBCTypeDescription jdbcTypeDescription) {
-        final int decimalScale = jdbcTypeDescription.getDecimalScale();
+        int decimalScale = jdbcTypeDescription.getDecimalScale();
+        final int decimalPrecision = jdbcTypeDescription.getPrecisionOrSize();
         if (decimalScale == ORACLE_MAGIC_NUMBER_SCALE) {
+            decimalScale = 0;
+        }
+        if (decimalPrecision == 0 && decimalScale == 0) {
             return workAroundNumberWithoutScaleAndPrecision();
         }
-        final int decimalPrecision = jdbcTypeDescription.getPrecisionOrSize() == 0
-                ? DataType.MAX_EXASOL_DECIMAL_PRECISION
-                : jdbcTypeDescription.getPrecisionOrSize();
         if (decimalPrecision <= DataType.MAX_EXASOL_DECIMAL_PRECISION) {
             return DataType.createDecimal(decimalPrecision, decimalScale);
         } else {

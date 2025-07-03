@@ -446,7 +446,7 @@ class OracleSqlDialectIT {
                 final String qualifiedTableNameActual = VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING + "."
                         + TABLE_ORACLE_NUMBER_HANDLING;
                 final ResultSet expected = getExpectedResultSet(statementExasol, "(A VARCHAR(100), B VARCHAR(100), C VARCHAR(100))",
-                        "('12.3456789012345678901234567890123460E32', '12.3456789012345678901234567890E26', '12.3456789012345678901234567890123456E32')");
+                        "('1234567890123456789012345678901234.56', '1234567890123456789012345678901234.56', '1234567890123456789012345678901234.56')");
                 assertThat(statementExasol.executeQuery("SELECT * FROM " + qualifiedTableNameActual), //
                         matchesResultSet(expected));
             }
@@ -651,18 +651,26 @@ class OracleSqlDialectIT {
     @DisplayName("Datatype tests")
     class DatatypeTest {
         @ParameterizedTest
-        @CsvSource(value = { "VIRTUAL_SCHEMA_JDBC, 12346.12345", //
-                "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING, 01.2346123450E4" })
+        @CsvSource(value = {
+                "VIRTUAL_SCHEMA_JDBC, 12346.12345",
+                "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING, 12346.12345"
+        })
         void testSelectExpression(final String virtualSchemaName, final String expectedColumnValue) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-                final String query = "SELECT C7 + 1 FROM " + qualifiedTableNameActual + " ORDER BY 1";
-                final String expectedExplainVirtual = "SELECT CAST((\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                        + "\".\"C7\" + 1) AS FLOAT) FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                        + "\" ORDER BY (\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\" + 1)";
-                assertAll(() -> assertExpressionExecutionStringResult(statementExasol, query, expectedColumnValue),
-                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
+
+                final String query = "SELECT CAST(C7 + 1 AS NUMBER(10,5)) FROM " + qualifiedTableNameActual + " ORDER BY 1";
+
+                final String expectedExplainVirtual = "SELECT CAST((\""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\" + 1) AS DECIMAL(10, 5)) FROM \"" + SCHEMA_ORACLE + "\".\""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\" ORDER BY CAST((\""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\" + 1) AS DECIMAL(10, 5))";
+
+                assertAll(
+                        () -> assertExpressionExecutionStringResult(statementExasol, query, expectedColumnValue),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual)
+                );
             }
         }
 
@@ -676,7 +684,7 @@ class OracleSqlDialectIT {
 
         @ParameterizedTest
         @CsvSource(value = { "VIRTUAL_SCHEMA_JDBC, 12355.12345", //
-                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, 12355.12345", "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL, 01.2355123450E4" })
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, 12355.12345", "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING, 12355.12345" })
         void testFilterExpression(final String virtualSchemaName, final String expectedColumnValue) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
@@ -692,16 +700,21 @@ class OracleSqlDialectIT {
 
         @ParameterizedTest
         @CsvSource(value = { "VIRTUAL_SCHEMA_JDBC, 12345.12345", //
-                "VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, 12345.12345" })
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, 12345.12345" })
         void testAggregateSingleGroup(final String virtualSchemaName, final String expectedColumnValue) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-                final String query = "SELECT min(C7) FROM " + qualifiedTableNameActual;
-                final String expectedExplainVirtual = "SELECT CAST(MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                        + "\".\"C7\") AS FLOAT) FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\"";
-                assertAll(() -> assertExpressionExecutionStringResult(statementExasol, query, expectedColumnValue),
-                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
+                final String query = "SELECT CAST(MIN(C7) AS NUMBER(10,5)) FROM " + qualifiedTableNameActual;
+
+                final String expectedExplainVirtual = "SELECT CAST(MIN(\""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") AS DECIMAL(10, 5)) FROM \"" + SCHEMA_ORACLE + "\".\""
+                        + TABLE_ORACLE_ALL_DATA_TYPES;
+
+                assertAll(
+                        () -> assertExpressionExecutionStringResult(statementExasol, query, expectedColumnValue),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual)
+                );
             }
         }
 
@@ -755,12 +768,12 @@ class OracleSqlDialectIT {
                 final String query = "SELECT C_NUMBER36, C5, min(C7) FROM " + qualifiedActualTableName
                         + " GROUP BY C_NUMBER36, C5 ORDER BY C5 DESC";
                 final ResultSet actual = statementExasol.executeQuery(query);
-                final String expectedExplainVirtual = "SELECT \"" + TABLE_ORACLE_ALL_DATA_TYPES
-                        + "\".\"C_NUMBER36\", TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\"), CAST(MIN(\""
-                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") AS FLOAT) FROM \"" + SCHEMA_ORACLE + "\".\""
-                        + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\", \""
-                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C_NUMBER36\" ORDER BY \"" + TABLE_ORACLE_ALL_DATA_TYPES
-                        + "\".\"C5\" DESC";
+                final String expectedExplainVirtual = "IMPORT INTO (c1 DECIMAL(36, 0), c2 VARCHAR(4000) UTF8, c3 DECIMAL(10, 5)) FROM JDBC AT JDBC_CONNECTION STATEMENT 'SELECT \""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C_NUMBER36\", CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C5\") AS VARCHAR(4000)), CAST(MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") AS FLOAT) FROM \""
+                        + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY \"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C5\", \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C_NUMBER36\" ORDER BY \"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C5\" DESC'";
                 assertAll(
                         () -> assertThat(actual,
                                 table("DECIMAL", "VARCHAR", "DECIMAL")
@@ -927,9 +940,9 @@ class OracleSqlDialectIT {
                 "VIRTUAL_SCHEMA_JDBC | C_BINFLOAT | VARCHAR(4000) UTF8 | 1234.1241723", //
                 "VIRTUAL_SCHEMA_JDBC | C_FLOAT | DOUBLE | 12345.01982348239", //
                 "VIRTUAL_SCHEMA_JDBC | C_FLOAT126 | DOUBLE | 12345678.01234567901234567890123456789", //
-                "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING | C_BINFLOAT | VARCHAR(4000) UTF8 | 1234.1241723", //
-                "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL | C_FLOAT | DECIMAL(36,1) | 12345.01982348239", //
-                "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL | C_FLOAT126 | DECIMAL(36,1) | 12345678.01234567901234567890123456789" //
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C_BINFLOAT | VARCHAR(4000) UTF8 | 1234.1241723", //
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C_FLOAT | DOUBLE | 12345.01982348239", //
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C_FLOAT126 | DOUBLE | 12345678.01234567901234567890123456789" //
         }, delimiter = '|')
         void testFloatNumbers(final String virtualSchemaName, final String columnName, final String expectedColumnType,
                               final String expectedValue) throws SQLException {
