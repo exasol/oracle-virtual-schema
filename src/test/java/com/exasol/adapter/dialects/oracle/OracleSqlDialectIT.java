@@ -445,8 +445,8 @@ class OracleSqlDialectIT {
                  Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableNameActual = VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING + "."
                         + TABLE_ORACLE_NUMBER_HANDLING;
-                final ResultSet expected = getExpectedResultSet(statementExasol, "(A VARCHAR(100), B VARCHAR(100), C VARCHAR(100))",
-                        "('1234567890123456789012345678901234.56', '1234567890123456789012345678901234.56', '1234567890123456789012345678901234.56')");
+                final ResultSet expected = getExpectedResultSet(statementExasol, "(A DOUBLE, B DOUBLE, C DOUBLE)",
+                        "('1234567890123456789012345678901234.56', '1234567890123456789012345678.9012345678', '1234567890123456789012345678901234.56')");
                 assertThat(statementExasol.executeQuery("SELECT * FROM " + qualifiedTableNameActual), //
                         matchesResultSet(expected));
             }
@@ -651,26 +651,18 @@ class OracleSqlDialectIT {
     @DisplayName("Datatype tests")
     class DatatypeTest {
         @ParameterizedTest
-        @CsvSource(value = {
-                "VIRTUAL_SCHEMA_JDBC, 12346.12345",
-                "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING, 12346.12345"
-        })
+        @CsvSource(value = { "VIRTUAL_SCHEMA_JDBC, 12346.12345", //
+                "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING, 12346.12345" })
         void testSelectExpression(final String virtualSchemaName, final String expectedColumnValue) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-
-                final String query = "SELECT CAST(C7 + 1 AS NUMBER(10,5)) FROM " + qualifiedTableNameActual + " ORDER BY 1";
-
-                final String expectedExplainVirtual = "SELECT CAST((\""
-                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\" + 1) AS DECIMAL(10, 5)) FROM \"" + SCHEMA_ORACLE + "\".\""
-                        + TABLE_ORACLE_ALL_DATA_TYPES + "\" ORDER BY CAST((\""
-                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\" + 1) AS DECIMAL(10, 5))";
-
-                assertAll(
-                        () -> assertExpressionExecutionStringResult(statementExasol, query, expectedColumnValue),
-                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual)
-                );
+                final String query = "SELECT C7 + 1 FROM " + qualifiedTableNameActual + " ORDER BY 1";
+                final String expectedExplainVirtual = "SELECT (\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C7\" + 1) FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\" ORDER BY (\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\" + 1)";
+                assertAll(() -> assertExpressionExecutionStringResult(statementExasol, query, expectedColumnValue),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
             }
         }
 
@@ -705,16 +697,11 @@ class OracleSqlDialectIT {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-                final String query = "SELECT CAST(MIN(C7) AS NUMBER(10,5)) FROM " + qualifiedTableNameActual;
-
-                final String expectedExplainVirtual = "SELECT CAST(MIN(\""
-                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") AS DECIMAL(10, 5)) FROM \"" + SCHEMA_ORACLE + "\".\""
-                        + TABLE_ORACLE_ALL_DATA_TYPES;
-
-                assertAll(
-                        () -> assertExpressionExecutionStringResult(statementExasol, query, expectedColumnValue),
-                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual)
-                );
+                final String query = "SELECT min(C7) FROM " + qualifiedTableNameActual;
+                final String expectedExplainVirtual = "SELECT MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C7\") FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\"";
+                assertAll(() -> assertExpressionExecutionStringResult(statementExasol, query, expectedColumnValue),
+                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
             }
         }
 
@@ -725,7 +712,7 @@ class OracleSqlDialectIT {
                 final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C5, min(C7) FROM " + qualifiedActualTableName + " GROUP BY C5 ORDER BY 1 DESC";
                 final String expectedExplainVirtual = "SELECT CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                        + "\".\"C5\") AS VARCHAR(4000)), CAST(MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") AS FLOAT) FROM \""
+                        + "\".\"C5\") AS VARCHAR(4000)), MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") FROM \""
                         + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY \""
                         + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\" ORDER BY \"" + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\".\"C5\" DESC";
@@ -743,16 +730,16 @@ class OracleSqlDialectIT {
         void testAggregateGroupByExpressionOra() throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
-                final String qualifiedActualTableName = VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String qualifiedActualTableName = VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C5 + 1, min(C7) FROM " + qualifiedActualTableName
                         + " GROUP BY C5 + 1 ORDER BY 1 DESC";
                 final ResultSet expected = getExpectedResultSet(statementExasol, "(A VARCHAR(100), B VARCHAR(100))",
                         "('12.3456789012345678901234567890123457E34', '01.2345123450E4')," //
                                 + "('12.345678911234567890E8', '01.2355123450E4')");
                 final ResultSet actual = statementExasol.executeQuery(query);
-                final String expectedExplainVirtual = "SELECT CAST((\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                        + "\".\"C5\" + 1) AS FLOAT), CAST(MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                        + "\".\"C7\") AS FLOAT) FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                final String expectedExplainVirtual = "SELECT (\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C5\" + 1), MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C7\") FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\" GROUP BY (\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\" + 1) ORDER BY (\""
                         + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\" + 1) DESC";
                 assertAll(() -> assertThat(actual, matchesResultSet(expected)),
@@ -768,9 +755,9 @@ class OracleSqlDialectIT {
                 final String query = "SELECT C_NUMBER36, C5, min(C7) FROM " + qualifiedActualTableName
                         + " GROUP BY C_NUMBER36, C5 ORDER BY C5 DESC";
                 final ResultSet actual = statementExasol.executeQuery(query);
-                final String expectedExplainVirtual = "IMPORT INTO (c1 DECIMAL(36, 0), c2 VARCHAR(4000) UTF8, c3 DECIMAL(10, 5)) FROM JDBC AT JDBC_CONNECTION STATEMENT 'SELECT \""
+                final String expectedExplainVirtual = "SELECT \""
                         + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C_NUMBER36\", CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                        + "\".\"C5\") AS VARCHAR(4000)), CAST(MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") AS FLOAT) FROM \""
+                        + "\".\"C5\") AS VARCHAR(4000)), MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") FROM \""
                         + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY \"" + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\".\"C5\", \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C_NUMBER36\" ORDER BY \"" + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\".\"C5\" DESC'";
@@ -794,7 +781,7 @@ class OracleSqlDialectIT {
                         + " GROUP BY C5 HAVING MIN(C7) > 12350";
                 final ResultSet actual = statementExasol.executeQuery(query);
                 final String expectedExplainVirtual = "SELECT CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                        + "\".\"C5\") AS VARCHAR(4000)), CAST(MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") AS FLOAT) FROM \""
+                        + "\".\"C5\") AS VARCHAR(4000)), MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") FROM \""
                         + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY \""
                         + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\" HAVING 12350 < MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\".\"C7\")";
@@ -1156,7 +1143,7 @@ class OracleSqlDialectIT {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C17 FROM " + qualifiedTableName + " ORDER BY 1";
                 final ResultSet expected = getExpectedResultSet(statementExasol, "(A VARCHAR(4000) UTF8)",
-                        "('+01 11:12:10.123000'), ('+02 02:03:04.123456')");
+                        "(INTERVAL'+01 11:12:10.123000'DAY TO SECOND), (INTERVAL'+02 02:03:04.123456'DAY TO SECOND)");
                 final ResultSet actual = statementExasol.executeQuery(query);
                 final String expectedExplainVirtual = "SELECT TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\".\"C17\") FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" ORDER BY \""

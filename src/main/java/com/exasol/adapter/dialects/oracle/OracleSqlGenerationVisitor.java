@@ -291,17 +291,6 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
     }
 
     @Override
-    public String visit(final SqlFunctionAggregate function) throws AdapterException {
-        final boolean isDirectlyInSelectList = (function.hasParent()
-                && (function.getParent().getType() == SqlNodeType.SELECT_LIST));
-        if (isDirectlyInSelectList && this.aggregateFunctionsCast.contains(function.getFunction())) {
-            // Cast to FLOAT because result set metadata has precision = 0, scale = 0
-            return cast(super.visit(function), "FLOAT");
-        }
-        return super.visit(function);
-    }
-
-    @Override
     public String visit(final SqlFunctionScalar function) throws AdapterException {
         String sql = super.visit(function);
         switch (function.getFunction()) {
@@ -372,12 +361,6 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
             break;
         default:
             break;
-        }
-        final boolean isDirectlyInSelectList = (function.hasParent()
-                && (function.getParent().getType() == SqlNodeType.SELECT_LIST));
-        if (isDirectlyInSelectList && this.scalarFunctionsCast.contains(function.getFunction())) {
-            // Cast to FLOAT because result set metadata has precision = 0, scale = 0
-            sql = cast(sql, "FLOAT");
         }
         return sql;
     }

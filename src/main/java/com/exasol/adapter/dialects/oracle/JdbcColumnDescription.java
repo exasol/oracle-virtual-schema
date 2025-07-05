@@ -21,4 +21,17 @@ public class JdbcColumnDescription extends JDBCTypeDescription {
     public String getRemoteColumnMetadata() {
         return remoteColumnMetadata;
     }
+
+    @Override
+    public String toString() {
+        return "JdbcColumnDescription{" +
+                "columnName='" + columnName + '\'' +
+                ", remoteColumnMetadata='" + remoteColumnMetadata + '\'' +
+                ", jdbcType=" + getJdbcType() +
+                ", decimalScale=" + getDecimalScale() +
+                ", precisionOrSize=" + getPrecisionOrSize() +
+                ", byteSize=" + getByteSize() +
+                ", typeName='" + getTypeName() + '\'' +
+                '}';
+    }
 }

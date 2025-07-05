@@ -2,14 +2,23 @@ package com.exasol.adapter.dialects.oracle;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.logging.Logger;
 
+import com.exasol.ExaConnectionInformation;
+import com.exasol.ExaMetadata;
+import com.exasol.adapter.AdapterException;
 import com.exasol.adapter.AdapterProperties;
 import com.exasol.adapter.dialects.SqlDialect;
+import com.exasol.adapter.dialects.SqlGenerator;
 import com.exasol.adapter.dialects.rewriting.AbstractQueryRewriter;
+import com.exasol.adapter.dialects.rewriting.SqlGenerationContext;
 import com.exasol.adapter.jdbc.ColumnMetadataReader;
 import com.exasol.adapter.jdbc.RemoteMetadataReader;
-import com.exasol.adapter.jdbc.ResultSetMetadataReader;
+import com.exasol.adapter.metadata.DataType;
+import com.exasol.adapter.properties.DataTypeDetection;
+import com.exasol.adapter.sql.SqlStatement;
+import com.exasol.errorreporting.ExaError;
 
 /**
  * This class implements an Oracle-specific query rewriter.
@@ -36,22 +45,62 @@ public class OracleQueryRewriter extends AbstractQueryRewriter {
         return this.properties.isEnabled(OracleProperties.GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI_PROPERTY);
     }
 
+
     @Override
-    protected String generateImportStatement(final String connectionDefinition, final String pushdownQuery)
-            throws SQLException {
+    protected String generateImportStatement(String connectionDefinition, String pushdownQuery) throws SQLException {
+        return generateImportStatement(connectionDefinition, null, pushdownQuery);
+    }
+
+    @Override
+    protected String generateImportStatement(final String connectionDefinition,
+                                             List<DataType> selectListDataTypes, final String pushdownQuery) {
         if (isGenerateJdbcDatatypeMappingForOCIEnabled()) {
-            final String columnDescription = this.createImportColumnsDescription(pushdownQuery);
+            final String columnDescription = this.createImportColumnsDescription(pushdownQuery, selectListDataTypes);
             return "IMPORT INTO (" + columnDescription + ") FROM ORA " + connectionDefinition + " STATEMENT '" + pushdownQuery.replace("'", "''") + "'";
         } else {
             return "IMPORT FROM ORA " + connectionDefinition + " STATEMENT '" + pushdownQuery.replace("'", "''") + "'";
         }
     }
 
-    private String createImportColumnsDescription(final String query) {
+    @Override
+    public String rewrite(final SqlStatement statement, final List<DataType> selectListDataTypes,
+                          final ExaMetadata exaMetadata, final AdapterProperties properties)
+            throws AdapterException {
+        final String pushdownQuery = createPushdownQuery(statement, properties);
+        final ExaConnectionInformation exaConnectionInformation = getConnectionInformation(exaMetadata,
+                properties);
+        final String connectionDefinition = this.connectionDefinitionBuilder
+                .buildConnectionDefinition(properties, exaConnectionInformation);
+
+        if (DataTypeDetection.from(properties).getStrategy() == DataTypeDetection.Strategy.EXASOL_CALCULATED) {
+            String importStatement = generateImportStatement(connectionDefinition, selectListDataTypes,
+                        pushdownQuery);
+            LOGGER.finer(() -> "Import push-down statement:\n" + importStatement);
+            return importStatement;
+        } else {
+            throw new AdapterException(ExaError.messageBuilder("E-VSCJDBC-46").message(
+                            "Property `IMPORT_DATA_TYPES` value 'FROM_RESULT_SET' is no longer supported.")
+                    .mitigation("Please remove the `IMPORT_DATA_TYPES` property from the virtual schema so the default value 'EXASOL_CALCULATED' is used.")
+                    .toString());
+        }
+    }
+
+    private String createPushdownQuery(final SqlStatement statement, final AdapterProperties properties)
+            throws AdapterException {
+        final SqlGenerationContext context = new SqlGenerationContext(properties.getCatalogName(),
+                properties.getSchemaName(), false);
+        final SqlGenerator sqlGenerator = this.dialect.getSqlGenerator(context);
+        final String pushdownQuery = sqlGenerator.generateSqlFor(statement);
+        LOGGER.finer(() -> "Push-down query generated with " + sqlGenerator.getClass().getSimpleName() + ":\n"
+                + pushdownQuery);
+        return pushdownQuery;
+    }
+
+    private String createImportColumnsDescription(final String query, List<DataType> selectListDataTypes) {
         final ColumnMetadataReader columnMetadataReader = this.remoteMetadataReader.getColumnMetadataReader();
-        final ResultSetMetadataReader resultSetMetadataReader = new ResultSetMetadataReader(
+        final OracleResultSetMetadataReader resultSetMetadataReader = new OracleResultSetMetadataReader(
                 connection, columnMetadataReader);
-        final String columnsDescription = resultSetMetadataReader.describeColumns(query);
+        final String columnsDescription = resultSetMetadataReader.describeColumns(query, selectListDataTypes);
         LOGGER.finer(() -> "columndescription: " + columnsDescription);
         return columnsDescription;
     }
