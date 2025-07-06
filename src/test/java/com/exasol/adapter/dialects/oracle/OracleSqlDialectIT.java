@@ -727,9 +727,9 @@ class OracleSqlDialectIT {
                 final String query = "SELECT C5, min(C7) FROM " + qualifiedActualTableName + " GROUP BY C5 ORDER BY 1 DESC";
                 final String expectedExplainVirtual = "SELECT CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\".\"C5\") AS VARCHAR(4000)), MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") FROM \""
-                        + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY \""
-                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\" ORDER BY \"" + TABLE_ORACLE_ALL_DATA_TYPES
-                        + "\".\"C5\" DESC";
+                        + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY CAST(TO_CHAR(\""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\") AS VARCHAR(4000)) ORDER BY CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C5\") AS VARCHAR(4000)) DESC";
                 final ResultSet actual = statementExasol.executeQuery(query);
                 assertAll(
                         () -> assertThat(actual,
@@ -772,9 +772,9 @@ class OracleSqlDialectIT {
                 final String expectedExplainVirtual = "SELECT \""
                         + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C_NUMBER36\", CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\".\"C5\") AS VARCHAR(4000)), MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") FROM \""
-                        + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY \"" + TABLE_ORACLE_ALL_DATA_TYPES
-                        + "\".\"C5\", \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C_NUMBER36\" ORDER BY \"" + TABLE_ORACLE_ALL_DATA_TYPES
-                        + "\".\"C5\" DESC'";
+                        + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C5\") AS VARCHAR(4000)), \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C_NUMBER36\" ORDER BY CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C5\") AS VARCHAR(4000)) DESC'";
                 assertAll(
                         () -> assertThat(actual,
                                 table("DECIMAL", "VARCHAR", "DECIMAL")
@@ -796,8 +796,8 @@ class OracleSqlDialectIT {
                 final ResultSet actual = statementExasol.executeQuery(query);
                 final String expectedExplainVirtual = "SELECT CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\".\"C5\") AS VARCHAR(4000)), MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") FROM \""
-                        + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY \""
-                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\" HAVING 12350 < MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY CAST(TO_CHAR(\""
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\") AS VARCHAR(4000)) HAVING 12350 < MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\".\"C7\")";
                 assertAll(
                         () -> assertThat(actual, table("VARCHAR", "DECIMAL")
