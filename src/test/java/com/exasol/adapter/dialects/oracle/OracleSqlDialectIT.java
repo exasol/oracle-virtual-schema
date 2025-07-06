@@ -445,7 +445,7 @@ class OracleSqlDialectIT {
                  Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableNameActual = VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING + "."
                         + TABLE_ORACLE_NUMBER_HANDLING;
-                final ResultSet expected = getExpectedResultSet(statementExasol, "(A DOUBLE, B DOUBLE, C DOUBLE)",
+                final ResultSet expected = getExpectedResultSet(statementExasol, "(A VARCHAR(100), B VARCHAR(100), C DECIMAL(36,2))",
                         "('1234567890123456789012345678901234.56', '1234567890123456789012345678.9012345678', '1234567890123456789012345678901234.56')");
                 assertThat(statementExasol.executeQuery("SELECT * FROM " + qualifiedTableNameActual), //
                         matchesResultSet(expected));
@@ -730,12 +730,12 @@ class OracleSqlDialectIT {
         void testAggregateGroupByExpressionOra() throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
-                final String qualifiedActualTableName = VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+                final String qualifiedActualTableName = VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C5 + 1, min(C7) FROM " + qualifiedActualTableName
                         + " GROUP BY C5 + 1 ORDER BY 1 DESC";
-                final ResultSet expected = getExpectedResultSet(statementExasol, "(A VARCHAR(100), B VARCHAR(100))",
-                        "('12.3456789012345678901234567890123457E34', '01.2345123450E4')," //
-                                + "('12.345678911234567890E8', '01.2355123450E4')");
+                final ResultSet expected = getExpectedResultSet(statementExasol, "(A DOUBLE, B DECIMAL(10,5))",
+                        "(1.2345678901234568E35, 12345.12345),"
+                                + "(1.234567891123457E9, 12355.12345)");
                 final ResultSet actual = statementExasol.executeQuery(query);
                 final String expectedExplainVirtual = "SELECT (\"" + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\".\"C5\" + 1), MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES
@@ -925,11 +925,11 @@ class OracleSqlDialectIT {
         @ParameterizedTest
         @CsvSource(value = { //
                 "VIRTUAL_SCHEMA_JDBC | C_BINFLOAT | VARCHAR(4000) UTF8 | 1234.1241723", //
-                "VIRTUAL_SCHEMA_JDBC | C_FLOAT | DOUBLE | 12345.01982348239", //
-                "VIRTUAL_SCHEMA_JDBC | C_FLOAT126 | DOUBLE | 12345678.01234567901234567890123456789", //
+                "VIRTUAL_SCHEMA_JDBC | C_FLOAT | VARCHAR(4000) UTF8 | 12345.01982348239", //
+                "VIRTUAL_SCHEMA_JDBC | C_FLOAT126 | VARCHAR(4000) UTF8 | 12345678.01234567901234567890123456789", //
                 "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C_BINFLOAT | VARCHAR(4000) UTF8 | 1234.1241723", //
-                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C_FLOAT | DOUBLE | 12345.01982348239", //
-                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C_FLOAT126 | DOUBLE | 12345678.01234567901234567890123456789" //
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C_FLOAT | VARCHAR(4000) UTF8 | 12345.01982348239", //
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C_FLOAT126 | VARCHAR(4000) UTF8 | 12345678.01234567901234567890123456789" //
         }, delimiter = '|')
         void testFloatNumbers(final String virtualSchemaName, final String columnName, final String expectedColumnType,
                               final String expectedValue) throws SQLException {
@@ -1136,14 +1136,14 @@ class OracleSqlDialectIT {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
+        @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testIntervalDay(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
                  Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C17 FROM " + qualifiedTableName + " ORDER BY 1";
                 final ResultSet expected = getExpectedResultSet(statementExasol, "(A VARCHAR(4000) UTF8)",
-                        "(INTERVAL'+01 11:12:10.123000'DAY TO SECOND), (INTERVAL'+02 02:03:04.123456'DAY TO SECOND)");
+                        "(+01 11:12:10.123000), (+02 02:03:04.123456)");
                 final ResultSet actual = statementExasol.executeQuery(query);
                 final String expectedExplainVirtual = "SELECT TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\".\"C17\") FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" ORDER BY \""

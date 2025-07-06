@@ -53,6 +53,9 @@ public class OracleColumnMetadataReader extends BaseColumnMetadataReader {
                 return convertOracleChar(jdbcTypeDescription.getPrecisionOrSize());
             case Types.DECIMAL:
             case Types.NUMERIC:
+            case Types.REAL:
+            case Types.FLOAT:
+            case Types.DOUBLE:
                 return mapNumericType(jdbcTypeDescription);
             case ORACLE_TIMESTAMP_WITH_TIME_ZONE:
             case ORACLE_TIMESTAMP_WITH_LOCAL_TIME_ZONE:
