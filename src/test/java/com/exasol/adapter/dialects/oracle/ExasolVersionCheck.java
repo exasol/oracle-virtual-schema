@@ -1,11 +1,10 @@
 package com.exasol.adapter.dialects.oracle;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import com.exasol.adapter.dialects.oracle.release.ExasolDbVersion;
+import com.exasol.containers.ExasolContainer;
+import com.exasol.containers.ExasolDockerImageReference;
 
 class ExasolVersionCheck {
 
@@ -13,14 +12,13 @@ class ExasolVersionCheck {
         // Not instantiable
     }
 
-    static String getExasolMajorVersion(final Connection connection) {
-        try (Statement stmt = connection.createStatement()) {
-            final ResultSet result = stmt
-                    .executeQuery("SELECT PARAM_VALUE FROM SYS.EXA_METADATA WHERE PARAM_NAME='databaseMajorVersion'");
-            assertTrue(result.next(), "no result");
-            return result.getString(1);
-        } catch (final SQLException exception) {
-            throw new IllegalStateException("Failed to query Exasol version: " + exception.getMessage(), exception);
-        }
+    static void assumeExasolVersion834OrLater(ExasolContainer<?> exasolContainer) {
+        final ExasolDockerImageReference imageReference = exasolContainer.getDockerImageReference();
+        final ExasolDbVersion exasolDbVersion = ExasolDbVersion.of(imageReference.getMajor(), imageReference.getMinor(), imageReference.getFixVersion());
+        assumeTrue(exasolDbVersion.isGreaterOrEqualThan(ExasolDbVersion.parse("8.34.0")), "Expected Exasol version 8.34 or higher, but got '" + getExasolDbVersion(imageReference) + "'");
+    }
+
+    private static String getExasolDbVersion(ExasolDockerImageReference imageReference) {
+        return String.format("%d.%d.%d", imageReference.getMajor(), imageReference.getMinor(), imageReference.getFixVersion());
     }
 }

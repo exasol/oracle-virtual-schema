@@ -185,13 +185,19 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
 
     private String getColumnProjectionString(final SqlColumn column, final String projectionString)
             throws AdapterException {
-        final boolean isDirectlyInSelectList = (column.hasParent()
-                && (column.getParent().getType() == SqlNodeType.SELECT_LIST));
-        if (!isDirectlyInSelectList) {
+        final boolean isProjectionColumn = isProjectionColumn(column.getParent());
+        if (!isProjectionColumn) {
             return projectionString;
         } else {
             return getProjectionString(column, projectionString);
         }
+    }
+
+    private boolean isProjectionColumn(final SqlNode parent) {
+        return parent != null
+                && (parent.getType() == SqlNodeType.SELECT_LIST
+                || parent.getType() == SqlNodeType.GROUP_BY
+                || parent.getType() == SqlNodeType.ORDER_BY);
     }
 
     private String getProjectionString(final SqlColumn column, final String projectionString) throws AdapterException {
@@ -240,8 +246,8 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
     }
 
     private String transformString(final String literalString, final boolean b, final SqlNode parent) {
-        final boolean isDirectlyInSelectList = (b && (parent.getType() == SqlNodeType.SELECT_LIST));
-        if (isDirectlyInSelectList) {
+        final boolean isProjectionColumn = (b && isProjectionColumn(parent));
+        if (isProjectionColumn) {
             return castToChar(literalString);
         }
         return literalString;

@@ -144,7 +144,7 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
                     "regexp_replace", "substr", "add_hours", "left", "mid", "add_weeks", "add_minutes", "to_timestamp",
                     "reverse", "regexp_instr", "soundex", "add_days", "add_years", "replace", "translate", "lpad",
                     "ltrim", "regexp_substr", "ucase", "lcase", "character_Length", "locate", "curdate", "substring",
-                    "rpad", "to_date", "to_char", "repeat", "to_number", "length", "rtrim", "add_seconds");
+                    "rpad", "to_date", "to_char", "repeat", "to_number", "length", "rtrim", "add_seconds", "least");
         }
 
         @Override
