@@ -202,7 +202,7 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
 
     private String getProjectionString(final SqlColumn column, final String projectionString) throws AdapterException {
         final AbstractSqlDialect dialect = (AbstractSqlDialect) getDialect();
-        final String typeName = getTypeNameFromColumn(column);
+        final String typeName = getTypeName(column);
         if (typeName.startsWith("INTERVAL") || typeName.equals("BINARY_FLOAT") || typeName.equals("BINARY_DOUBLE")) {
             return castToChar(projectionString);
         } else if (typeName.startsWith("TIMESTAMP")
@@ -214,6 +214,10 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
         } else {
             return projectionString;
         }
+    }
+
+    String getTypeName(SqlColumn column) throws AdapterException {
+        return getTypeNameFromColumn(column);
     }
 
     public String castToChar(final String operand) {

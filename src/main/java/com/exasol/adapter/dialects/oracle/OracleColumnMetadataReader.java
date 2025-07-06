@@ -96,7 +96,7 @@ public class OracleColumnMetadataReader extends BaseColumnMetadataReader {
     }
 
 
-    private DataType createOracleMaximumSizeVarChar() {
+    static DataType createOracleMaximumSizeVarChar() {
         return createVarChar(MAX_ORACLE_VARCHAR_SIZE, DataType.ExaCharset.UTF8);
     }
 
@@ -127,7 +127,7 @@ public class OracleColumnMetadataReader extends BaseColumnMetadataReader {
         int decimalScale = jdbcTypeDescription.getDecimalScale();
         final int decimalPrecision = jdbcTypeDescription.getPrecisionOrSize();
         if (decimalScale == ORACLE_MAGIC_NUMBER_SCALE) {
-            decimalScale = 0;
+            return workAroundNumberWithoutScaleAndPrecision();
         }
         if (decimalPrecision == 0 && decimalScale == 0) {
             return workAroundNumberWithoutScaleAndPrecision();

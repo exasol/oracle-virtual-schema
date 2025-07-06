@@ -7,6 +7,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.lenient;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.exasol.adapter.AdapterException;
@@ -40,11 +42,12 @@ class OracleSqlGenerationVisitorTest {
     private OracleSqlGenerationVisitor visitor;
 
     @BeforeEach
-    void beforeEach() {
+    void beforeEach() throws AdapterException {
         final SqlDialect dialect = new OracleSqlDialectFactory().createSqlDialect(null,
                 AdapterProperties.emptyProperties(), null);
         final SqlGenerationContext context = new SqlGenerationContext("test_catalog", "test_schema", false);
-        this.visitor = new OracleSqlGenerationVisitor(dialect, context);
+        this.visitor = Mockito.spy(new OracleSqlGenerationVisitor(dialect, context));
+        lenient().doReturn("test").when(this.visitor).getTypeName(Mockito.any());
     }
 
     @Test
@@ -147,7 +150,7 @@ class OracleSqlGenerationVisitorTest {
         final SqlSelectList selectList = SqlSelectList.createAnyValueSelectList();
         final SqlLiteralExactnumeric literalExactnumeric = new SqlLiteralExactnumeric(new BigDecimal("5.9"));
         literalExactnumeric.setParent(selectList);
-        assertThat(this.visitor.visit(literalExactnumeric), equalTo("TO_CHAR(5.9)"));
+        assertThat(this.visitor.visit(literalExactnumeric), equalTo("CAST(TO_CHAR(5.9) AS VARCHAR(4000))"));
     }
 
     @Test
@@ -161,7 +164,7 @@ class OracleSqlGenerationVisitorTest {
         final SqlSelectList selectList = SqlSelectList.createAnyValueSelectList();
         final SqlLiteralDouble literalDouble = new SqlLiteralDouble(10.6);
         literalDouble.setParent(selectList);
-        assertThat(this.visitor.visit(literalDouble), equalTo("TO_CHAR(1.06E1)"));
+        assertThat(this.visitor.visit(literalDouble), equalTo("CAST(TO_CHAR(1.06E1) AS VARCHAR(4000))"));
     }
 
     @Test
@@ -206,7 +209,7 @@ class OracleSqlGenerationVisitorTest {
         final SqlFunctionAggregate sqlFunctionAggregate = new SqlFunctionAggregate(AVG, arguments, false);
         final SqlNode selectList = SqlSelectList.createAnyValueSelectList();
         sqlFunctionAggregate.setParent(selectList);
-        assertThat(this.visitor.visit(sqlFunctionAggregate), equalTo("CAST(AVG(\"test_column\") AS FLOAT)"));
+        assertThat(this.visitor.visit(sqlFunctionAggregate), equalTo("AVG(\"test_column\")"));
     }
 
     @Test
@@ -291,7 +294,7 @@ class OracleSqlGenerationVisitorTest {
         final List<SqlNode> arguments = List.of(new SqlLiteralString("test"), new SqlLiteralString(""));
         final SqlFunctionScalar sqlFunctionScalar = new SqlFunctionScalar(TANH, arguments);
         sqlFunctionScalar.setParent(selectList);
-        assertThat(this.visitor.visit(sqlFunctionScalar), equalTo("CAST(TANH('test', '') AS FLOAT)"));
+        assertThat(this.visitor.visit(sqlFunctionScalar), equalTo("TANH('test', '')"));
     }
 
     @Test

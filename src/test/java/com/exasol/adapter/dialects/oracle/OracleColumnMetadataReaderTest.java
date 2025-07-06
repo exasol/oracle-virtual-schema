@@ -1,11 +1,14 @@
 package com.exasol.adapter.dialects.oracle;
 
-import static com.exasol.adapter.metadata.DataType.createMaximumSizeVarChar;
+import static com.exasol.adapter.dialects.oracle.OracleColumnMetadataReader.createOracleMaximumSizeVarChar;
+import static com.exasol.adapter.dialects.oracle.OracleProperties.ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Mockito.lenient;
 
 import java.sql.Types;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,15 +25,18 @@ class OracleColumnMetadataReaderTest {
 
     private ExaMetadata exaMetadataMock;
 
+    private Map<String, String> propertyMap = new HashMap<>();
+
     @BeforeEach
     void beforeEach() {
         this.exaMetadataMock = Mockito.mock(ExaMetadata.class);
         lenient().when(exaMetadataMock.getDatabaseVersion()).thenReturn("8.34.0");
         this.columnMetadataReader = createDefaultOracleColumnMetadataReader();
+        propertyMap.remove(ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY);
     }
 
     protected OracleColumnMetadataReader createDefaultOracleColumnMetadataReader() {
-        return new OracleColumnMetadataReader(null, AdapterProperties.emptyProperties(),
+        return new OracleColumnMetadataReader(null, new AdapterProperties(propertyMap),
                 exaMetadataMock, BaseIdentifierConverter.createDefault());
     }
 
@@ -45,7 +51,7 @@ class OracleColumnMetadataReaderTest {
         final int scale = OracleColumnMetadataReader.ORACLE_MAGIC_NUMBER_SCALE;
         final JDBCTypeDescription typeDescription = createTypeDescriptionForNumeric(precision, scale);
         assertThat(this.columnMetadataReader.mapJdbcType(typeDescription),
-                equalTo(createMaximumSizeVarChar(DataType.ExaCharset.UTF8)));
+                equalTo(createOracleMaximumSizeVarChar()));
     }
 
     @Test
@@ -61,6 +67,7 @@ class OracleColumnMetadataReaderTest {
     void testMapColumnTypeWithZeroPrecision() {
         final int precision = 0;
         final int scale = 0;
+        propertyMap.put(ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY, "36,0");
         final JDBCTypeDescription typeDescription = createTypeDescriptionForNumeric(precision, scale);
         assertThat(this.columnMetadataReader.mapJdbcType(typeDescription),
                 equalTo(DataType.createDecimal(DataType.MAX_EXASOL_DECIMAL_PRECISION, scale)));

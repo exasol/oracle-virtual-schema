@@ -56,7 +56,7 @@ public class OracleQueryRewriterTest extends AbstractQueryRewriterTestBase {
         final QueryRewriter queryRewriter = new OracleQueryRewriter(dialect, null,
                 connectionFactoryMock.getConnection(), properties);
         assertThat(queryRewriter.rewrite(this.statement, EMPTY_SELECT_LIST_DATA_TYPES, EXA_METADATA, properties),
-                equalTo("IMPORT FROM ORA AT ora_connection STATEMENT 'SELECT TO_CHAR(1) FROM \"DUAL\"'"));
+                equalTo("IMPORT FROM ORA AT ora_connection STATEMENT 'SELECT CAST(TO_CHAR(1) AS VARCHAR(4000)) FROM \"DUAL\"'"));
     }
 
     @Test
@@ -72,7 +72,7 @@ public class OracleQueryRewriterTest extends AbstractQueryRewriterTestBase {
         final QueryRewriter queryRewriter = new OracleQueryRewriter(dialect, oracleMetadataReader, mockConnection(),
                 properties);
         assertThat(queryRewriter.rewrite(this.statement, EMPTY_SELECT_LIST_DATA_TYPES, EXA_METADATA, properties),
-                equalTo("IMPORT INTO (c1 DECIMAL(18, 0)) FROM ORA AT ora_connection STATEMENT 'SELECT TO_CHAR(1) FROM \"DUAL\"'"));
+                equalTo("IMPORT INTO (c1 DECIMAL(18, 0)) FROM ORA AT ora_connection STATEMENT 'SELECT CAST(TO_CHAR(1) AS VARCHAR(4000)) FROM \"DUAL\"'"));
     }
 
     @Override
