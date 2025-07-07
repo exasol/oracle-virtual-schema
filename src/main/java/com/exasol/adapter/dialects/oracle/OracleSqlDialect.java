@@ -108,11 +108,11 @@ public class OracleSqlDialect extends AbstractSqlDialect {
         return StructureElementSupport.MULTIPLE;
     }
 
-    DataType getOracleNumberTargetType() {
+    DataType getOracleNumberTargetType(int size) {
         if (this.properties.containsKey(ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY)) {
             return this.getOracleNumberTypeFromProperty();
         } else {
-            return DataType.createMaximumSizeVarChar(DataType.ExaCharset.UTF8);
+            return DataType.createVarChar(size, DataType.ExaCharset.UTF8);
         }
     }
 

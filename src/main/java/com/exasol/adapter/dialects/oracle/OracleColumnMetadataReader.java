@@ -64,7 +64,7 @@ public class OracleColumnMetadataReader extends BaseColumnMetadataReader {
             case INTERVAL_DAY_TO_SECOND:
             case ORACLE_BINARY_FLOAT:
             case ORACLE_BINARY_DOUBLE:
-                return createOracleMaximumSizeVarChar();
+                return createExasolVarChar(MAX_ORACLE_VARCHAR_SIZE);
             default:
                 return super.mapJdbcType(jdbcTypeDescription);
         }
@@ -96,15 +96,14 @@ public class OracleColumnMetadataReader extends BaseColumnMetadataReader {
     }
 
 
-    static DataType createOracleMaximumSizeVarChar() {
-        return createVarChar(MAX_ORACLE_VARCHAR_SIZE, DataType.ExaCharset.UTF8);
+    static DataType createExasolVarChar(int size) {
+        return createVarChar(size, DataType.ExaCharset.UTF8);
     }
 
     private DataType convertOracleVarChar(final int size) {
         final DataType.ExaCharset charset = UTF8;
-        if (size <= MAX_ORACLE_VARCHAR_SIZE) {
-            final int precision = size == 0 ? MAX_ORACLE_VARCHAR_SIZE : size;
-            return createVarChar(precision, charset);
+        if (size > 0 && size <= MAX_ORACLE_VARCHAR_SIZE) {
+            return createVarChar(size, charset);
         } else {
             return createVarChar(MAX_ORACLE_VARCHAR_SIZE, charset);
         }
@@ -112,47 +111,31 @@ public class OracleColumnMetadataReader extends BaseColumnMetadataReader {
 
     private DataType convertOracleChar(final int size) {
         final DataType.ExaCharset charset = UTF8;
-        if (size <= MAX_ORACLE_VARCHAR_SIZE) {
+        if (size > 0 && size <= MAX_ORACLE_VARCHAR_SIZE) {
             return createChar(size, charset);
         } else {
-            if (size <= MAX_ORACLE_VARCHAR_SIZE) {
-                return createVarChar(size, charset);
-            } else {
-                return createVarChar(MAX_ORACLE_VARCHAR_SIZE, charset);
-            }
+            return createVarChar(MAX_ORACLE_VARCHAR_SIZE, charset);
         }
     }
 
     protected DataType mapNumericType(final JDBCTypeDescription jdbcTypeDescription) {
         int decimalScale = jdbcTypeDescription.getDecimalScale();
         final int decimalPrecision = jdbcTypeDescription.getPrecisionOrSize();
-        if (decimalScale == ORACLE_MAGIC_NUMBER_SCALE) {
-            return workAroundNumberWithoutScaleAndPrecision();
-        }
-        if (decimalPrecision == 0 && decimalScale == 0) {
-            return workAroundNumberWithoutScaleAndPrecision();
+        if (decimalPrecision <= 0) {
+            return getOracleNumberTargetType(MAX_ORACLE_VARCHAR_SIZE);
         }
         if (decimalPrecision <= DataType.MAX_EXASOL_DECIMAL_PRECISION) {
-            return DataType.createDecimal(decimalPrecision, decimalScale);
+            return DataType.createDecimal(decimalPrecision, decimalScale < 0 ? 0 : decimalScale);
         } else {
-            return workAroundNumberWithoutScaleAndPrecision();
+            return getOracleNumberTargetType(decimalPrecision + (decimalScale > 0 ? 1 : 0));
         }
     }
 
-    /**
-     * @return Oracle JDBC driver returns scale -127 if NUMBER data type was specified without scale and precision.
-     *         Convert to VARCHAR. See http://docs.oracle.com/cd/B28359_01/server.111/b28318/datatype.htm#i16209 and
-     *         https://docs.oracle.com/cd/E19501-01/819-3659/gcmaz/
-     */
-    private DataType workAroundNumberWithoutScaleAndPrecision() {
-        return getOracleNumberTargetType();
-    }
-
-    private DataType getOracleNumberTargetType() {
+    private DataType getOracleNumberTargetType(int size) {
         if (this.properties.containsKey(ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY)) {
             return getNumberTypeFromProperty(ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY);
         } else {
-            return createOracleMaximumSizeVarChar();
+            return createExasolVarChar(size);
         }
     }
 

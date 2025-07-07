@@ -237,6 +237,7 @@ class OracleSqlDialectIT {
                 + "c_number36 number(36), " //
                 + "c6 number(38), " //
                 + "c7 number(10,5), " //
+                + "c8 number(38,5), " //
                 + "c_binfloat binary_float, " //
                 + "c_bindouble binary_double, " //
                 + "c10 date, " //
@@ -263,6 +264,7 @@ class OracleSqlDialectIT {
                 + "123456789012345678901234567890123456, " // c_number36
                 + "12345678901234567890123456789012345678, " // C6
                 + "12345.12345, " // C7
+                + "123456789012345678901234567890123.45678, " // C8
                 + "1234.1241723, " // C_BINFLOAT
                 + "1234987.120871234, " // C_BINDOUBLE
                 + "TO_DATE('2016-08-19', 'YYYY-MM-DD'), " // C10
@@ -917,12 +919,14 @@ class OracleSqlDialectIT {
         @CsvSource(value = { //
                 "VIRTUAL_SCHEMA_JDBC | C5 | VARCHAR(4000) UTF8 | 123456789012345678901234567890123456", //
                 "VIRTUAL_SCHEMA_JDBC | C_NUMBER36 | DECIMAL(36,0) | 123456789012345678901234567890123456", //
-                "VIRTUAL_SCHEMA_JDBC | C6 | VARCHAR(4000) UTF8 | 12345678901234567890123456789012345678", //
+                "VIRTUAL_SCHEMA_JDBC | C6 | VARCHAR(38) UTF8 | 12345678901234567890123456789012345678", //
                 "VIRTUAL_SCHEMA_JDBC | C7 | DECIMAL(10,5) | 12345.12345", //
+                "VIRTUAL_SCHEMA_JDBC | C8 | VARCHAR(39) UTF8 | 123456789012345678901234567890123.45678", //
                 "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C5 | VARCHAR(4000) UTF8 | 123456789012345678901234567890123456", //
                 "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C_NUMBER36 | DECIMAL(36,0) | 123456789012345678901234567890123456", //
-                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C6 | VARCHAR(4000) UTF8 | 12345678901234567890123456789012345678", //
-                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C7 | DECIMAL(10,5) | 12345.12345" //
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C6 | VARCHAR(38) UTF8 | 12345678901234567890123456789012345678", //
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C7 | DECIMAL(10,5) | 12345.12345", //
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C8 | VARCHAR(39) UTF8 | 123456789012345678901234567890123.45678", //
         }, delimiter = '|')
         void testNumberColumns(final String virtualSchemaName, final String columnName, final String expectedColumnType,
                                final String expectedValue) throws SQLException {
@@ -939,11 +943,11 @@ class OracleSqlDialectIT {
         @ParameterizedTest
         @CsvSource(value = { //
                 "VIRTUAL_SCHEMA_JDBC | C_BINFLOAT | VARCHAR(4000) UTF8 | 1234.1241723", //
-                "VIRTUAL_SCHEMA_JDBC | C_FLOAT | VARCHAR(4000) UTF8 | 12345.01982348239", //
-                "VIRTUAL_SCHEMA_JDBC | C_FLOAT126 | VARCHAR(4000) UTF8 | 12345678.01234567901234567890123456789", //
+                "VIRTUAL_SCHEMA_JDBC | C_FLOAT | VARCHAR(126) UTF8 | 12345.01982348239", //
+                "VIRTUAL_SCHEMA_JDBC | C_FLOAT126 | VARCHAR(126) UTF8 | 12345678.01234567901234567890123456789", //
                 "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C_BINFLOAT | VARCHAR(4000) UTF8 | 1234.1241723", //
-                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C_FLOAT | VARCHAR(4000) UTF8 | 12345.01982348239", //
-                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C_FLOAT126 | VARCHAR(4000) UTF8 | 12345678.01234567901234567890123456789" //
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C_FLOAT | VARCHAR(126) UTF8 | 12345.01982348239", //
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C_FLOAT126 | VARCHAR(126) UTF8 | 12345678.01234567901234567890123456789" //
         }, delimiter = '|')
         void testFloatNumbers(final String virtualSchemaName, final String columnName, final String expectedColumnType,
                               final String expectedValue) throws SQLException {

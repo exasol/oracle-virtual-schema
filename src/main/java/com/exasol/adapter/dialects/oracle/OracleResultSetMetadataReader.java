@@ -86,7 +86,8 @@ public class OracleResultSetMetadataReader {
                 JDBCTypeDescription jdbcColumnMetadataDescription = getJdbcTypeDescription(metadata, columnNumber);
                 JDBCTypeDescription jdbcTypeDescription = getJdbcTypeDescription(selectListDataType, jdbcColumnMetadataDescription);
                 final DataType type = this.columnMetadataReader.mapJdbcType(jdbcTypeDescription);
-                types.add(type);
+                final DataType mergedDataType = mergeDataType(selectListDataType, type);
+                types.add(mergedDataType);
             } else {
                 JDBCTypeDescription jdbcTypeDescription = getJdbcTypeDescription(metadata, columnNumber);
                 final DataType type = this.columnMetadataReader.mapJdbcType(jdbcTypeDescription);
@@ -94,6 +95,15 @@ public class OracleResultSetMetadataReader {
             }
         }
         return types;
+    }
+
+    private DataType mergeDataType(DataType selectListDataType, DataType columnDataType) {
+        switch (selectListDataType.getExaDataType()) {
+            case DOUBLE:
+                return columnDataType.getExaDataType() == DataType.ExaDataType.VARCHAR ? selectListDataType : columnDataType;
+            default:
+                return columnDataType;
+        }
     }
 
     private JDBCTypeDescription getJdbcTypeDescription(DataType dataType, JDBCTypeDescription jdbcColumnMetadataDescription) {
