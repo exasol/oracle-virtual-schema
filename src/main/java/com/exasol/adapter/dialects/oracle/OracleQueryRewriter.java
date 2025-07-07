@@ -78,7 +78,7 @@ public class OracleQueryRewriter extends AbstractQueryRewriter {
             LOGGER.finer(() -> "Import push-down statement:\n" + importStatement);
             return importStatement;
         } else {
-            throw new AdapterException(ExaError.messageBuilder("E-VSCJDBC-46").message(
+            throw new AdapterException(ExaError.messageBuilder("E-VSORA-10").message(
                             "Property `IMPORT_DATA_TYPES` value 'FROM_RESULT_SET' is no longer supported.")
                     .mitigation("Please remove the `IMPORT_DATA_TYPES` property from the virtual schema so the default value 'EXASOL_CALCULATED' is used.")
                     .toString());

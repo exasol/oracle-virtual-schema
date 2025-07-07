@@ -16,6 +16,14 @@ import com.exasol.adapter.jdbc.RemoteMetadataReaderException;
 import com.exasol.adapter.metadata.DataType;
 import com.exasol.errorreporting.ExaError;
 
+/**
+ * {@code OracleResultSetMetadataReader} is responsible for retrieving and translating metadata
+ * of result sets for push-down SQL queries executed on an Oracle database.
+ * <p>
+ * It uses a {@link ColumnMetadataReader} to map JDBC metadata to Exasol {@link DataType}s and ensures
+ * the result set schema is compatible with Exasol requirements. This class is typically used during
+ * SQL pushdown planning to determine the structure of intermediate query results.
+ */
 public class OracleResultSetMetadataReader {
 
     private static final Logger LOGGER = Logger.getLogger(com.exasol.adapter.jdbc.ResultSetMetadataReader.class.getName());
@@ -23,10 +31,10 @@ public class OracleResultSetMetadataReader {
     private final ColumnMetadataReader columnMetadataReader;
 
     /**
-     * Create a new instance of a {@link com.exasol.adapter.jdbc.ResultSetMetadataReader}.
+     * Constructs a new instance of {@link OracleResultSetMetadataReader}.
      *
-     * @param connection           connection to the remote data source
-     * @param columnMetadataReader column metadata reader used to translate the column types
+     * @param connection           JDBC connection to the Oracle database
+     * @param columnMetadataReader implementation responsible for mapping JDBC column types to Exasol types
      */
     public OracleResultSetMetadataReader(final Connection connection, final ColumnMetadataReader columnMetadataReader) {
         this.connection = connection;
@@ -34,10 +42,13 @@ public class OracleResultSetMetadataReader {
     }
 
     /**
-     * Generate a textual description of the result columns of the push-down query.
+     * Generates a column description string from the push-down query result's metadata.
      *
-     * @param query push-down query
-     * @return string describing the columns (names and types)
+     * @param query                the SQL query to prepare and analyze
+     * @param selectListDataTypes optional list of expected {@link DataType}s from the SELECT clause;
+     *                            if provided, used to help infer correct types
+     * @return Exasol column description string
+     * @throws RemoteMetadataReaderException if metadata retrieval or validation fails
      */
     public String describeColumns(final String query, List<DataType> selectListDataTypes) {
         LOGGER.fine(() -> "Generating columns description for push-down query using "
@@ -50,7 +61,7 @@ public class OracleResultSetMetadataReader {
             LOGGER.fine(() -> "Columns description: " + columnsDescription);
             return columnsDescription;
         } catch (final SQLException exception) {
-            throw new RemoteMetadataReaderException(ExaError.messageBuilder("E-VSCJDBC-30").message(
+            throw new RemoteMetadataReaderException(ExaError.messageBuilder("E-VSORA-11").message(
                             "Unable to read remote metadata for push-down query trying to generate result column description.")
                     .mitigation("Please, make sure that you provided valid CATALOG_NAME "
                             + "and SCHEMA_NAME properties if required. Caused by: {{cause}}")
@@ -58,6 +69,13 @@ public class OracleResultSetMetadataReader {
         }
     }
 
+    /**
+     * Validates the list of mapped {@link DataType}s to ensure all types are supported by Exasol.
+     *
+     * @param types the list of data types to validate
+     * @param query the associated SQL query (used for error reporting)
+     * @throws RemoteMetadataReaderException if unsupported column types are found
+     */
     private void validateColumnTypes(final List<DataType> types, final String query) {
         final List<Integer> illegalColumns = new ArrayList<>();
         int column = 1;
@@ -68,35 +86,50 @@ public class OracleResultSetMetadataReader {
             ++column;
         }
         if (!illegalColumns.isEmpty()) {
-            throw new RemoteMetadataReaderException(ExaError.messageBuilder("E-VSCJDBC-31")
+            throw new RemoteMetadataReaderException(ExaError.messageBuilder("E-VSORA-12")
                     .message("Unsupported data type(s) in column(s) in query: {{unsupportedColumns|uq}}.",
                             illegalColumns.stream().map(String::valueOf).collect(Collectors.joining(", ")))
                     .mitigation("Please remove those columns from your query:\n{{query|uq}}", query).toString());
         }
     }
 
-    private List<DataType> mapResultMetadataToExasolDataTypes(final ResultSetMetaData metadata, List<DataType> selectListDataTypes) throws SQLException {
+    /**
+     * Maps JDBC column metadata to a list of Exasol {@link DataType}s.
+     *
+     * @param metadata             JDBC metadata from {@link ResultSetMetaData}
+     * @param selectListDataTypes optional list of types from SELECT clause for disambiguation
+     * @return list of mapped {@link DataType}s
+     * @throws SQLException if metadata access fails
+     */
+    private List<DataType> mapResultMetadataToExasolDataTypes(final ResultSetMetaData metadata, List<DataType> selectListDataTypes)
+            throws SQLException {
         validateMetadata(metadata);
         final int columnCount = metadata.getColumnCount();
         final List<DataType> types = new ArrayList<>(columnCount);
         boolean useSelectListDataTypes = useSelectListDataTypes(selectListDataTypes, columnCount);
+
         for (int columnNumber = 1; columnNumber <= columnCount; ++columnNumber) {
             if (useSelectListDataTypes) {
                 final DataType selectListDataType = getSelectListDataType(selectListDataTypes, columnNumber);
                 JDBCTypeDescription jdbcColumnMetadataDescription = getJdbcTypeDescription(metadata, columnNumber);
                 JDBCTypeDescription jdbcTypeDescription = getJdbcTypeDescription(selectListDataType, jdbcColumnMetadataDescription);
                 final DataType type = this.columnMetadataReader.mapJdbcType(jdbcTypeDescription);
-                final DataType mergedDataType = mergeDataType(selectListDataType, type);
-                types.add(mergedDataType);
+                types.add(mergeDataType(selectListDataType, type));
             } else {
                 JDBCTypeDescription jdbcTypeDescription = getJdbcTypeDescription(metadata, columnNumber);
-                final DataType type = this.columnMetadataReader.mapJdbcType(jdbcTypeDescription);
-                types.add(type);
+                types.add(this.columnMetadataReader.mapJdbcType(jdbcTypeDescription));
             }
         }
         return types;
     }
 
+    /**
+     * Returns the better-fitting {@link DataType} by combining SELECT clause information and actual JDBC metadata.
+     *
+     * @param selectListDataType expected type from SELECT clause
+     * @param columnDataType     type inferred from JDBC metadata
+     * @return merged {@link DataType}
+     */
     private DataType mergeDataType(DataType selectListDataType, DataType columnDataType) {
         switch (selectListDataType.getExaDataType()) {
             case DOUBLE:
@@ -106,12 +139,19 @@ public class OracleResultSetMetadataReader {
         }
     }
 
+    /**
+     * Combines type information from SELECT list and JDBC metadata to build a complete {@link JDBCTypeDescription}.
+     *
+     * @param dataType                   expected data type
+     * @param jdbcColumnMetadataDescription JDBC metadata fallback values
+     * @return resolved JDBC type description
+     */
     private JDBCTypeDescription getJdbcTypeDescription(DataType dataType, JDBCTypeDescription jdbcColumnMetadataDescription) {
         final int scale = dataType.getScale() > 0 ? dataType.getScale() : jdbcColumnMetadataDescription.getDecimalScale();
         final int precision = dataType.getPrecision() > 0 ? dataType.getPrecision() : jdbcColumnMetadataDescription.getPrecisionOrSize();
         final int byteSize = dataType.getByteSize() > 0 ? dataType.getByteSize() : jdbcColumnMetadataDescription.getByteSize();
-        return new JDBCTypeDescription(jdbcColumnMetadataDescription.getJdbcType(),
-                scale, precision, byteSize, jdbcColumnMetadataDescription.getTypeName());
+        return new JDBCTypeDescription(jdbcColumnMetadataDescription.getJdbcType(), scale, precision, byteSize,
+                jdbcColumnMetadataDescription.getTypeName());
     }
 
     private boolean useSelectListDataTypes(List<DataType> selectListDataTypes, int columnCount) {
@@ -124,46 +164,58 @@ public class OracleResultSetMetadataReader {
 
     private void validateMetadata(final ResultSetMetaData metadata) {
         if (metadata == null) {
-            throw new RemoteMetadataReaderException(ExaError.messageBuilder("F-VSCJDBC-34") //
-                    .message(
-                            "Metadata is missing in the ResultSet. This can happen if the generated query was incorrect,"
-                                    + " but the JDBC driver didn't throw an exception.")
+            throw new RemoteMetadataReaderException(ExaError.messageBuilder("E-VSORA-13") //
+                    .message("Metadata is missing in the ResultSet. This can happen if the generated query was incorrect,"
+                            + " but the JDBC driver didn't throw an exception.")
                     .ticketMitigation().toString());
         }
     }
 
     /**
-     * Get the jdbc type description from result set metadata.
+     * Reads the JDBC type description for a given column.
      *
      * @param metadata     result set metadata
-     * @param columnNumber column number to read
-     * @return JDBC type description
-     * @throws SQLException if reading fails
+     * @param columnNumber column index (1-based)
+     * @return a new {@link JDBCTypeDescription} for the column
+     * @throws SQLException if metadata access fails
      */
     protected static JDBCTypeDescription getJdbcTypeDescription(final ResultSetMetaData metadata,
                                                                 final int columnNumber) throws SQLException {
         final int jdbcType = metadata.getColumnType(columnNumber);
-        final int jdbcPrecisions = metadata.getPrecision(columnNumber);
-        final int jdbcScales = metadata.getScale(columnNumber);
-        return new JDBCTypeDescription(jdbcType, jdbcScales, jdbcPrecisions, 0,
-                metadata.getColumnTypeName(columnNumber));
+        final int jdbcPrecision = metadata.getPrecision(columnNumber);
+        final int jdbcScale = metadata.getScale(columnNumber);
+        return new JDBCTypeDescription(jdbcType, jdbcScale, jdbcPrecision, 0, metadata.getColumnTypeName(columnNumber));
     }
 
+    /**
+     * Reads full JDBC column description including column name and remote metadata string.
+     *
+     * @param metadata     result set metadata
+     * @param columnNumber column index (1-based)
+     * @return a {@link JdbcColumnDescription} including the column name and type info
+     * @throws SQLException if metadata access fails
+     */
     protected static JdbcColumnDescription getJdbcColumnDescription(final ResultSetMetaData metadata,
-                                                                final int columnNumber) throws SQLException {
+                                                                    final int columnNumber) throws SQLException {
         final int jdbcType = metadata.getColumnType(columnNumber);
-        final int jdbcPrecisions = metadata.getPrecision(columnNumber);
-        final int jdbcScales = metadata.getScale(columnNumber);
-        String columnName = metadata.getColumnName(columnNumber);
-        JDBCTypeDescription jdbcTypeDescription = new JDBCTypeDescription(jdbcType, jdbcScales, jdbcPrecisions, 0,
+        final int jdbcPrecision = metadata.getPrecision(columnNumber);
+        final int jdbcScale = metadata.getScale(columnNumber);
+        final String columnName = metadata.getColumnName(columnNumber);
+        JDBCTypeDescription jdbcTypeDescription = new JDBCTypeDescription(jdbcType, jdbcScale, jdbcPrecision, 0,
                 metadata.getColumnTypeName(columnNumber));
         return new JdbcColumnDescription(jdbcTypeDescription, columnName, buildRemoteColumnMetadata(metadata));
     }
 
+    /**
+     * Builds a string representation of the JDBC metadata for logging or debugging.
+     *
+     * @param meta result set metadata
+     * @return string with column metadata information
+     * @throws SQLException if metadata access fails
+     */
     private static String buildRemoteColumnMetadata(ResultSetMetaData meta) throws SQLException {
         int columnCount = meta.getColumnCount();
         StringBuilder remoteColumnStringBuilder = new StringBuilder("Column Metadata: [");
-
         for (int i = 1; i <= columnCount; i++) {
             String columnName = meta.getColumnName(i);
             Object value = meta.getColumnTypeName(i);
@@ -172,7 +224,6 @@ public class OracleResultSetMetadataReader {
                     .append(value)
                     .append(i < columnCount ? ", " : "");
         }
-
         remoteColumnStringBuilder.append("]");
         return remoteColumnStringBuilder.toString();
     }

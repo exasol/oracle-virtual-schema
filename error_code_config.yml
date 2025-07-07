@@ -3,8 +3,4 @@ error-tags:
     packages:
       - com.exasol.adapter.dialects.oracle
       - com.exasol.closeafterall
-    highest-index: 9
-  VSCJDBC:
-    packages:
-      - com.exasol.adapter.dialects.oracle
-    highest-index: 47
+    highest-index: 13

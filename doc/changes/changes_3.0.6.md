@@ -1,12 +1,25 @@
-# Oracle Virtual Schema 3.0.6, released 2025-??-??
+# Oracle Virtual Schema 3.0.6, released 2025-07-08
 
-Code name:
+Code name: Timestamp with precision support
 
 ## Summary
 
+This release improves the support for TIMESTAMP columns types with fractional second precision (FSP). The specified FSP will be maintained in Exasol newer versions (>= 8.32.0)
+
+We also fixed integration tests by improving conversion from Oracle numeric types to Exasol numeric or varchar types. The data type precision, size and decimal scale have been fixed for many conversion scenarios.
+
+This release also contains a security update. We updated the dependencies of the project to fix transitive security issues.
+
+We also added an exception for the OSSIndex for CVE-2024-55551, which is a false positive in Exasol's JDBC driver.
+This issue has been fixed quite a while back now, but the OSSIndex unfortunately does not contain the fix version of 24.2.1 (2024-12-10) set.
+
 ## Features
 
-* ISSUE_NUMBER: description
+* #48: TS(9) support in Oracle VS
+
+## Security
+
+* #129: Fix CVE-2024-55551 in `com.exasol:exasol-jdbc:jar:7.1.20:compile`
 
 ## Dependency Updates
 
