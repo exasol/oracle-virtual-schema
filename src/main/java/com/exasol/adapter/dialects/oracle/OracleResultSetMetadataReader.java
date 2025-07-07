@@ -84,13 +84,9 @@ public class OracleResultSetMetadataReader {
             if (useSelectListDataTypes) {
                 final DataType selectListDataType = getSelectListDataType(selectListDataTypes, columnNumber);
                 JDBCTypeDescription jdbcColumnMetadataDescription = getJdbcTypeDescription(metadata, columnNumber);
-                if (shouldConvertDataType(selectListDataType, jdbcColumnMetadataDescription)) {
-                    JDBCTypeDescription jdbcTypeDescription = getJdbcTypeDescription(selectListDataType, jdbcColumnMetadataDescription);
-                    final DataType type = this.columnMetadataReader.mapJdbcType(jdbcTypeDescription);
-                    types.add(type);
-                } else {
-                    types.add(selectListDataType);
-                }
+                JDBCTypeDescription jdbcTypeDescription = getJdbcTypeDescription(selectListDataType, jdbcColumnMetadataDescription);
+                final DataType type = this.columnMetadataReader.mapJdbcType(jdbcTypeDescription);
+                types.add(type);
             } else {
                 JDBCTypeDescription jdbcTypeDescription = getJdbcTypeDescription(metadata, columnNumber);
                 final DataType type = this.columnMetadataReader.mapJdbcType(jdbcTypeDescription);
@@ -98,12 +94,6 @@ public class OracleResultSetMetadataReader {
             }
         }
         return types;
-    }
-
-    private boolean shouldConvertDataType(DataType dataType, JDBCTypeDescription jdbcColumnMetadataDescription) {
-        final int scale = dataType.getScale() > 0 ? dataType.getScale() : jdbcColumnMetadataDescription.getDecimalScale();
-        final int precision = dataType.getPrecision() > 0 ? dataType.getPrecision() : jdbcColumnMetadataDescription.getPrecisionOrSize();
-        return scale > 0 || precision > 0;
     }
 
     private JDBCTypeDescription getJdbcTypeDescription(DataType dataType, JDBCTypeDescription jdbcColumnMetadataDescription) {
