@@ -6,5 +6,5 @@ error-tags:
     highest-index: 9
   VSCJDBC:
     packages:
-      - com.exasol
+      - com.exasol.adapter.dialects.oracle
     highest-index: 47
