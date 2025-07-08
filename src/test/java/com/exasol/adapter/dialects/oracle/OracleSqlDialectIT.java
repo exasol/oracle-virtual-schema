@@ -101,11 +101,7 @@ class OracleSqlDialectIT {
 
         try (BufferedInputStream in = new BufferedInputStream(new URL(downloadUrl).openStream());
              FileOutputStream fileOutputStream = new FileOutputStream(tempFile)) {
-            byte[] dataBuffer = new byte[1024];
-            int bytesRead;
-            while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
-                fileOutputStream.write(dataBuffer, 0, bytesRead);
-            }
+            in.transferTo(fileOutputStream);
         }
 
         // Upload to BucketFS path: drivers/oracle/<filename>
