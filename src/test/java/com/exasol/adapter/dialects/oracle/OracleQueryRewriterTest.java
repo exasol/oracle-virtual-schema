@@ -71,7 +71,7 @@ public class OracleQueryRewriterTest extends AbstractQueryRewriterTestBase {
         final var oracleMetadataReader = new OracleMetadataReader(mockConnection(), properties, exaMetadataMock);
         final QueryRewriter queryRewriter = new OracleQueryRewriter(dialect, oracleMetadataReader, mockConnection(),
                 properties);
-        assertThat(queryRewriter.rewrite(this.statement, EMPTY_SELECT_LIST_DATA_TYPES, EXA_METADATA, properties),
+        assertThat(queryRewriter.rewrite(this.statement, List.of(DataType.createDecimal(18, 0)), EXA_METADATA, properties),
                 equalTo("IMPORT INTO (c1 DECIMAL(18, 0)) FROM ORA AT ora_connection STATEMENT 'SELECT CAST(TO_CHAR(1) AS VARCHAR(4000)) FROM \"DUAL\"'"));
     }
 
