@@ -13,7 +13,7 @@ import com.exasol.adapter.dialects.SqlDialect;
 import com.exasol.adapter.dialects.SqlGenerator;
 import com.exasol.adapter.dialects.rewriting.AbstractQueryRewriter;
 import com.exasol.adapter.dialects.rewriting.SqlGenerationContext;
-import com.exasol.adapter.jdbc.ColumnMetadataReader;
+import com.exasol.adapter.dialects.rewriting.SqlGenerationHelper;
 import com.exasol.adapter.jdbc.RemoteMetadataReader;
 import com.exasol.adapter.metadata.DataType;
 import com.exasol.adapter.properties.DataTypeDetection;
@@ -55,7 +55,7 @@ public class OracleQueryRewriter extends AbstractQueryRewriter {
     protected String generateImportStatement(final String connectionDefinition,
                                              List<DataType> selectListDataTypes, final String pushdownQuery) {
         if (isGenerateJdbcDatatypeMappingForOCIEnabled()) {
-            final String columnDescription = this.createImportColumnsDescription(pushdownQuery, selectListDataTypes);
+            final String columnDescription = this.createImportColumnsDescription(selectListDataTypes);
             return "IMPORT INTO (" + columnDescription + ") FROM ORA " + connectionDefinition + " STATEMENT '" + pushdownQuery.replace("'", "''") + "'";
         } else {
             return "IMPORT FROM ORA " + connectionDefinition + " STATEMENT '" + pushdownQuery.replace("'", "''") + "'";
@@ -96,11 +96,8 @@ public class OracleQueryRewriter extends AbstractQueryRewriter {
         return pushdownQuery;
     }
 
-    private String createImportColumnsDescription(final String query, List<DataType> selectListDataTypes) {
-        final ColumnMetadataReader columnMetadataReader = this.remoteMetadataReader.getColumnMetadataReader();
-        final OracleResultSetMetadataReader resultSetMetadataReader = new OracleResultSetMetadataReader(
-                connection, columnMetadataReader);
-        final String columnsDescription = resultSetMetadataReader.describeColumns(query, selectListDataTypes);
+    private String createImportColumnsDescription(List<DataType> selectListDataTypes) {
+        final String columnsDescription = SqlGenerationHelper.createColumnsDescriptionFromDataTypes(selectListDataTypes);
         LOGGER.finer(() -> "columndescription: " + columnsDescription);
         return columnsDescription;
     }
