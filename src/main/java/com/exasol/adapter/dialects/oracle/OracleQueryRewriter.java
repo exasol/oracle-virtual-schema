@@ -66,7 +66,7 @@ public class OracleQueryRewriter extends AbstractQueryRewriter {
     public String rewrite(final SqlStatement statement, final List<DataType> selectListDataTypes,
                           final ExaMetadata exaMetadata, final AdapterProperties properties)
             throws AdapterException {
-        final String pushdownQuery = createPushdownQuery(statement, properties);
+        final String pushdownQuery = buildPushdownQuery(statement, properties);
         final ExaConnectionInformation exaConnectionInformation = getConnectionInformation(exaMetadata,
                 properties);
         final String connectionDefinition = this.connectionDefinitionBuilder
@@ -85,7 +85,7 @@ public class OracleQueryRewriter extends AbstractQueryRewriter {
         }
     }
 
-    private String createPushdownQuery(final SqlStatement statement, final AdapterProperties properties)
+    private String buildPushdownQuery(final SqlStatement statement, final AdapterProperties properties)
             throws AdapterException {
         final SqlGenerationContext context = new SqlGenerationContext(properties.getCatalogName(),
                 properties.getSchemaName(), false);

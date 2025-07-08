@@ -26,7 +26,7 @@ import com.exasol.errorreporting.ExaError;
  */
 public class OracleResultSetMetadataReader {
 
-    private static final Logger LOGGER = Logger.getLogger(com.exasol.adapter.jdbc.ResultSetMetadataReader.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(OracleResultSetMetadataReader.class.getName());
     private final Connection connection;
     private final ColumnMetadataReader columnMetadataReader;
 
@@ -131,12 +131,11 @@ public class OracleResultSetMetadataReader {
      * @return merged {@link DataType}
      */
     private DataType mergeDataType(DataType selectListDataType, DataType columnDataType) {
-        switch (selectListDataType.getExaDataType()) {
-            case DOUBLE:
-                return columnDataType.getExaDataType() == DataType.ExaDataType.VARCHAR ? selectListDataType : columnDataType;
-            default:
-                return columnDataType;
+        if (selectListDataType.getExaDataType() == DataType.ExaDataType.DOUBLE
+                && columnDataType.getExaDataType() == DataType.ExaDataType.VARCHAR) {
+            return selectListDataType;
         }
+        return columnDataType;
     }
 
     /**
