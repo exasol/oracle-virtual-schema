@@ -113,20 +113,6 @@ public class OracleColumnMetadataReader extends BaseColumnMetadataReader {
     }
 
     /**
-     * Reads JDBC metadata from the {@link ResultSet} and returns an extended {@link JdbcColumnDescription}.
-     *
-     * @param remoteColumn the JDBC result set row
-     * @return a {@link JdbcColumnDescription} with additional Oracle metadata
-     * @throws SQLException if accessing the result set fails
-     */
-    @Override
-    public JDBCTypeDescription readJdbcTypeDescription(final ResultSet remoteColumn) throws SQLException {
-        JDBCTypeDescription result = super.readJdbcTypeDescription(remoteColumn);
-        String column = remoteColumn.getString(NAME_COLUMN);
-        return new JdbcColumnDescription(result, column, buildRemoteColumnMetadata(remoteColumn));
-    }
-
-    /**
      * Builds a string representation of the raw column metadata returned by the Oracle JDBC driver.
      *
      * @param remoteColumn the JDBC {@link ResultSet} pointing to column metadata
