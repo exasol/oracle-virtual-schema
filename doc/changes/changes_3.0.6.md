@@ -19,7 +19,7 @@ This issue has been fixed quite a while back now, but the OSSIndex unfortunately
 
 ## Security
 
-* #129: Fix CVE-2024-55551 in `com.exasol:exasol-jdbc:jar:7.1.20:compile`
+* #61: Fix CVE-2024-55551 in `com.exasol:exasol-jdbc:jar:7.1.20:compile`
 
 ## Dependency Updates
 
