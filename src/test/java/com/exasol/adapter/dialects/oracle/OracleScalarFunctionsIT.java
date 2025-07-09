@@ -4,13 +4,18 @@ import static com.exasol.adapter.metadata.DataType.IntervalType.DAY_TO_SECOND;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.TimeZone;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.exasol.adapter.commontests.scalarfunction.ScalarFunctionsTestBase;
 import com.exasol.adapter.commontests.scalarfunction.TestSetup;
-import com.exasol.adapter.commontests.scalarfunction.virtualschematestsetup.*;
+import com.exasol.adapter.commontests.scalarfunction.virtualschematestsetup.CreateVirtualSchemaTestSetupRequest;
+import com.exasol.adapter.commontests.scalarfunction.virtualschematestsetup.VirtualSchemaTestSetup;
+import com.exasol.adapter.commontests.scalarfunction.virtualschematestsetup.VirtualSchemaTestSetupProvider;
 import com.exasol.adapter.commontests.scalarfunction.virtualschematestsetup.request.Column;
 import com.exasol.adapter.commontests.scalarfunction.virtualschematestsetup.request.TableRequest;
 import com.exasol.adapter.metadata.DataType;
@@ -139,7 +144,7 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
                     "regexp_replace", "substr", "add_hours", "left", "mid", "add_weeks", "add_minutes", "to_timestamp",
                     "reverse", "regexp_instr", "soundex", "add_days", "add_years", "replace", "translate", "lpad",
                     "ltrim", "regexp_substr", "ucase", "lcase", "character_Length", "locate", "curdate", "substring",
-                    "rpad", "to_date", "to_char", "repeat", "to_number", "length", "rtrim", "add_seconds");
+                    "rpad", "to_date", "to_char", "repeat", "to_number", "length", "rtrim", "add_seconds", "least");
         }
 
         @Override

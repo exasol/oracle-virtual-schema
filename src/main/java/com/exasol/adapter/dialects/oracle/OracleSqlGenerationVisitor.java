@@ -1,12 +1,15 @@
 package com.exasol.adapter.dialects.oracle;
 
+import static com.exasol.adapter.dialects.oracle.OracleColumnMetadataReader.MAX_ORACLE_VARCHAR_SIZE;
 import static com.exasol.adapter.sql.AggregateFunction.*;
 import static com.exasol.adapter.sql.ScalarFunction.*;
 
 import java.util.*;
 
 import com.exasol.adapter.AdapterException;
-import com.exasol.adapter.dialects.*;
+import com.exasol.adapter.dialects.AbstractSqlDialect;
+import com.exasol.adapter.dialects.ImportType;
+import com.exasol.adapter.dialects.SqlDialect;
 import com.exasol.adapter.dialects.rewriting.SqlGenerationContext;
 import com.exasol.adapter.dialects.rewriting.SqlGenerationVisitor;
 import com.exasol.adapter.metadata.DataType;
@@ -148,10 +151,10 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
      * @param column a NUMBER column
      * @return true if a cast is necessary for the NUMBER column
      */
-    private boolean checkIfNeedToCastNumberToDecimal(final SqlColumn column) {
+    private boolean checkIfNeedToCastNumberToDecimal(final SqlColumn column, final int columnSize) {
         final AbstractSqlDialect dialect = (AbstractSqlDialect) getDialect();
         final DataType columnType = column.getMetadata().getType();
-        final DataType castNumberToDecimalType = ((OracleSqlDialect) dialect).getOracleNumberTargetType();
+        final DataType castNumberToDecimalType = ((OracleSqlDialect) dialect).getOracleNumberTargetType(columnSize);
         return (columnType.getPrecision() == castNumberToDecimalType.getPrecision())
                 && (columnType.getScale() == castNumberToDecimalType.getScale());
     }
@@ -182,20 +185,27 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
 
     private String getColumnProjectionString(final SqlColumn column, final String projectionString)
             throws AdapterException {
-        final boolean isDirectlyInSelectList = (column.hasParent()
-                && (column.getParent().getType() == SqlNodeType.SELECT_LIST));
-        if (!isDirectlyInSelectList) {
+        final boolean isProjectionColumn = isProjectionColumn(column.getParent());
+        if (!isProjectionColumn) {
             return projectionString;
         } else {
             return getProjectionString(column, projectionString);
         }
     }
 
+    private boolean isProjectionColumn(final SqlNode parent) {
+        return parent != null
+                && (parent.getType() == SqlNodeType.SELECT_LIST
+                || parent.getType() == SqlNodeType.GROUP_BY
+                || parent.getType() == SqlNodeType.ORDER_BY);
+    }
+
     private String getProjectionString(final SqlColumn column, final String projectionString) throws AdapterException {
         final AbstractSqlDialect dialect = (AbstractSqlDialect) getDialect();
-        final String typeName = getTypeNameFromColumn(column);
+        final String typeName = getTypeName(column);
+        final int columnSize = getColumnSize(column);
         if (typeName.startsWith("INTERVAL") || typeName.equals("BINARY_FLOAT") || typeName.equals("BINARY_DOUBLE")) {
-            return castToChar(projectionString);
+            return castToChar(projectionString, columnSize);
         } else if (typeName.startsWith("TIMESTAMP")
                 && (((OracleSqlDialect) dialect).getImportType() == ImportType.JDBC)) {
             return "TO_TIMESTAMP(TO_CHAR(" + projectionString + ", " + TIMESTAMP_FORMAT + "), " + TIMESTAMP_FORMAT
@@ -207,23 +217,37 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
         }
     }
 
-    public String castToChar(final String operand) {
-        return "TO_CHAR(" + operand + ")";
+    String getTypeName(SqlColumn column) throws AdapterException {
+        return getTypeNameFromColumn(column);
+    }
+
+    public String castToChar(final String operand, int size) {
+        return String.format("CAST(TO_CHAR(%s) AS VARCHAR(%d))", operand, size);
     }
 
     private String getNumberProjectionString(final SqlColumn column, final String projectionString,
             final OracleSqlDialect dialect) {
+        int columnSize = getColumnSize(column);
         if (column.getMetadata().getType().getExaDataType() == DataType.ExaDataType.VARCHAR) {
-            return castToChar(projectionString);
+            return castToChar(projectionString, columnSize);
         } else {
-            if (checkIfNeedToCastNumberToDecimal(column)) {
-                final DataType castNumberToDecimalType = dialect.getOracleNumberTargetType();
+            if (checkIfNeedToCastNumberToDecimal(column, columnSize)) {
+                final DataType castNumberToDecimalType = dialect.getOracleNumberTargetType(columnSize);
                 return cast(projectionString, "DECIMAL(" + castNumberToDecimalType.getPrecision() + ","
                         + castNumberToDecimalType.getScale() + ")");
             } else {
                 return projectionString;
             }
         }
+    }
+
+    private int getColumnSize(SqlColumn column) {
+        int size = column.getMetadata().getType().getSize();
+        int precision = column.getMetadata().getType().getPrecision();
+        if (size <= 0 && precision <= 0) {
+            return MAX_ORACLE_VARCHAR_SIZE;
+        }
+        return precision <= 0 ? size : precision;
     }
 
     private String cast(final String value, final String as) {
@@ -237,9 +261,9 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
     }
 
     private String transformString(final String literalString, final boolean b, final SqlNode parent) {
-        final boolean isDirectlyInSelectList = (b && (parent.getType() == SqlNodeType.SELECT_LIST));
-        if (isDirectlyInSelectList) {
-            return castToChar(literalString);
+        final boolean isProjectionColumn = (b && isProjectionColumn(parent));
+        if (isProjectionColumn) {
+            return castToChar(literalString, MAX_ORACLE_VARCHAR_SIZE);
         }
         return literalString;
     }
@@ -285,17 +309,6 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
             }
         }
         return builder.toString();
-    }
-
-    @Override
-    public String visit(final SqlFunctionAggregate function) throws AdapterException {
-        final boolean isDirectlyInSelectList = (function.hasParent()
-                && (function.getParent().getType() == SqlNodeType.SELECT_LIST));
-        if (isDirectlyInSelectList && this.aggregateFunctionsCast.contains(function.getFunction())) {
-            // Cast to FLOAT because result set metadata has precision = 0, scale = 0
-            return cast(super.visit(function), "FLOAT");
-        }
-        return super.visit(function);
     }
 
     @Override
@@ -369,12 +382,6 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
             break;
         default:
             break;
-        }
-        final boolean isDirectlyInSelectList = (function.hasParent()
-                && (function.getParent().getType() == SqlNodeType.SELECT_LIST));
-        if (isDirectlyInSelectList && this.scalarFunctionsCast.contains(function.getFunction())) {
-            // Cast to FLOAT because result set metadata has precision = 0, scale = 0
-            sql = cast(sql, "FLOAT");
         }
         return sql;
     }

@@ -3,12 +3,14 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.exasol</groupId>
     <artifactId>oracle-virtual-schema</artifactId>
-    <version>3.0.5</version>
+    <version>3.0.6</version>
     <name>Virtual Schema for Oracle</name>
     <description>Virtual Schema for Oracle</description>
     <url>https://github.com/exasol/oracle-virtual-schema/</url>
     <properties>
-        <vscjdbc.version>12.0.0</vscjdbc.version>
+        <virtual-schema-common-jdbc.version>13.0.0</virtual-schema-common-jdbc.version>
+        <junit-jupiter.version>5.13.1</junit-jupiter.version>
+        <org.testcontainers.version>1.21.1</org.testcontainers.version>
         <!-- Additional sonar configuration for analyzing TypeScript extension -->
         <sonar.sources>src/main/,extension/src/</sonar.sources>
         <sonar.exclusions>extension/src/*.test.ts</sonar.exclusions>
@@ -20,7 +22,7 @@
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>virtual-schema-common-jdbc</artifactId>
-            <version>${vscjdbc.version}</version>
+            <version>${virtual-schema-common-jdbc.version}</version>
         </dependency>
         <dependency>
             <groupId>com.exasol</groupId>
@@ -43,7 +45,7 @@
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>virtual-schema-common-jdbc</artifactId>
-            <version>${vscjdbc.version}</version>
+            <version>${virtual-schema-common-jdbc.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
@@ -55,14 +57,20 @@
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.11.4</version>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit-jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>${junit-jupiter.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
-            <version>5.15.2</version>
+            <version>5.18.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -81,19 +89,19 @@
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>exasol-testcontainers</artifactId>
-            <version>7.1.3</version>
+            <version>7.1.6</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>1.20.4</version>
+            <version>${org.testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>oracle-xe</artifactId>
-            <version>1.20.4</version>
+            <version>${org.testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -124,7 +132,7 @@
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>virtual-schema-shared-integration-tests</artifactId>
-            <version>3.0.0</version>
+            <version>3.0.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -156,15 +164,28 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <compilerArgs>
-                        <arg>-Xlint:all,-path</arg>
+                        <!-- We turn off `processing` because it complains about every annotation -->
+                        <!-- Disable 'path' warning because compiler fails with error
+                            "[path] bad path element "~/.m2/repository/org/apache/derby/derbyclient/10.14.2.0/derbyLocale_cs.jar": no such file or directory" -->
+                        <arg>-Xlint:all,-processing,-path</arg>
                         <arg>-Werror</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.sonatype.ossindex.maven</groupId>
+                <artifactId>ossindex-maven-plugin</artifactId>
+                <configuration>
+                    <excludeVulnerabilityIds>
+                        <!-- Exasol's JDBC driver was fixed in version 24.2.1, but OSSIndex does not reflect that yet -->
+                        <exclude>CVE-2024-55551</exclude>
+                    </excludeVulnerabilityIds>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>com.exasol</groupId>
                 <artifactId>project-keeper-maven-plugin</artifactId>
-                <version>4.5.0</version>
+                <version>5.2.2</version>
                 <executions>
                     <execution>
                         <goals>
@@ -177,7 +198,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
-                    <finalName>virtual-schema-dist-${vscjdbc.version}-oracle-${project.version}</finalName>
+                    <finalName>virtual-schema-dist-${virtual-schema-common-jdbc.version}-oracle-${project.version}</finalName>
                 </configuration>
             </plugin>
             <plugin>
@@ -185,14 +206,6 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
                     <useModulePath>false</useModulePath>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <!-- Fix locale dependent tests in case the OS locale is not English -->
-                    <argLine>-Duser.country=US -Duser.language=en ${argLine}</argLine>
                 </configuration>
             </plugin>
             <plugin>
@@ -240,7 +253,7 @@
                         <fileset>
                             <directory>extension/src</directory>
                             <includes>
-                                <include>extension-description.ts</include>
+                                <include>extension-config.ts</include>
                             </includes>
                         </fileset>
                     </filesets>
@@ -249,7 +262,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>3.1.0</version>
+                <version>3.5.0</version>
                 <executions>
                     <execution>
                         <id>npm-ci</id>
@@ -310,7 +323,7 @@
     <parent>
         <artifactId>oracle-virtual-schema-generated-parent</artifactId>
         <groupId>com.exasol</groupId>
-        <version>3.0.5</version>
+        <version>3.0.6</version>
         <relativePath>pk_generated_parent.pom</relativePath>
     </parent>
 </project>

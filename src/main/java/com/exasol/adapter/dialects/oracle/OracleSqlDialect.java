@@ -12,14 +12,22 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.exasol.ExaMetadata;
 import com.exasol.adapter.AdapterProperties;
 import com.exasol.adapter.capabilities.Capabilities;
-import com.exasol.adapter.dialects.*;
+import com.exasol.adapter.dialects.AbstractSqlDialect;
+import com.exasol.adapter.dialects.ImportType;
+import com.exasol.adapter.dialects.QueryRewriter;
+import com.exasol.adapter.dialects.SqlGenerator;
 import com.exasol.adapter.dialects.rewriting.ImportIntoTemporaryTableQueryRewriter;
 import com.exasol.adapter.dialects.rewriting.SqlGenerationContext;
-import com.exasol.adapter.jdbc.*;
+import com.exasol.adapter.jdbc.ConnectionFactory;
+import com.exasol.adapter.jdbc.RemoteMetadataReader;
+import com.exasol.adapter.jdbc.RemoteMetadataReaderException;
 import com.exasol.adapter.metadata.DataType;
-import com.exasol.adapter.properties.*;
+import com.exasol.adapter.properties.BooleanProperty;
+import com.exasol.adapter.properties.CastNumberToDecimalProperty;
+import com.exasol.adapter.properties.ImportProperty;
 import com.exasol.adapter.sql.AggregateFunction;
 import com.exasol.adapter.sql.ScalarFunction;
 import com.exasol.errorreporting.ExaError;
@@ -64,8 +72,8 @@ public class OracleSqlDialect extends AbstractSqlDialect {
      * @param connectionFactory factory for the JDBC connection to the remote data source
      * @param properties        user-defined adapter properties
      */
-    public OracleSqlDialect(final ConnectionFactory connectionFactory, final AdapterProperties properties) {
-        super(connectionFactory, properties,
+    public OracleSqlDialect(final ConnectionFactory connectionFactory, final AdapterProperties properties, final ExaMetadata exaMetadata) {
+        super(connectionFactory, properties, exaMetadata,
                 Set.of(SCHEMA_NAME_PROPERTY, ORACLE_IMPORT_PROPERTY, ORACLE_CONNECTION_NAME_PROPERTY,
                         ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY, GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI_PROPERTY), //
                 List.of(CastNumberToDecimalProperty.validator(ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY), //
@@ -100,11 +108,11 @@ public class OracleSqlDialect extends AbstractSqlDialect {
         return StructureElementSupport.MULTIPLE;
     }
 
-    DataType getOracleNumberTargetType() {
+    DataType getOracleNumberTargetType(int size) {
         if (this.properties.containsKey(ORACLE_CAST_NUMBER_TO_DECIMAL_PROPERTY)) {
             return this.getOracleNumberTypeFromProperty();
         } else {
-            return DataType.createMaximumSizeVarChar(DataType.ExaCharset.UTF8);
+            return DataType.createVarChar(size, DataType.ExaCharset.UTF8);
         }
     }
 
@@ -164,7 +172,7 @@ public class OracleSqlDialect extends AbstractSqlDialect {
     @Override
     protected RemoteMetadataReader createRemoteMetadataReader() {
         try {
-            return new OracleMetadataReader(this.connectionFactory.getConnection(), this.properties);
+            return new OracleMetadataReader(this.connectionFactory.getConnection(), this.properties, this.exaMetadata);
         } catch (final SQLException exception) {
             throw new RemoteMetadataReaderException(ExaError.messageBuilder("E-VSORA-1")
                     .message("Unable to create Oracle remote metadata reader. Caused by: {{cause|uq}}")
@@ -175,14 +183,7 @@ public class OracleSqlDialect extends AbstractSqlDialect {
     @Override
     protected QueryRewriter createQueryRewriter() {
         if (this.isImportFromOraEnabled()) {
-            try {
-                return new OracleQueryRewriter(this, this.createRemoteMetadataReader(),
-                        this.connectionFactory.getConnection(), this.properties);
-            } catch (final SQLException exception) {
-                throw new RemoteMetadataReaderException(ExaError.messageBuilder("E-VSORA-4")
-                        .message("Unable to create Oracle remote metadata reader. Caused by: {{cause|uq}}")
-                        .parameter("cause", exception.getMessage()).toString(), exception);
-            }
+            return new OracleQueryRewriter(this, this.createRemoteMetadataReader(), this.properties);
         }
         return new ImportIntoTemporaryTableQueryRewriter(this, this.createRemoteMetadataReader(),
                 this.connectionFactory);

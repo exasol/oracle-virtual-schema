@@ -3,4 +3,4 @@ error-tags:
     packages:
       - com.exasol.adapter.dialects.oracle
       - com.exasol.closeafterall
-    highest-index: 9
+    highest-index: 10
