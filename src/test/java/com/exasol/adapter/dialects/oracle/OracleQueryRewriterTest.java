@@ -53,8 +53,7 @@ public class OracleQueryRewriterTest extends AbstractQueryRewriterTestBase {
                 ORACLE_CONNECTION_NAME_PROPERTY, "ora_connection"));
         final SqlDialectFactory dialectFactory = new OracleSqlDialectFactory();
         final SqlDialect dialect = dialectFactory.createSqlDialect(connectionFactoryMock, properties, null);
-        final QueryRewriter queryRewriter = new OracleQueryRewriter(dialect, null,
-                connectionFactoryMock.getConnection(), properties);
+        final QueryRewriter queryRewriter = new OracleQueryRewriter(dialect, null, properties);
         assertThat(queryRewriter.rewrite(this.statement, EMPTY_SELECT_LIST_DATA_TYPES, EXA_METADATA, properties),
                 equalTo("IMPORT FROM ORA AT ora_connection STATEMENT 'SELECT CAST(TO_CHAR(1) AS VARCHAR(4000)) FROM \"DUAL\"'"));
     }
@@ -69,8 +68,7 @@ public class OracleQueryRewriterTest extends AbstractQueryRewriterTestBase {
         final SqlDialectFactory dialectFactory = new OracleSqlDialectFactory();
         final SqlDialect dialect = dialectFactory.createSqlDialect(connectionFactoryMock, properties, null);
         final var oracleMetadataReader = new OracleMetadataReader(mockConnection(), properties, exaMetadataMock);
-        final QueryRewriter queryRewriter = new OracleQueryRewriter(dialect, oracleMetadataReader, mockConnection(),
-                properties);
+        final QueryRewriter queryRewriter = new OracleQueryRewriter(dialect, oracleMetadataReader, properties);
         assertThat(queryRewriter.rewrite(this.statement, List.of(DataType.createDecimal(18, 0)), EXA_METADATA, properties),
                 equalTo("IMPORT INTO (c1 DECIMAL(18, 0)) FROM ORA AT ora_connection STATEMENT 'SELECT CAST(TO_CHAR(1) AS VARCHAR(4000)) FROM \"DUAL\"'"));
     }

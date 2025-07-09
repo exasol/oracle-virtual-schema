@@ -5,7 +5,8 @@ import static com.exasol.adapter.metadata.DataType.createChar;
 import static com.exasol.adapter.metadata.DataType.createVarChar;
 import static com.exasol.adapter.metadata.DataType.ExaCharset.UTF8;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.Types;
 
 import com.exasol.ExaMetadata;
 import com.exasol.adapter.AdapterProperties;
@@ -110,31 +111,6 @@ public class OracleColumnMetadataReader extends BaseColumnMetadataReader {
             default:
                 return super.mapJdbcType(jdbcTypeDescription);
         }
-    }
-
-    /**
-     * Builds a string representation of the raw column metadata returned by the Oracle JDBC driver.
-     *
-     * @param remoteColumn the JDBC {@link ResultSet} pointing to column metadata
-     * @return a string describing all columns in the row
-     * @throws SQLException if accessing the result set fails
-     */
-    private String buildRemoteColumnMetadata(ResultSet remoteColumn) throws SQLException {
-        ResultSetMetaData meta = remoteColumn.getMetaData();
-        int columnCount = meta.getColumnCount();
-        StringBuilder remoteColumnStringBuilder = new StringBuilder("Column Metadata: [");
-
-        for (int i = 1; i <= columnCount; i++) {
-            String columnName = meta.getColumnName(i);
-            Object value = remoteColumn.getObject(i);
-            remoteColumnStringBuilder.append(columnName)
-                    .append("=")
-                    .append(value)
-                    .append(i < columnCount ? ", " : "");
-        }
-
-        remoteColumnStringBuilder.append("]");
-        return remoteColumnStringBuilder.toString();
     }
 
     /**

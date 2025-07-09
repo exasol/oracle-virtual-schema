@@ -1,6 +1,5 @@
 package com.exasol.adapter.dialects.oracle;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Logger;
@@ -24,20 +23,19 @@ import com.exasol.errorreporting.ExaError;
  * This class implements an Oracle-specific query rewriter.
  */
 public class OracleQueryRewriter extends AbstractQueryRewriter {
+
+    private final AdapterProperties properties;
+    private static final Logger LOGGER = Logger.getLogger(OracleQueryRewriter.class.getName());
+
     /**
      * Create a new instance of the {@link OracleQueryRewriter}.
      *
      * @param dialect              Oracle SQl dialect
      * @param remoteMetadataReader reader for metadata from the remote data source
+     * @param properties adapter properties
      */
-    private final Connection connection;
-    private final AdapterProperties properties;
-
-    private static final Logger LOGGER = Logger.getLogger(OracleQueryRewriter.class.getName());
-
-    public OracleQueryRewriter(final SqlDialect dialect, final RemoteMetadataReader remoteMetadataReader, Connection connection, AdapterProperties properties) {
+    public OracleQueryRewriter(final SqlDialect dialect, final RemoteMetadataReader remoteMetadataReader, AdapterProperties properties) {
         super(dialect, remoteMetadataReader, new OracleConnectionDefinitionBuilder());
-        this.connection = connection;
         this.properties = properties;
     }
 

@@ -183,14 +183,7 @@ public class OracleSqlDialect extends AbstractSqlDialect {
     @Override
     protected QueryRewriter createQueryRewriter() {
         if (this.isImportFromOraEnabled()) {
-            try {
-                return new OracleQueryRewriter(this, this.createRemoteMetadataReader(),
-                        this.connectionFactory.getConnection(), this.properties);
-            } catch (final SQLException exception) {
-                throw new RemoteMetadataReaderException(ExaError.messageBuilder("E-VSORA-4")
-                        .message("Unable to create Oracle remote metadata reader. Caused by: {{cause|uq}}")
-                        .parameter("cause", exception.getMessage()).toString(), exception);
-            }
+            return new OracleQueryRewriter(this, this.createRemoteMetadataReader(), this.properties);
         }
         return new ImportIntoTemporaryTableQueryRewriter(this, this.createRemoteMetadataReader(),
                 this.connectionFactory);
