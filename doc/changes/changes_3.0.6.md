@@ -1,4 +1,4 @@
-# Oracle Virtual Schema 3.0.6, released 2025-07-08
+# Oracle Virtual Schema 3.0.6, released 2025-07-09
 
 Code name: Timestamp with precision support
 
