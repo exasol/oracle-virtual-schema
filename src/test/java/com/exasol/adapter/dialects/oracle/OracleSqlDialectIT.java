@@ -12,23 +12,29 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import org.hamcrest.MatcherAssert;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import com.exasol.bucketfs.BucketAccessException;
+
 @Tag("integration")
 @Testcontainers
 class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
+
+    @BeforeAll
+    static void beforeAll() throws SQLException, BucketAccessException, TimeoutException, IOException {
+        initAllTables();
+    }
 
     @Test
     void testCountAll() throws SQLException {
@@ -164,30 +170,6 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         }
     }
 
-    private String getColumnTypesOfTable(Statement statementExasol, final String tableName, final String columnName) throws SQLException {
-        final ResultSet result = statementExasol.executeQuery("DESCRIBE " + tableName);
-        while (result.next()) {
-            if (result.getString("COLUMN_NAME").toUpperCase().equals(columnName)) {
-                return result.getString("SQL_TYPE").toUpperCase();
-            }
-        }
-        throw new IllegalArgumentException("Type for column " + columnName + " not found");
-    }
-
-    private void assertExpressionExecutionBigDecimalResult(Statement statementExasol, final String query, final BigDecimal expectedValue)
-            throws SQLException {
-        final ResultSet result = statementExasol.executeQuery(query);
-        result.next();
-        final BigDecimal actualResult = result.getBigDecimal(1);
-        assertThat(actualResult.stripTrailingZeros(), equalTo(expectedValue));
-    }
-
-    private void assertExplainVirtual(Statement statementExasol, final String query, final String expected) throws SQLException {
-        final ResultSet explainVirtual = statementExasol.executeQuery("EXPLAIN VIRTUAL " + query);
-        explainVirtual.next();
-        final String explainVirtualStringActual = explainVirtual.getString("PUSHDOWN_SQL");
-        assertThat(explainVirtualStringActual, containsString(expected));
-    }
 
     @Nested
     @DisplayName("Join test")

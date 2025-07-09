@@ -3,22 +3,24 @@ package com.exasol.adapter.dialects.oracle;
 import static com.exasol.adapter.dialects.oracle.ExasolVersionCheck.assumeExasolVersion834OrLater;
 import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.*;
 import static com.exasol.adapter.dialects.oracle.OracleVirtualSchemaIntegrationTestSetup.*;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
 
 import java.io.*;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.nio.file.Path;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.junit.jupiter.Container;
 
+import com.exasol.adapter.dialects.oracle.helper.ThrowsSqlConsumer;
 import com.exasol.adapter.dialects.oracle.release.ExasolDbVersion;
 import com.exasol.bucketfs.Bucket;
 import com.exasol.bucketfs.BucketAccessException;
@@ -50,12 +52,11 @@ abstract class CommonOracleIntegrationTestSetup {
     private static final ExasolContainer<? extends ExasolContainer<?>> exasolContainer = new ExasolContainer<>(EXASOL_VERSION) //
             .withRequiredServices(ExasolService.BUCKETFS, ExasolService.UDF).withReuse(true);
     @Container
-    private static final OracleContainerDBA oracleContainer = new OracleContainerDBA(ORACLE_CONTAINER_NAME);
+    protected static final OracleContainerDBA oracleContainer = new OracleContainerDBA(ORACLE_CONTAINER_NAME);
 
-    @BeforeAll
-    static void beforeAll()
+    static void initAllTables()
             throws BucketAccessException, TimeoutException, SQLException, IOException {
-        setupOracleDbContainer();
+        setupOracleAllTables();
         setupExasolContainer();
     }
 
@@ -96,8 +97,8 @@ abstract class CommonOracleIntegrationTestSetup {
         return bucket;
     }
 
-    private static void setupExasolContainer()
-            throws BucketAccessException, TimeoutException, FileNotFoundException, SQLException, IOException {
+    protected static void setupExasolContainer()
+            throws BucketAccessException, TimeoutException, SQLException, IOException {
         final Connection exasolConnection = exasolContainer.createConnectionForUser(exasolContainer.getUsername(),
                 exasolContainer.getPassword());
         assumeExasolVersion834OrLater(exasolContainer);
@@ -181,7 +182,16 @@ abstract class CommonOracleIntegrationTestSetup {
         //
     }
 
-    private static void setupOracleDbContainer() throws SQLException {
+    protected static void setupOracle(ThrowsSqlConsumer<Statement> tableCreator) throws SQLException {
+        try (Connection oracleConnection = oracleContainer.createConnectionDBA("");
+             Statement statementOracle = oracleConnection.createStatement()) {
+            createOracleUser(statementOracle);
+            grantAdditionalRights(statementOracle);
+            tableCreator.accept(statementOracle);
+        }
+    }
+
+    private static void setupOracleAllTables() throws SQLException {
         try (Connection oracleConnection = oracleContainer.createConnectionDBA("");
              Statement statementOracle = oracleConnection.createStatement()) {
             createOracleUser(statementOracle);
@@ -354,6 +364,81 @@ abstract class CommonOracleIntegrationTestSetup {
             return true;
         }
         return false;
+    }
+
+    protected static String getColumnTypesOfTable(Statement statementExasol, final String tableName, final String columnName) throws SQLException {
+        final ResultSet result = statementExasol.executeQuery("DESCRIBE " + tableName);
+        while (result.next()) {
+            String resultSetColumnName = result.getString("COLUMN_NAME").toUpperCase();
+            String resultSetType = result.getString("SQL_TYPE").toUpperCase();
+            if (resultSetColumnName.equals(columnName)) {
+                return resultSetType;
+            }
+        }
+        throw new IllegalArgumentException("Type for column " + columnName + " not found");
+    }
+
+    protected static void assertExpressionExecutionBigDecimalResult(Statement statementExasol, final String query, final BigDecimal expectedValue)
+            throws SQLException {
+        final ResultSet result = statementExasol.executeQuery(query);
+        result.next();
+        final BigDecimal actualResult = result.getBigDecimal(1);
+        assertThat(actualResult.stripTrailingZeros(), equalTo(expectedValue));
+    }
+
+    protected static void assertBigDecimalResults(Statement statementExasol, final String query, final BigDecimal... expectedValues)
+            throws SQLException {
+        final ResultSet result = statementExasol.executeQuery(query);
+        int i = 1;
+        result.next();
+        for (BigDecimal expectedValue: expectedValues) {
+            final BigDecimal actualResult = result.getBigDecimal(i);
+            assertThat(actualResult.compareTo(expectedValue), equalTo(0));
+            i++;
+        }
+    }
+
+    protected static void assertStringResults(Statement statementExasol, final String query, final String... expectedValues)
+            throws SQLException {
+        final ResultSet result = statementExasol.executeQuery(query);
+        int i = 1;
+        result.next();
+        for (String expectedValue: expectedValues) {
+            final String actualResult = result.getString(i);
+            assertThat(actualResult, equalTo(expectedValue));
+            i++;
+        }
+    }
+
+    protected static void assertTimestampResultsLater(Statement statementExasol, final String query, final Timestamp... expectedValues)
+            throws SQLException {
+        final ResultSet result = statementExasol.executeQuery(query);
+        int i = 1;
+        result.next();
+        for (Timestamp expectedValue: expectedValues) {
+            final Timestamp actualResult = result.getTimestamp(i);
+            assertThat(actualResult.compareTo(expectedValue), greaterThan(0));
+            i++;
+        }
+    }
+
+    protected static void assertTimestampResults(Statement statementExasol, final String query, final Timestamp... expectedValues)
+            throws SQLException {
+        final ResultSet result = statementExasol.executeQuery(query);
+        int i = 1;
+        result.next();
+        for (Timestamp expectedValue: expectedValues) {
+            final Timestamp actualResult = result.getTimestamp(i);
+            assertThat(actualResult, equalTo(expectedValue));
+            i++;
+        }
+    }
+
+    protected static void assertExplainVirtual(Statement statementExasol, final String query, final String expected) throws SQLException {
+        final ResultSet explainVirtual = statementExasol.executeQuery("EXPLAIN VIRTUAL " + query);
+        explainVirtual.next();
+        final String explainVirtualStringActual = explainVirtual.getString("PUSHDOWN_SQL");
+        assertThat(explainVirtualStringActual, containsString(expected));
     }
 
 }
