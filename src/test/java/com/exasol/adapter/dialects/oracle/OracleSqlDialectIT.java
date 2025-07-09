@@ -234,6 +234,7 @@ class OracleSqlDialectIT {
                 + "c6 number(38), " //
                 + "c7 number(10,5), " //
                 + "c8 number(38,5), " //
+                + "c9 number(38,38), " //
                 + "c_binfloat binary_float, " //
                 + "c_bindouble binary_double, " //
                 + "c10 date, " //
@@ -261,6 +262,7 @@ class OracleSqlDialectIT {
                 + "12345678901234567890123456789012345678, " // C6
                 + "12345.12345, " // C7
                 + "123456789012345678901234567890123.45678, " // C8
+                + "0.12345678901234567890123456789012345678, " // C9
                 + "1234.1241723, " // C_BINFLOAT
                 + "1234987.120871234, " // C_BINDOUBLE
                 + "TO_DATE('2016-08-19', 'YYYY-MM-DD'), " // C10
@@ -918,11 +920,13 @@ class OracleSqlDialectIT {
                 "VIRTUAL_SCHEMA_JDBC | C6 | VARCHAR(38) UTF8 | 12345678901234567890123456789012345678", //
                 "VIRTUAL_SCHEMA_JDBC | C7 | DECIMAL(10,5) | 12345.12345", //
                 "VIRTUAL_SCHEMA_JDBC | C8 | VARCHAR(39) UTF8 | 123456789012345678901234567890123.45678", //
+                "VIRTUAL_SCHEMA_JDBC | C9 | VARCHAR(40) UTF8 | 0.12345678901234567890123456789012345678", //
                 "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C5 | VARCHAR(4000) UTF8 | 123456789012345678901234567890123456", //
                 "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C_NUMBER36 | DECIMAL(36,0) | 123456789012345678901234567890123456", //
                 "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C6 | VARCHAR(38) UTF8 | 12345678901234567890123456789012345678", //
                 "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C7 | DECIMAL(10,5) | 12345.12345", //
                 "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C8 | VARCHAR(39) UTF8 | 123456789012345678901234567890123.45678", //
+                "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C9 | VARCHAR(40) UTF8 | 0.12345678901234567890123456789012345678", //
         }, delimiter = '|')
         void testNumberColumns(final String virtualSchemaName, final String columnName, final String expectedColumnType,
                                final String expectedValue) throws SQLException {

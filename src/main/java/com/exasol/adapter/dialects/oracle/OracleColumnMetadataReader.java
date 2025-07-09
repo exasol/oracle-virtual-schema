@@ -167,8 +167,15 @@ public class OracleColumnMetadataReader extends BaseColumnMetadataReader {
         }
         if (decimalPrecision <= DataType.MAX_EXASOL_DECIMAL_PRECISION) {
             return DataType.createDecimal(decimalPrecision, decimalScale < 0 ? 0 : decimalScale);
+        } else if (decimalPrecision == decimalScale) {
+            //if decimalPrecision == decimalScale, then we need two additional characters for storing zero and decimal separator: "0."
+            return getOracleNumberTargetType(decimalPrecision + 2);
+        } else if (decimalScale > 0) {
+            //if decimalScale > 0, then we need one additional character for storing decimal separator: "."
+            return getOracleNumberTargetType(decimalPrecision  + 1);
         } else {
-            return getOracleNumberTargetType(decimalPrecision + (decimalScale > 0 ? 1 : 0));
+            //if decimalScale <= 0, then no decimal separator is required
+            return getOracleNumberTargetType(decimalPrecision);
         }
     }
 
