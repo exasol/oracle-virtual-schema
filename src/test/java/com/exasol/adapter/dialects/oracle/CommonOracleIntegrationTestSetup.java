@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import org.junit.jupiter.api.AfterAll;
 import org.testcontainers.junit.jupiter.Container;
 
 import com.exasol.adapter.dialects.oracle.helper.ThrowsSqlConsumer;
@@ -30,6 +31,33 @@ import com.exasol.containers.ExasolService;
 import com.exasol.dbbuilder.dialects.exasol.*;
 import com.exasol.udfdebugging.UdfTestSetup;
 
+/**
+ * Abstract base class for Oracle-to-Exasol Virtual Schema integration test setup.
+ * <p>
+ * This class manages containerized Oracle and Exasol databases and provides methods to
+ * initialize schemas, connections, and virtual schemas for integration testing of the Oracle Virtual Schema adapter.
+ * It sets up:
+ * <ul>
+ *     <li>Test schemas and tables on an Oracle container</li>
+ *     <li>JDBC and OCI connections in Exasol</li>
+ *     <li>Virtual schemas using JDBC and Oracle native connectivity</li>
+ *     <li>Exasol adapter scripts and dependencies in BucketFS</li>
+ * </ul>
+ *
+ * <p>
+ * This setup supports various test scenarios, including:
+ * <ul>
+ *     <li>Basic connectivity via JDBC and Oracle OCI</li>
+ *     <li>Oracle NUMBER-to-DECIMAL handling in Exasol</li>
+ *     <li>Pushdown capabilities for timestamps, functions, and joins</li>
+ * </ul>
+ *
+ * <p>
+ * Subclasses should call initialization methods, similar to {@link #initAllTables()} in {@code @BeforeAll}
+ *
+ * <p><strong>Note:</strong> This class assumes that Docker is available on the test machine.
+ *
+ */
 abstract class CommonOracleIntegrationTestSetup {
     protected static final String ORACLE_CONTAINER_NAME = IntegrationTestConstants.ORACLE_CONTAINER_NAME;
 
@@ -54,12 +82,42 @@ abstract class CommonOracleIntegrationTestSetup {
     @Container
     protected static final OracleContainerDBA oracleContainer = new OracleContainerDBA(ORACLE_CONTAINER_NAME);
 
+    /**
+     * Initializes the Oracle and Exasol database containers with test schemas and data.
+     * <p>
+     * This method prepares the Oracle database with test tables and the Exasol container
+     * with adapter scripts, UDFs, and virtual schemas necessary for integration tests.
+     *
+     * @throws BucketAccessException if the adapter or drivers fail to upload to BucketFS
+     * @throws TimeoutException      if a timeout occurs while accessing BucketFS
+     * @throws SQLException          if database operations fail
+     * @throws IOException           if driver or client downloads fail
+     */
     static void initAllTables()
             throws BucketAccessException, TimeoutException, SQLException, IOException {
         setupOracleAllTables();
         setupExasolContainer();
     }
 
+    /**
+     * Cleans up the Exasol container after all tests have run.
+     * <p>
+     * This removes all database objects and ensures a clean state.
+     */
+    @AfterAll
+    static void afterAll() {
+        exasolContainer.purgeDatabase();
+    }
+
+    /**
+     * Uploads the correct Oracle Instant Client version to the BucketFS based on Exasol version.
+     *
+     * @param bucket the BucketFS bucket to upload to
+     * @return the same bucket instance, after the Instant Client has been uploaded
+     * @throws BucketAccessException if uploading fails
+     * @throws TimeoutException      if the upload operation times out
+     * @throws IOException           if reading or downloading the zip fails
+     */
     private static Bucket uploadInstantClientToBucket(Bucket bucket)
             throws BucketAccessException, TimeoutException, IOException {
         if (is832OrLater()) {
@@ -69,6 +127,15 @@ abstract class CommonOracleIntegrationTestSetup {
         }
     }
 
+    /**
+     * Uploads Oracle Instant Client 12.1.0.2.0 to the given BucketFS path.
+     *
+     * @param bucket the BucketFS bucket to upload to
+     * @return the same bucket instance, after upload
+     * @throws BucketAccessException     if the upload fails
+     * @throws TimeoutException          if the upload operation times out
+     * @throws FileNotFoundException     if the Instant Client file is not found
+     */
     private static Bucket uploadInstantClient12(Bucket bucket)
             throws BucketAccessException, TimeoutException, FileNotFoundException {
         final String instantClientName = "instantclient-basic-linux.x64-12.1.0.2.0.zip";
@@ -77,6 +144,15 @@ abstract class CommonOracleIntegrationTestSetup {
         return bucket;
     }
 
+    /**
+     * Downloads Oracle Instant Client 23.5 from Oracle and uploads it to BucketFS.
+     *
+     * @param bucket the BucketFS bucket to upload to
+     * @return the same bucket instance, after upload
+     * @throws BucketAccessException if the upload fails
+     * @throws TimeoutException      if the upload operation times out
+     * @throws IOException           if the file cannot be downloaded or written
+     */
     private static Bucket uploadInstantClient23(Bucket bucket)
             throws BucketAccessException, TimeoutException, IOException {
         final String fileName = "instantclient-basic-linux.x64-23.5.0.24.07.zip";
@@ -97,6 +173,15 @@ abstract class CommonOracleIntegrationTestSetup {
         return bucket;
     }
 
+    /**
+     * Prepares the Exasol container for testing by uploading the Oracle JDBC driver, adapter script,
+     * and creating virtual schemas using OCI and JDBC connections.
+     *
+     * @throws BucketAccessException if the upload to BucketFS fails
+     * @throws TimeoutException      if uploading takes too long
+     * @throws SQLException          if Exasol SQL operations fail
+     * @throws IOException           if adapter or client upload fails
+     */
     protected static void setupExasolContainer()
             throws BucketAccessException, TimeoutException, SQLException, IOException {
         final Connection exasolConnection = exasolContainer.createConnectionForUser(exasolContainer.getUsername(),
@@ -124,6 +209,15 @@ abstract class CommonOracleIntegrationTestSetup {
         createVirtualSchemasOnExasolDbContainer(exasolFactory, adapterScript, jdbcConnectionDefinition);
     }
 
+    /**
+     * Creates an Oracle OCI connection definition in Exasol using the given credentials.
+     *
+     * @param exasolFactory   factory for creating Exasol database objects
+     * @param mappedPort      mapped port of the Oracle container
+     * @param oracleUsername  Oracle username
+     * @param oraclePassword  Oracle password
+     * @return a connection definition object for the OCI connection
+     */
     private static ConnectionDefinition createOracleOCIConnection(final ExasolObjectFactory exasolFactory,
                                                                   final Integer mappedPort, final String oracleUsername, final String oraclePassword) {
         final String hostIp = getTestHostIpFromInsideExasol(exasolContainer);
@@ -137,6 +231,14 @@ abstract class CommonOracleIntegrationTestSetup {
                 oraclePassword);
     }
 
+    /**
+     * Creates a JDBC connection definition in Exasol pointing to the Oracle container.
+     *
+     * @param oracleUsername     Oracle username
+     * @param oraclePassword     Oracle password
+     * @param exasolFactory      factory for creating Exasol database objects
+     * @return JDBC connection definition
+     */
     private static ConnectionDefinition createOracleJDBCConnection(final String oracleUsername,
                                                                    final String oraclePassword, final ExasolObjectFactory exasolFactory) {
         final String hostIp = getTestHostIpFromInsideExasol(exasolContainer);
@@ -148,6 +250,14 @@ abstract class CommonOracleIntegrationTestSetup {
 
     }
 
+    /**
+     * Creates various virtual schemas in Exasol, both using plain JDBC and Oracle OCI,
+     * including number-to-decimal mapping configurations.
+     *
+     * @param exasolFactory            factory for creating virtual schemas
+     * @param adapterScript            the adapter script object
+     * @param jdbcConnectionDefinition JDBC connection to Oracle
+     */
     private static void createVirtualSchemasOnExasolDbContainer(final ExasolObjectFactory exasolFactory,
                                                                 final AdapterScript adapterScript, final ConnectionDefinition jdbcConnectionDefinition) {
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_JDBC).adapterScript(adapterScript)
@@ -182,6 +292,12 @@ abstract class CommonOracleIntegrationTestSetup {
         //
     }
 
+    /**
+     * Executes custom Oracle setup logic inside the Oracle container.
+     *
+     * @param tableCreator a function that accepts a {@link Statement} to create Oracle tables or other setup
+     * @throws SQLException if executing SQL statements fails
+     */
     protected static void setupOracle(ThrowsSqlConsumer<Statement> tableCreator) throws SQLException {
         try (Connection oracleConnection = oracleContainer.createConnectionDBA("");
              Statement statementOracle = oracleConnection.createStatement()) {
@@ -191,6 +307,11 @@ abstract class CommonOracleIntegrationTestSetup {
         }
     }
 
+    /**
+     * Creates all required test tables and schemas in the Oracle database.
+     *
+     * @throws SQLException if any SQL execution fails
+     */
     private static void setupOracleAllTables() throws SQLException {
         try (Connection oracleConnection = oracleContainer.createConnectionDBA("");
              Statement statementOracle = oracleConnection.createStatement()) {
