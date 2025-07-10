@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.exasol</groupId>
     <artifactId>oracle-virtual-schema</artifactId>
-    <version>3.0.6</version>
+    <version>3.0.7</version>
     <name>Virtual Schema for Oracle</name>
     <description>Virtual Schema for Oracle</description>
     <url>https://github.com/exasol/oracle-virtual-schema/</url>
@@ -323,7 +323,7 @@
     <parent>
         <artifactId>oracle-virtual-schema-generated-parent</artifactId>
         <groupId>com.exasol</groupId>
-        <version>3.0.6</version>
+        <version>3.0.7</version>
         <relativePath>pk_generated_parent.pom</relativePath>
     </parent>
 </project>
