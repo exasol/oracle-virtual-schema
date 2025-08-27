@@ -1,4 +1,4 @@
-# Oracle Virtual Schema 3.0.8, released 2025-08-26
+# Oracle Virtual Schema 3.0.8, released 2025-08-27
 
 Code name: Fixes for vulnerability CVE-2025-48924
 
