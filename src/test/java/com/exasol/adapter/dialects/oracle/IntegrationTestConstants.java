@@ -12,7 +12,7 @@ public final class IntegrationTestConstants {
     public static final int ORACLE_PORT = 1521;
     public static final String RESOURCES_FOLDER_DIALECT_NAME = "oracle";
 
-    public static final String EXASOL_VERSION = "8.34.0";
+    public static final String EXASOL_VERSION = "2025.1.3";
 
     private IntegrationTestConstants() {
         // intentionally left empty
