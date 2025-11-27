@@ -77,8 +77,9 @@ abstract class CommonOracleIntegrationTestSetup {
     protected static final String TABLE_ORACLE_TIMESTAMPS = "TABLE_ORACLE_TIMESTAMPS";
 
     @Container
-    private static final ExasolContainer<? extends ExasolContainer<?>> exasolContainer = new ExasolContainer<>(EXASOL_VERSION) //
-            .withRequiredServices(ExasolService.BUCKETFS, ExasolService.UDF).withReuse(true);
+    @SuppressWarnings("resource") // Will be closed by @Container
+    private static final ExasolContainer<? extends ExasolContainer<?>> exasolContainer = new ExasolContainer<>(
+            EXASOL_VERSION).withRequiredServices(ExasolService.BUCKETFS, ExasolService.UDF).withReuse(true);
     @Container
     protected static final OracleContainerDBA oracleContainer = new OracleContainerDBA(ORACLE_CONTAINER_NAME);
 
