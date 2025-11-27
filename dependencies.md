@@ -22,7 +22,7 @@
 | [JUnit Jupiter Params][10]                      | [Eclipse Public License v2.0][11]                 |
 | [mockito-junit-jupiter][12]                     | [MIT][13]                                         |
 | [EqualsVerifier \| release normal jar][14]      | [Apache License, Version 2.0][15]                 |
-| [SLF4J JDK14 Provider][16]                      | [MIT License][17]                                 |
+| [SLF4J JDK14 Provider][16]                      | [MIT][17]                                         |
 | [Test containers for Exasol on Docker][18]      | [MIT License][19]                                 |
 | [Testcontainers :: JUnit Jupiter Extension][20] | [MIT][21]                                         |
 | [Testcontainers :: JDBC :: Oracle XE][20]       | [MIT][21]                                         |
@@ -53,7 +53,7 @@
 | [Apache Maven Toolchains Plugin][47]                    | [Apache-2.0][15]                            |
 | [Apache Maven Compiler Plugin][48]                      | [Apache-2.0][15]                            |
 | [Apache Maven Enforcer Plugin][49]                      | [Apache-2.0][15]                            |
-| [Maven Flatten Plugin][50]                              | [Apache Software Licenese][15]              |
+| [Maven Flatten Plugin][50]                              | [Apache Software License][15]               |
 | [org.sonatype.ossindex.maven:ossindex-maven-plugin][51] | [ASL2][52]                                  |
 | [Maven Surefire Plugin][53]                             | [Apache-2.0][15]                            |
 | [Versions Maven Plugin][54]                             | [Apache License, Version 2.0][15]           |
@@ -89,14 +89,14 @@
 [7]: https://github.com/exasol/maven-project-version-getter/blob/main/LICENSE
 [8]: http://hamcrest.org/JavaHamcrest/
 [9]: https://raw.githubusercontent.com/hamcrest/JavaHamcrest/master/LICENSE
-[10]: https://junit.org/junit5/
+[10]: https://junit.org/
 [11]: https://www.eclipse.org/legal/epl-v20.html
 [12]: https://github.com/mockito/mockito
 [13]: https://opensource.org/licenses/MIT
 [14]: https://www.jqno.nl/equalsverifier
 [15]: https://www.apache.org/licenses/LICENSE-2.0.txt
 [16]: http://www.slf4j.org
-[17]: http://www.opensource.org/licenses/mit-license.php
+[17]: https://opensource.org/license/mit
 [18]: https://github.com/exasol/exasol-testcontainers/
 [19]: https://github.com/exasol/exasol-testcontainers/blob/main/LICENSE
 [20]: https://java.testcontainers.org
