@@ -16,6 +16,7 @@ import org.testcontainers.utility.DockerImageName;
  * https://github.com/gvenzl/oci-oracle-xe/issues/41
  */
 public class OracleContainerDBA extends OracleContainer {
+    @SuppressWarnings("this-escape") // This escape
     public OracleContainerDBA(final String dockerImageName) {
         super(DockerImageName.parse(dockerImageName));
         withReuse(true);
