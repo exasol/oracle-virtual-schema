@@ -37,7 +37,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
     @Test
     void testCountAll() throws SQLException {
         try (Connection connection = getExasolConnection();
-             Statement statementExasol = connection.createStatement()) {
+                Statement statementExasol = connection.createStatement()) {
             final String qualifiedTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_NUMBER_HANDLING;
             final String query = "SELECT COUNT(*) FROM " + qualifiedTableName;
             assertThat(getActualResultSet(statementExasol, query), table("BIGINT").row(1L).matches());
@@ -63,7 +63,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
         void testNumberToDecimalThrowsException(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT c5 FROM " + qualifiedTableName;
                 final SQLException exception = assertThrows(SQLException.class, () -> statementExasol.execute(query));
@@ -76,7 +76,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
         void testNumber36ToDecimal(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT c_number36 FROM " + qualifiedTableName;
                 assertAll(
@@ -91,7 +91,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
         void testNumber38ToDecimalThrowsException(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT c6 FROM " + qualifiedTableName;
                 final SQLException exception = assertThrows(SQLException.class, () -> statementExasol.execute(query));
@@ -104,7 +104,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
         void testNumber10S5ToDecimal(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C7 FROM " + qualifiedTableName;
                 assertAll(() -> assertExpressionExecutionBigDecimalResult(statementExasol, query, new BigDecimal("12345.12345")),
@@ -115,7 +115,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @Test
         void testSelectAllColsNumberFromJDBC() throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableNameActual = VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL + "."
                         + TABLE_ORACLE_NUMBER_HANDLING;
                 final ResultSet expected = getExpectedResultSet(statementExasol, "(A DECIMAL(36,1), B DECIMAL(36,1), C DECIMAL(36,2))",
@@ -128,7 +128,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @Test
         void testSelectAllColsNumberFromOra() throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableNameActual = VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING + "."
                         + TABLE_ORACLE_NUMBER_HANDLING;
                 final ResultSet expected = getExpectedResultSet(statementExasol, "(A VARCHAR(100), B VARCHAR(100), C DECIMAL(36,2))",
@@ -141,13 +141,13 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @Test
         void testSelectAllColsNumberFromOraWithJDBCTypemapping() throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableNameActual = VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING + "."
                         + TABLE_ORACLE_NUMBER_HANDLING;
                 final ResultSet expected = getExpectedResultSet(statementExasol, "(A DECIMAL(36,1), B DECIMAL(36,1), C DECIMAL(36,2))",
                         "('12.3456789012345678901234567890123460E32', '12.3456789012345678901234567890E26', '12.3456789012345678901234567890123456E32')");
-                    assertThat(statementExasol.executeQuery("SELECT * FROM " + qualifiedTableNameActual), //
-                            matchesResultSet(expected));
+                assertThat(statementExasol.executeQuery("SELECT * FROM " + qualifiedTableNameActual), //
+                        matchesResultSet(expected));
             }
         }
 
@@ -155,7 +155,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
         void testNumberDataTypes(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_NUMBER_HANDLING;
                 assertAll(() -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "A"), equalTo("DECIMAL(36,1)")),
                         () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "B"), equalTo("DECIMAL(36,1)")),
@@ -167,7 +167,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
         void testSelectOneNumberColumn(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_NUMBER_HANDLING;
                 assertAll(
                         () -> assertExpressionExecutionBigDecimalResult(statementExasol, "SELECT A FROM " + qualifiedTableName,
@@ -180,7 +180,6 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         }
     }
 
-
     @Nested
     @DisplayName("Join test")
     class JoinTest {
@@ -188,7 +187,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testInnerJoin(final String virtualSchema) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String query = "SELECT * FROM " + virtualSchema + "." + TABLE_JOIN_1 + " a INNER JOIN  "
                         + virtualSchema + "." + TABLE_JOIN_2 + " b ON a.x=b.x";
                 final ResultSet expected = getExpectedResultSet(statementExasol,
@@ -202,7 +201,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE })
         void testInnerJoinWithProjection(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
                 final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
                 final String query = "SELECT b.y || " + qualifiedJoinTableName1 + ".y FROM " + qualifiedJoinTableName1
@@ -217,7 +216,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testLeftJoin(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
                 final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
                 final String query = "SELECT * FROM " + qualifiedJoinTableName1 + " a LEFT OUTER JOIN  "
@@ -234,7 +233,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testRightJoin(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
                 final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
                 final String query = "SELECT * FROM " + qualifiedJoinTableName1 + " a RIGHT OUTER JOIN  "
@@ -251,7 +250,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testFullOuterJoin(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
                 final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
                 final String query = "SELECT * FROM " + qualifiedJoinTableName1 + " a FULL OUTER JOIN  "
@@ -269,7 +268,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testRightJoinWithComplexCondition(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
                 final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
                 final String query = "SELECT * FROM " + qualifiedJoinTableName1 + " a RIGHT OUTER JOIN  "
@@ -286,7 +285,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testFullOuterJoinWithComplexCondition(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedJoinTableName1 = virtualSchemaName + "." + TABLE_JOIN_1;
                 final String qualifiedJoinTableName2 = virtualSchemaName + "." + TABLE_JOIN_2;
                 final String query = "SELECT * FROM " + qualifiedJoinTableName1 + " a FULL OUTER JOIN  "
@@ -309,7 +308,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                 "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING, 12346.12345" })
         void testSelectExpression(final String virtualSchemaName, final String expectedColumnValue) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C7 + 1 FROM " + qualifiedTableNameActual + " ORDER BY 1";
                 final String expectedExplainVirtual = "SELECT (\"" + TABLE_ORACLE_ALL_DATA_TYPES
@@ -320,7 +319,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
             }
         }
 
-        private void assertExpressionExecutionStringResult(Statement statementExasol, final String query, final String expected)
+        private void assertExpressionExecutionStringResult(final Statement statementExasol, final String query, final String expected)
                 throws SQLException {
             final ResultSet result = statementExasol.executeQuery(query);
             result.next();
@@ -328,7 +327,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
             MatcherAssert.assertThat(actual, containsString(expected));
         }
 
-        private void assertExpressionExecutionStringResults(Statement statementExasol, final String query, final String expected1, String expected2)
+        private void assertExpressionExecutionStringResults(final Statement statementExasol, final String query, final String expected1, final String expected2)
                 throws SQLException {
             final ResultSet result = statementExasol.executeQuery(query);
             result.next();
@@ -345,7 +344,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                 "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, 12355.12345", "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING, 12355.12345" })
         void testFilterExpression(final String virtualSchemaName, final String expectedColumnValue) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C7 FROM " + qualifiedTableNameActual + " WHERE C7 > 12346";
                 final String expectedExplainVirtual = "SELECT \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\" FROM \""
@@ -361,7 +360,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                 "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, 12345.12345" })
         void testAggregateSingleGroup(final String virtualSchemaName, final String expectedColumnValue) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT min(C7) FROM " + qualifiedTableNameActual;
                 final String expectedExplainVirtual = "SELECT MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES
@@ -374,7 +373,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @Test
         void testAggregateGroupByColumnJdbc() throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C5, min(C7) FROM " + qualifiedActualTableName + " GROUP BY C5 ORDER BY 1 DESC";
                 final String expectedExplainVirtual = "SELECT CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
@@ -395,7 +394,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @Test
         void testAggregateGroupByExpressionOra() throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedActualTableName = VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C5 + 1, min(C7) FROM " + qualifiedActualTableName
                         + " GROUP BY C5 + 1 ORDER BY 1 DESC";
@@ -416,7 +415,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @Test
         void testAggregateGroupByTuple() throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C_NUMBER36, C5, min(C7) FROM " + qualifiedActualTableName
                         + " GROUP BY C_NUMBER36, C5 ORDER BY C5 DESC";
@@ -425,7 +424,8 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                         + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C_NUMBER36\", CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\".\"C5\") AS VARCHAR(4000)), MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") FROM \""
                         + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                        + "\".\"C5\") AS VARCHAR(4000)), \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C_NUMBER36\" ORDER BY CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C5\") AS VARCHAR(4000)), \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C_NUMBER36\" ORDER BY CAST(TO_CHAR(\""
+                        + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\".\"C5\") AS VARCHAR(4000)) DESC'";
                 assertAll(
                         () -> assertThat(actual,
@@ -441,7 +441,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @Test
         void testAggregateHaving() throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C5, min(C7) FROM " + qualifiedActualTableName
                         + " GROUP BY C5 HAVING MIN(C7) > 12350";
@@ -462,7 +462,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testOrderByColumn(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableNameActual = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C1 FROM " + qualifiedTableNameActual + " ORDER BY C1 DESC NULLS LAST";
                 final String expectedExplainVirtual = "SELECT \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C1\" FROM \""
@@ -476,7 +476,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @Test
         void testOrderByExpressionJdbc() throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C7 FROM " + qualifiedActualTableName + " ORDER BY ABS(C7) DESC NULLS FIRST";
                 final ResultSet expected = getExpectedResultSet(statementExasol, "(A DECIMAL(36,5))", "(12355.12345), (12345.12345)");
@@ -492,7 +492,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @Test
         void testLimit() throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C7 FROM " + qualifiedActualTableName + " ORDER BY C7 LIMIT 2";
                 final ResultSet expected = getExpectedResultSet(statementExasol, "(A DECIMAL(36,5))", "(12345.12345), (12355.12345)");
@@ -509,7 +509,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @Test
         void testLimitOffset() throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedActualTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C7 FROM " + qualifiedActualTableName + " ORDER BY C7 LIMIT 1 OFFSET 1";
                 final ResultSet expected = getExpectedResultSet(statementExasol, "(A DECIMAL(36,5))", "(12355.12345)");
@@ -535,9 +535,9 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                 "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, C4, VARCHAR(50) UTF8, dddddddddddddddddddd" //
         })
         void testCharactersColumns(final String virtualSchemaName, final String columnName,
-                                   final String expectedColumnType, final String expectedColumnValue) throws SQLException {
+                final String expectedColumnType, final String expectedColumnValue) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
                 assertAll(() -> assertExpressionExecutionStringResult(statementExasol, query, expectedColumnValue),
@@ -557,7 +557,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         })
         void testBlobColumns(final String virtualSchemaName, final String columnName) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
                 final SQLException exception = assertThrows(SQLException.class, () -> statementExasol.execute(query));
@@ -581,9 +581,9 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                 "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C9 | VARCHAR(40) UTF8 | 0.12345678901234567890123456789012345678", //
         }, delimiter = '|')
         void testNumberColumns(final String virtualSchemaName, final String columnName, final String expectedColumnType,
-                               final String expectedValue) throws SQLException {
+                final String expectedValue) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
                 assertAll(() -> assertExpressionExecutionBigDecimalResult(statementExasol, query, new BigDecimal(expectedValue)),
@@ -602,9 +602,9 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                 "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | C_FLOAT126 | VARCHAR(126) UTF8 | 12345678.01234567901234567890123456789" //
         }, delimiter = '|')
         void testFloatNumbers(final String virtualSchemaName, final String columnName, final String expectedColumnType,
-                              final String expectedValue) throws SQLException {
+                final String expectedValue) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
                 assertAll(() -> assertExpressionExecutionFloatResult(statementExasol, query, Float.parseFloat(expectedValue)),
@@ -613,7 +613,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
             }
         }
 
-        private void assertExpressionExecutionFloatResult(Statement statementExasol, final String query, final float expected)
+        private void assertExpressionExecutionFloatResult(final Statement statementExasol, final String query, final float expected)
                 throws SQLException {
             final ResultSet result = statementExasol.executeQuery(query);
             result.next();
@@ -625,7 +625,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
         void testBinaryDouble(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C_BINDOUBLE FROM " + qualifiedTableName;
                 assertAll(() -> assertExpressionExecutionDoubleResult(statementExasol, query, Double.parseDouble("1234987.120871234")),
@@ -634,7 +634,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
             }
         }
 
-        private void assertExpressionExecutionDoubleResult(Statement statementExasol, final String query, final double expected)
+        private void assertExpressionExecutionDoubleResult(final Statement statementExasol, final String query, final double expected)
                 throws SQLException {
             final ResultSet result = statementExasol.executeQuery(query);
             result.next();
@@ -645,7 +645,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @Test
         void testLongJdbc() throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C_LONG FROM " + qualifiedTableName;
                 assertAll(() -> assertExpressionExecutionStringResult(statementExasol, query, "test long 123"),
@@ -657,7 +657,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @Test
         void testLongOra() throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = VIRTUAL_SCHEMA_ORACLE + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C_LONG FROM " + qualifiedTableName;
                 final SQLException exception = assertThrows(SQLException.class, () -> statementExasol.execute(query));
@@ -670,7 +670,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testDate(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C10 FROM " + qualifiedTableName;
                 assertAll(() -> assertExpressionExecutionDateResult(statementExasol, query, Date.valueOf("2016-08-19")),
@@ -678,7 +678,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
             }
         }
 
-        private void assertExpressionExecutionDateResult(Statement statementExasol, final String query, final Date expected) throws SQLException {
+        private void assertExpressionExecutionDateResult(final Statement statementExasol, final String query, final Date expected) throws SQLException {
             final ResultSet result = statementExasol.executeQuery(query);
             result.next();
             final Date actualResult = result.getDate(1);
@@ -696,7 +696,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         void testTimestampsJdbc(final String columnName, final String expectedColumnValue, final String expectedColumnType) throws SQLException {
             assumeTrue(supportTimestampPrecision());
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
                 final String expectedExplainVirtual = "SELECT TO_TIMESTAMP(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
@@ -720,7 +720,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         void testTimestampsJdbcWithoutTimestampPrecision(final String columnName, final String expectedColumnValue) throws SQLException {
             assumeFalse(supportTimestampPrecision());
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
                 final String expectedExplainVirtual = "SELECT TO_TIMESTAMP(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
@@ -744,7 +744,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         void testTimestampOra(final String columnName, final String expectedColumnValue, final String expectedColumnType) throws SQLException {
             assumeTrue(supportTimestampPrecision());
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 statementExasol.execute("ALTER SESSION SET TIME_ZONE = 'UTC'");
                 final String qualifiedTableName = VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
@@ -767,7 +767,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         void testTimestampOraWithoutTimestampPrecision(final String columnName, final String expectedColumnValue) throws SQLException {
             assumeFalse(supportTimestampPrecision());
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 statementExasol.execute("ALTER SESSION SET TIME_ZONE = 'UTC'");
                 final String qualifiedTableName = VIRTUAL_SCHEMA_ORACLE + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
@@ -779,7 +779,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
             }
         }
 
-        private void assertExpressionExecutionTimestampResult(Statement statementExasol, final String query, final Timestamp expected)
+        private void assertExpressionExecutionTimestampResult(final Statement statementExasol, final String query, final Timestamp expected)
                 throws SQLException {
             final ResultSet result = statementExasol.executeQuery(query);
             result.next();
@@ -791,7 +791,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testIntervalYear(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C16 FROM " + qualifiedTableName;
                 final String expectedExplainVirtual = "SELECT CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
@@ -809,7 +809,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING })
         void testIntervalDay(final String virtualSchemaName) throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT C17 FROM " + qualifiedTableName + " ORDER BY 1";
                 final String expectedExplainVirtual = "SELECT CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
@@ -830,7 +830,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         void testSelectAllTimestampColumns(final String virtualSchemaName, final String expectedColumnValue)
                 throws SQLException {
             try (Connection connection = getExasolConnection();
-                 Statement statementExasol = connection.createStatement()) {
+                    Statement statementExasol = connection.createStatement()) {
                 statementExasol.execute("ALTER SESSION SET TIME_ZONE = 'UTC'");
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_TIMESTAMPS;
                 final String query = "SELECT * FROM " + qualifiedTableName;

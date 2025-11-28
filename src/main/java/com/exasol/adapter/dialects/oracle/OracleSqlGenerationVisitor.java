@@ -7,9 +7,7 @@ import static com.exasol.adapter.sql.ScalarFunction.*;
 import java.util.*;
 
 import com.exasol.adapter.AdapterException;
-import com.exasol.adapter.dialects.AbstractSqlDialect;
-import com.exasol.adapter.dialects.ImportType;
-import com.exasol.adapter.dialects.SqlDialect;
+import com.exasol.adapter.dialects.*;
 import com.exasol.adapter.dialects.rewriting.SqlGenerationContext;
 import com.exasol.adapter.dialects.rewriting.SqlGenerationVisitor;
 import com.exasol.adapter.metadata.DataType;
@@ -196,8 +194,8 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
     private boolean isProjectionColumn(final SqlNode parent) {
         return parent != null
                 && (parent.getType() == SqlNodeType.SELECT_LIST
-                || parent.getType() == SqlNodeType.GROUP_BY
-                || parent.getType() == SqlNodeType.ORDER_BY);
+                        || parent.getType() == SqlNodeType.GROUP_BY
+                        || parent.getType() == SqlNodeType.ORDER_BY);
     }
 
     private String getProjectionString(final SqlColumn column, final String projectionString) throws AdapterException {
@@ -217,17 +215,17 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
         }
     }
 
-    String getTypeName(SqlColumn column) throws AdapterException {
+    String getTypeName(final SqlColumn column) throws AdapterException {
         return getTypeNameFromColumn(column);
     }
 
-    public String castToChar(final String operand, int size) {
+    public String castToChar(final String operand, final int size) {
         return String.format("CAST(TO_CHAR(%s) AS VARCHAR(%d))", operand, size);
     }
 
     private String getNumberProjectionString(final SqlColumn column, final String projectionString,
             final OracleSqlDialect dialect) {
-        int columnSize = getColumnSize(column);
+        final int columnSize = getColumnSize(column);
         if (column.getMetadata().getType().getExaDataType() == DataType.ExaDataType.VARCHAR) {
             return castToChar(projectionString, columnSize);
         } else {
@@ -241,9 +239,9 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
         }
     }
 
-    private int getColumnSize(SqlColumn column) {
-        int size = column.getMetadata().getType().getSize();
-        int precision = column.getMetadata().getType().getPrecision();
+    private int getColumnSize(final SqlColumn column) {
+        final int size = column.getMetadata().getType().getSize();
+        final int precision = column.getMetadata().getType().getPrecision();
         if (size <= 0 && precision <= 0) {
             return MAX_ORACLE_VARCHAR_SIZE;
         }
@@ -315,73 +313,73 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
     public String visit(final SqlFunctionScalar function) throws AdapterException {
         String sql = super.visit(function);
         switch (function.getFunction()) {
-        case LOCATE:
-            sql = getLocate(function);
-            break;
-        case TRIM:
-            sql = getTrim(function);
-            break;
-        case ADD_DAYS:
-        case ADD_HOURS:
-        case ADD_MINUTES:
-        case ADD_SECONDS:
-        case ADD_WEEKS:
-        case ADD_YEARS:
-            sql = getTimeOrDate(function);
-            break;
-        case CURRENT_DATE:
-            sql = "CURRENT_DATE";
-            break;
-        case CURRENT_TIMESTAMP:
-            sql = "CURRENT_TIMESTAMP";
-            break;
-        case DBTIMEZONE:
-            sql = "DBTIMEZONE";
-            break;
-        case LOCALTIMESTAMP:
-            sql = "LOCALTIMESTAMP";
-            break;
-        case SESSIONTIMEZONE:
-            sql = "SESSIONTIMEZONE";
-            break;
-        case SYSDATE:
-            sql = "TO_DATE(SYSDATE)";
-            break;
-        case SYSTIMESTAMP:
-            sql = "SYSTIMESTAMP";
-            break;
-        case BIT_AND:
-            sql = sql.replaceFirst("^BIT_AND", "BITAND");
-            break;
-        case BIT_TO_NUM:
-            sql = sql.replaceFirst("^BIT_TO_NUM", "BIN_TO_NUM");
-            break;
-        case NULLIFZERO:
-            sql = getSqlFunctionScalar(function, "NULLIF(", ", 0)");
-            break;
-        case ZEROIFNULL:
-            sql = getSqlFunctionScalar(function, "NVL(", ", 0)");
-            break;
-        case DIV:
-            sql = getDiv(function);
-            break;
-        case COT:
-            sql = getSqlFunctionScalar(function, "(1 / TAN(", "))");
-            break;
-        case DEGREES:
-            sql = getSqlFunctionScalar(function, "((", ") * 180 / ACOS(-1))");
-            break;
-        case RADIANS:
-            sql = getSqlFunctionScalar(function, "((", ") * ACOS(-1) / 180)");
-            break;
-        case REPEAT:
-            sql = getRepeat(function);
-            break;
-        case REVERSE:
-            sql = getSqlFunctionScalar(function, "REVERSE(TO_CHAR(", "))");
-            break;
-        default:
-            break;
+            case LOCATE:
+                sql = getLocate(function);
+                break;
+            case TRIM:
+                sql = getTrim(function);
+                break;
+            case ADD_DAYS:
+            case ADD_HOURS:
+            case ADD_MINUTES:
+            case ADD_SECONDS:
+            case ADD_WEEKS:
+            case ADD_YEARS:
+                sql = getTimeOrDate(function);
+                break;
+            case CURRENT_DATE:
+                sql = "CURRENT_DATE";
+                break;
+            case CURRENT_TIMESTAMP:
+                sql = "CURRENT_TIMESTAMP";
+                break;
+            case DBTIMEZONE:
+                sql = "DBTIMEZONE";
+                break;
+            case LOCALTIMESTAMP:
+                sql = "LOCALTIMESTAMP";
+                break;
+            case SESSIONTIMEZONE:
+                sql = "SESSIONTIMEZONE";
+                break;
+            case SYSDATE:
+                sql = "TO_DATE(SYSDATE)";
+                break;
+            case SYSTIMESTAMP:
+                sql = "SYSTIMESTAMP";
+                break;
+            case BIT_AND:
+                sql = sql.replaceFirst("^BIT_AND", "BITAND");
+                break;
+            case BIT_TO_NUM:
+                sql = sql.replaceFirst("^BIT_TO_NUM", "BIN_TO_NUM");
+                break;
+            case NULLIFZERO:
+                sql = getSqlFunctionScalar(function, "NULLIF(", ", 0)");
+                break;
+            case ZEROIFNULL:
+                sql = getSqlFunctionScalar(function, "NVL(", ", 0)");
+                break;
+            case DIV:
+                sql = getDiv(function);
+                break;
+            case COT:
+                sql = getSqlFunctionScalar(function, "(1 / TAN(", "))");
+                break;
+            case DEGREES:
+                sql = getSqlFunctionScalar(function, "((", ") * 180 / ACOS(-1))");
+                break;
+            case RADIANS:
+                sql = getSqlFunctionScalar(function, "((", ") * ACOS(-1) / 180)");
+                break;
+            case REPEAT:
+                sql = getRepeat(function);
+                break;
+            case REVERSE:
+                sql = getSqlFunctionScalar(function, "REVERSE(TO_CHAR(", "))");
+                break;
+            default:
+                break;
         }
         return sql;
     }
@@ -441,24 +439,24 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
         }
         builder.append("' ");
         switch (function.getFunction()) {
-        case ADD_DAYS:
-        case ADD_WEEKS:
-            builder.append("DAY");
-            break;
-        case ADD_HOURS:
-            builder.append("HOUR");
-            break;
-        case ADD_MINUTES:
-            builder.append("MINUTE");
-            break;
-        case ADD_SECONDS:
-            builder.append("SECOND");
-            break;
-        case ADD_YEARS:
-            builder.append("YEAR");
-            break;
-        default:
-            break;
+            case ADD_DAYS:
+            case ADD_WEEKS:
+                builder.append("DAY");
+                break;
+            case ADD_HOURS:
+                builder.append("HOUR");
+                break;
+            case ADD_MINUTES:
+                builder.append("MINUTE");
+                break;
+            case ADD_SECONDS:
+                builder.append("SECOND");
+                break;
+            case ADD_YEARS:
+                builder.append("YEAR");
+                break;
+            default:
+                break;
         }
         builder.append(")");
         return builder.toString();
