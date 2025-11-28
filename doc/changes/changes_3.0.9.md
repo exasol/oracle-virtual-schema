@@ -8,6 +8,10 @@ Code name:
 
 * ISSUE_NUMBER: description
 
+## Security
+
+* Fixed CVE-2025-12383 in test dependency `org.glassfish.jersey.core:jersey-client:2.45`
+
 ## Dependency Updates
 
 ### Virtual Schema for Oracle
@@ -29,8 +33,9 @@ Code name:
 * Updated `com.exasol:virtual-schema-common-jdbc:13.0.0` to `13.0.1`
 * Updated `com.exasol:virtual-schema-shared-integration-tests:3.0.1` to `3.0.2`
 * Updated `com.oracle.database.jdbc:ojdbc8:23.7.0.25.01` to `23.26.0.0.0`
-* Updated `io.netty:netty-common:4.1.118.Final` to `4.2.7.Final`
+* Removed `io.netty:netty-common:4.1.118.Final`
 * Updated `nl.jqno.equalsverifier:equalsverifier:3.19` to `3.19.4`
+* Added `org.glassfish.jersey.core:jersey-client:2.47`
 * Updated `org.jacoco:org.jacoco.agent:0.8.13` to `0.8.14`
 * Updated `org.junit.jupiter:junit-jupiter-api:5.13.1` to `5.14.1`
 * Updated `org.junit.jupiter:junit-jupiter-params:5.13.1` to `5.14.1`

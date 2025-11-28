@@ -151,11 +151,11 @@
             <version>0.5.16</version>
             <scope>test</scope>
         </dependency>
-        <!-- update transitive dependency com.exasol:extension-manager-client-java to fix vulnerability CVE-2024-47535 -->
+        <!-- Update transitive dependency of extension-manager-integration-test-java to fix CVE-2025-12383, see https://github.com/exasol/extension-manager/issues/195 -->
         <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-common</artifactId>
-            <version>4.2.7.Final</version>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>2.47</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
