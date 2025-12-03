@@ -253,26 +253,6 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
     }
 
     @Override
-    public String visit(final SqlLiteralExactnumeric literal) {
-        final String literalString = super.visit(literal);
-        return transformString(literalString, literal.hasParent(), literal.getParent());
-    }
-
-    private String transformString(final String literalString, final boolean b, final SqlNode parent) {
-        final boolean isProjectionColumn = (b && isProjectionColumn(parent));
-        if (isProjectionColumn) {
-            return castToChar(literalString, MAX_ORACLE_VARCHAR_SIZE);
-        }
-        return literalString;
-    }
-
-    @Override
-    public String visit(final SqlLiteralDouble literal) {
-        final String literalString = super.visit(literal);
-        return transformString(literalString, literal.hasParent(), literal.getParent());
-    }
-
-    @Override
     public String visit(final SqlFunctionAggregateGroupConcat function) throws AdapterException {
         final StringBuilder builder = new StringBuilder();
         builder.append("LISTAGG");

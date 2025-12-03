@@ -1,32 +1,24 @@
 package com.exasol.adapter.dialects.oracle;
 
 import static com.exasol.adapter.dialects.oracle.OracleProperties.*;
+import static java.util.Collections.emptyList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Mockito.lenient;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.sql.*;
+import java.util.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentMatchers;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.exasol.ExaMetadata;
 import com.exasol.adapter.AdapterException;
 import com.exasol.adapter.AdapterProperties;
-import com.exasol.adapter.dialects.QueryRewriter;
-import com.exasol.adapter.dialects.SqlDialect;
-import com.exasol.adapter.dialects.SqlDialectFactory;
+import com.exasol.adapter.dialects.*;
 import com.exasol.adapter.dialects.rewriting.AbstractQueryRewriterTestBase;
 import com.exasol.adapter.jdbc.ConnectionFactory;
 import com.exasol.adapter.metadata.DataType;
@@ -55,7 +47,7 @@ public class OracleQueryRewriterTest extends AbstractQueryRewriterTestBase {
         final SqlDialect dialect = dialectFactory.createSqlDialect(connectionFactoryMock, properties, null);
         final QueryRewriter queryRewriter = new OracleQueryRewriter(dialect, null, properties);
         assertThat(queryRewriter.rewrite(this.statement, EMPTY_SELECT_LIST_DATA_TYPES, EXA_METADATA, properties),
-                equalTo("IMPORT FROM ORA AT ora_connection STATEMENT 'SELECT CAST(TO_CHAR(1) AS VARCHAR(4000)) FROM \"DUAL\"'"));
+                equalTo("IMPORT FROM ORA AT ora_connection STATEMENT 'SELECT 1 FROM \"DUAL\"'"));
     }
 
     @Test
@@ -70,7 +62,22 @@ public class OracleQueryRewriterTest extends AbstractQueryRewriterTestBase {
         final var oracleMetadataReader = new OracleMetadataReader(mockConnection(), properties, exaMetadataMock);
         final QueryRewriter queryRewriter = new OracleQueryRewriter(dialect, oracleMetadataReader, properties);
         assertThat(queryRewriter.rewrite(this.statement, List.of(DataType.createDecimal(18, 0)), EXA_METADATA, properties),
-                equalTo("IMPORT INTO (c1 DECIMAL(18, 0)) FROM ORA AT ora_connection STATEMENT 'SELECT CAST(TO_CHAR(1) AS VARCHAR(4000)) FROM \"DUAL\"'"));
+                equalTo("IMPORT INTO (c1 DECIMAL(18, 0)) FROM ORA AT ora_connection STATEMENT 'SELECT 1 FROM \"DUAL\"'"));
+    }
+
+    @Test
+    void testRewriteToImportFromOraOmitsINTOForEmptySelectListDataTypes(
+            @Mock final ConnectionFactory connectionFactoryMock) throws AdapterException, SQLException {
+        final AdapterProperties properties = new AdapterProperties(Map.of(
+                ORACLE_IMPORT_PROPERTY, "true",
+                ORACLE_CONNECTION_NAME_PROPERTY, "ora_connection", GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI_PROPERTY,
+                "true"));
+        final SqlDialectFactory dialectFactory = new OracleSqlDialectFactory();
+        final SqlDialect dialect = dialectFactory.createSqlDialect(connectionFactoryMock, properties, null);
+        final var oracleMetadataReader = new OracleMetadataReader(mockConnection(), properties, exaMetadataMock);
+        final QueryRewriter queryRewriter = new OracleQueryRewriter(dialect, oracleMetadataReader, properties);
+        assertThat(queryRewriter.rewrite(this.statement, emptyList(), EXA_METADATA, properties),
+                equalTo("IMPORT FROM ORA AT ora_connection STATEMENT 'SELECT 1 FROM \"DUAL\"'"));
     }
 
     @Override

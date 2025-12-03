@@ -10,9 +10,7 @@ import com.exasol.adapter.AdapterException;
 import com.exasol.adapter.AdapterProperties;
 import com.exasol.adapter.dialects.SqlDialect;
 import com.exasol.adapter.dialects.SqlGenerator;
-import com.exasol.adapter.dialects.rewriting.AbstractQueryRewriter;
-import com.exasol.adapter.dialects.rewriting.SqlGenerationContext;
-import com.exasol.adapter.dialects.rewriting.SqlGenerationHelper;
+import com.exasol.adapter.dialects.rewriting.*;
 import com.exasol.adapter.jdbc.RemoteMetadataReader;
 import com.exasol.adapter.metadata.DataType;
 import com.exasol.adapter.properties.DataTypeDetection;
@@ -32,7 +30,7 @@ public class OracleQueryRewriter extends AbstractQueryRewriter {
      *
      * @param dialect              Oracle SQl dialect
      * @param remoteMetadataReader reader for metadata from the remote data source
-     * @param properties adapter properties
+     * @param properties           adapter properties
      */
     public OracleQueryRewriter(final SqlDialect dialect, final RemoteMetadataReader remoteMetadataReader, AdapterProperties properties) {
         super(dialect, remoteMetadataReader, new OracleConnectionDefinitionBuilder());
@@ -43,7 +41,6 @@ public class OracleQueryRewriter extends AbstractQueryRewriter {
         return this.properties.isEnabled(OracleProperties.GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI_PROPERTY);
     }
 
-
     @Override
     protected String generateImportStatement(String connectionDefinition, String pushdownQuery) throws SQLException {
         return generateImportStatement(connectionDefinition, null, pushdownQuery);
@@ -51,8 +48,8 @@ public class OracleQueryRewriter extends AbstractQueryRewriter {
 
     @Override
     protected String generateImportStatement(final String connectionDefinition,
-                                             List<DataType> selectListDataTypes, final String pushdownQuery) {
-        if (isGenerateJdbcDatatypeMappingForOCIEnabled()) {
+            final List<DataType> selectListDataTypes, final String pushdownQuery) {
+        if (isGenerateJdbcDatatypeMappingForOCIEnabled() && !selectListDataTypes.isEmpty()) {
             final String columnDescription = this.createImportColumnsDescription(selectListDataTypes);
             return "IMPORT INTO (" + columnDescription + ") FROM ORA " + connectionDefinition + " STATEMENT '" + pushdownQuery.replace("'", "''") + "'";
         } else {
@@ -62,7 +59,7 @@ public class OracleQueryRewriter extends AbstractQueryRewriter {
 
     @Override
     public String rewrite(final SqlStatement statement, final List<DataType> selectListDataTypes,
-                          final ExaMetadata exaMetadata, final AdapterProperties properties)
+            final ExaMetadata exaMetadata, final AdapterProperties properties)
             throws AdapterException {
         final String pushdownQuery = buildPushdownQuery(statement, properties);
         final ExaConnectionInformation exaConnectionInformation = getConnectionInformation(exaMetadata,
@@ -72,12 +69,12 @@ public class OracleQueryRewriter extends AbstractQueryRewriter {
 
         if (DataTypeDetection.from(properties).getStrategy() == DataTypeDetection.Strategy.EXASOL_CALCULATED) {
             String importStatement = generateImportStatement(connectionDefinition, selectListDataTypes,
-                        pushdownQuery);
+                    pushdownQuery);
             LOGGER.finer(() -> "Import push-down statement:\n" + importStatement);
             return importStatement;
         } else {
             throw new AdapterException(ExaError.messageBuilder("E-VSORA-10").message(
-                            "Property `IMPORT_DATA_TYPES` value 'FROM_RESULT_SET' is no longer supported.")
+                    "Property `IMPORT_DATA_TYPES` value 'FROM_RESULT_SET' is no longer supported.")
                     .mitigation("Please remove the `IMPORT_DATA_TYPES` property from the virtual schema so the default value 'EXASOL_CALCULATED' is used.")
                     .toString());
         }
