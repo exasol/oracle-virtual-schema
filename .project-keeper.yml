@@ -13,7 +13,7 @@ version:
   fromSource: pom.xml
 build:
   runnerOs: ubuntu-24.04
-  freeDiskSpace: false
+  freeDiskSpace: true
   exasolDbVersions:
     - "2025.1.3"
     - "8.29.12" # Added to test support for TIMESTAMP without nano precision. Remove if/when 7.1 is re-enabled
