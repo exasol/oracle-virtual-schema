@@ -25,7 +25,6 @@ Code name:
 #### Test Dependency Updates
 
 * Updated `com.exasol:exasol-testcontainers:7.1.7` to `7.2.0`
-* Updated `com.exasol:extension-manager-integration-test-java:0.5.15` to `0.5.16`
 * Updated `com.exasol:hamcrest-resultset-matcher:1.7.0` to `1.7.2`
 * Updated `com.exasol:maven-project-version-getter:1.2.1` to `1.2.2`
 * Updated `com.exasol:test-db-builder-java:3.6.0` to `3.6.4`

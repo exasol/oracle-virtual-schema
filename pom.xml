@@ -148,7 +148,8 @@
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>extension-manager-integration-test-java</artifactId>
-            <version>0.5.16</version>
+            <!-- Can't upgrade extension dependencies because of https://github.com/exasol/project-keeper/issues/701 -->
+            <version>0.5.15</version>
             <scope>test</scope>
         </dependency>
         <!-- Update transitive dependency of extension-manager-integration-test-java to fix CVE-2025-12383, see https://github.com/exasol/extension-manager/issues/195 -->
