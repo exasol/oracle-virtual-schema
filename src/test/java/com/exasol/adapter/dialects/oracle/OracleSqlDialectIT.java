@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeoutException;
 
 import org.hamcrest.MatcherAssert;
@@ -31,6 +32,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
 
     @BeforeAll
     static void beforeAll() throws SQLException, BucketAccessException, TimeoutException, IOException {
+        Locale.setDefault(Locale.US);
         initAllTables();
     }
 
@@ -51,11 +53,11 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         try (Connection connection = getExasolConnection();
                 Statement statementExasol = connection.createStatement()) {
             final String qualifiedTableName = schema + "." + TABLE_ORACLE_NUMBER_HANDLING;
-            final String query = "select 2, to_number(3), 1.23, 1.23e1, 'abc', true, DATE '2024-01-23', TIMESTAMP '2024-01-01 00:00:00.123456789', null, INTERVAL '5' DAY from "
+            final String query = "select 1 as column_name, 2, to_number(3), 1.23, 1.23e1, 'abc', true, DATE '2024-01-23', TIMESTAMP '2024-01-01 00:00:00.123456789', null, INTERVAL '5' DAY from "
                     + qualifiedTableName;
             assertThat(getActualResultSet(statementExasol, query),
-                    table("SMALLINT", "SMALLINT", "DECIMAL", "DECIMAL", "CHAR", "BOOLEAN", "DATE", "TIMESTAMP", "BOOLEAN", "INTERVAL DAY TO SECOND")
-                            .row((short) 2, (short) 3, new BigDecimal("1.23"), new BigDecimal("12.3"), "abc", true,
+                    table("SMALLINT", "SMALLINT", "SMALLINT", "DECIMAL", "DECIMAL", "CHAR", "BOOLEAN", "DATE", "TIMESTAMP", "BOOLEAN", "INTERVAL DAY TO SECOND")
+                            .row((short) 1, (short) 2, (short) 3, new BigDecimal("1.23"), new BigDecimal("12.3"), "abc", true,
                                     Date.valueOf("2024-01-23"), Timestamp.valueOf("2024-01-01 00:00:00.123456789"), null, "+05 00:00:00.000")
                             .matches());
         }
