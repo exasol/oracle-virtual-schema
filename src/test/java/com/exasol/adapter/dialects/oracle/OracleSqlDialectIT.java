@@ -47,12 +47,17 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
     @ParameterizedTest
     @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE,
             VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
-    void testFixedColumn(final String schema) throws SQLException {
+    void testLiteralColumns(final String schema) throws SQLException {
         try (Connection connection = getExasolConnection();
                 Statement statementExasol = connection.createStatement()) {
             final String qualifiedTableName = schema + "." + TABLE_ORACLE_NUMBER_HANDLING;
-            final String query = "select 0 as c1 from " + qualifiedTableName;
-            assertThat(getActualResultSet(statementExasol, query), table("SMALLINT").row((short) 0).matches());
+            final String query = "select 2, to_number(3), 1.23, 1.23e1, 'abc', true, DATE '2024-01-23', TIMESTAMP '2024-01-01 00:00:00.123456789', null, INTERVAL '5' DAY from "
+                    + qualifiedTableName;
+            assertThat(getActualResultSet(statementExasol, query),
+                    table("SMALLINT", "SMALLINT", "DECIMAL", "DECIMAL", "CHAR", "BOOLEAN", "DATE", "TIMESTAMP", "BOOLEAN", "INTERVAL DAY TO SECOND")
+                            .row((short) 2, (short) 3, new BigDecimal("1.23"), new BigDecimal("12.3"), "abc", true,
+                                    Date.valueOf("2024-01-23"), Timestamp.valueOf("2024-01-01 00:00:00.123456789"), null, "+05 00:00:00.000")
+                            .matches());
         }
     }
 
