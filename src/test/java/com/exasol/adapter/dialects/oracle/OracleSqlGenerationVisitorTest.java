@@ -6,14 +6,11 @@ import static com.exasol.adapter.sql.ScalarFunction.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.lenient;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,9 +28,7 @@ import com.exasol.adapter.adapternotes.ColumnAdapterNotes;
 import com.exasol.adapter.adapternotes.ColumnAdapterNotesJsonConverter;
 import com.exasol.adapter.dialects.SqlDialect;
 import com.exasol.adapter.dialects.rewriting.SqlGenerationContext;
-import com.exasol.adapter.metadata.ColumnMetadata;
-import com.exasol.adapter.metadata.DataType;
-import com.exasol.adapter.metadata.TableMetadata;
+import com.exasol.adapter.metadata.*;
 import com.exasol.adapter.sql.*;
 import com.exasol.sql.SqlNormalizer;
 
@@ -150,7 +145,7 @@ class OracleSqlGenerationVisitorTest {
         final SqlSelectList selectList = SqlSelectList.createAnyValueSelectList();
         final SqlLiteralExactnumeric literalExactnumeric = new SqlLiteralExactnumeric(new BigDecimal("5.9"));
         literalExactnumeric.setParent(selectList);
-        assertThat(this.visitor.visit(literalExactnumeric), equalTo("CAST(TO_CHAR(5.9) AS VARCHAR(4000))"));
+        assertThat(this.visitor.visit(literalExactnumeric), equalTo("5.9"));
     }
 
     @Test
@@ -164,7 +159,7 @@ class OracleSqlGenerationVisitorTest {
         final SqlSelectList selectList = SqlSelectList.createAnyValueSelectList();
         final SqlLiteralDouble literalDouble = new SqlLiteralDouble(10.6);
         literalDouble.setParent(selectList);
-        assertThat(this.visitor.visit(literalDouble), equalTo("CAST(TO_CHAR(1.06E1) AS VARCHAR(4000))"));
+        assertThat(this.visitor.visit(literalDouble), equalTo("1.06E1"));
     }
 
     @Test

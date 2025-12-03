@@ -1,8 +1,10 @@
 package com.exasol.adapter.dialects.oracle;
 
+import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.ORACLE_CONTAINER_NAME;
+
 import java.sql.*;
+import java.time.Duration;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 import org.testcontainers.containers.OracleContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -16,12 +18,17 @@ import org.testcontainers.utility.DockerImageName;
  * https://github.com/gvenzl/oci-oracle-xe/issues/41
  */
 public class OracleContainerDBA extends OracleContainer {
-    public OracleContainerDBA(final String dockerImageName) {
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(120);
+
+    private OracleContainerDBA(final String dockerImageName) {
         super(DockerImageName.parse(dockerImageName));
-        withReuse(true);
     }
 
-    int connectTimeoutSeconds = 120;
+    public static OracleContainerDBA startDbaContainer() {
+        final OracleContainerDBA container = new OracleContainerDBA(ORACLE_CONTAINER_NAME);
+        container.withReuse(true);
+        return container;
+    }
 
     // Code smell but also how it's done in the class it's inheriting from.
     // Finding a more novel approach isn't the goal here.
@@ -39,7 +46,7 @@ public class OracleContainerDBA extends OracleContainer {
         try {
             final long start = System.currentTimeMillis();
 
-            while ((System.currentTimeMillis() < (start + TimeUnit.SECONDS.toMillis(this.connectTimeoutSeconds)))
+            while ((System.currentTimeMillis() < (start + CONNECT_TIMEOUT.toMillis()))
                     && this.isRunning()) {
                 try {
                     return jdbcDriverInstance.connect(url, info);

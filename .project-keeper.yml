@@ -13,10 +13,10 @@ version:
   fromSource: pom.xml
 build:
   runnerOs: ubuntu-24.04
-  freeDiskSpace: false
+  freeDiskSpace: true
   exasolDbVersions:
-    - "8.34.0"
-    - "8.29.9" # Added to test support for TIMESTAMP without nano precision. Remove if/when 7.1 is re-enabled
+    - "2025.1.3"
+    - "8.29.12" # Added to test support for TIMESTAMP without nano precision. Remove if/when 7.1 is re-enabled
   # - "7.1.30" # Exasol 7.1.x does not yet support the latest Ubuntu version
   workflows:
     - name: ci-build.yml
@@ -29,4 +29,6 @@ build:
             id: fix-vm-crash
             run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 excludes:
-  - "E-PK-CORE-17: Missing required file: 'release_config.yml'"
+  # Avoid large diff caused by different formatter settings
+  - "E-PK-CORE-18: Outdated content: '.settings/org.eclipse.jdt.ui.prefs'"
+  - "E-PK-CORE-18: Outdated content: '.settings/org.eclipse.jdt.core.prefs'"

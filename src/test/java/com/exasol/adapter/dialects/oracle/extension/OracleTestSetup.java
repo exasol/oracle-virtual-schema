@@ -5,7 +5,6 @@ import java.sql.SQLException;
 
 import org.testcontainers.containers.JdbcDatabaseContainer.NoDriverFoundException;
 
-import com.exasol.adapter.dialects.oracle.IntegrationTestConstants;
 import com.exasol.adapter.dialects.oracle.OracleContainerDBA;
 import com.exasol.dbbuilder.dialects.Schema;
 import com.exasol.dbbuilder.dialects.oracle.OracleObjectFactory;
@@ -21,7 +20,7 @@ class OracleTestSetup implements AutoCloseable {
     }
 
     public static OracleTestSetup start() {
-        final OracleContainerDBA container = new OracleContainerDBA(IntegrationTestConstants.ORACLE_CONTAINER_NAME);
+        final OracleContainerDBA container = OracleContainerDBA.startDbaContainer();
         container.start();
         final Connection connection = createConnection(container);
         return new OracleTestSetup(container, connection);

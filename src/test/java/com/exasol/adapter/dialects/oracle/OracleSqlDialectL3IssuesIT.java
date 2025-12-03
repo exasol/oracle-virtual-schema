@@ -14,9 +14,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeoutException;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -34,7 +32,7 @@ public class OracleSqlDialectL3IssuesIT extends CommonOracleIntegrationTestSetup
         setupExasolContainer();
     }
 
-    private static void createOracleTableNumericAndTimestamp(Statement statementOracle) throws SQLException {
+    private static void createOracleTableNumericAndTimestamp(final Statement statementOracle) throws SQLException {
         final String qualifiedTableName = SCHEMA_ORACLE + "." + TABLE_ORACLE_ALL_DATA_TYPES;
         statementOracle.execute("CREATE TABLE " + qualifiedTableName + " (" //
                 + "num10 number(10),	" //
@@ -60,7 +58,7 @@ public class OracleSqlDialectL3IssuesIT extends CommonOracleIntegrationTestSetup
             VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
     void testToNumberTwice(final String virtualSchemaName) throws SQLException {
         try (Connection connection = getExasolConnection();
-             Statement statementExasol = connection.createStatement()) {
+                Statement statementExasol = connection.createStatement()) {
             final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT to_number(num10), to_number(num10) FROM " + qualifiedTableName;
             final String expectedExplainVirtualImport = "IMPORT INTO (c1 DECIMAL(10, 0), c2 DECIMAL(10, 0)) FROM ";
@@ -81,11 +79,10 @@ public class OracleSqlDialectL3IssuesIT extends CommonOracleIntegrationTestSetup
     @CsvSource(value = { "VIRTUAL_SCHEMA_JDBC | VARCHAR(38) UTF8", //
             "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING | VARCHAR(38) UTF8", //
             "VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL | DECIMAL(36,1)", //
-            "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING | DECIMAL(36,1)" }
-            , delimiter = '|')
-    void testToNumberTwiceAndCheckOrder(final String virtualSchemaName, String expectedNum38Type) throws SQLException {
+            "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING | DECIMAL(36,1)" }, delimiter = '|')
+    void testToNumberTwiceAndCheckOrder(final String virtualSchemaName, final String expectedNum38Type) throws SQLException {
         try (Connection connection = getExasolConnection();
-             Statement statementExasol = connection.createStatement()) {
+                Statement statementExasol = connection.createStatement()) {
             final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT to_number(num10), to_number(num38), to_number(num10), to_number(num38) FROM " + qualifiedTableName;
             assertAll(
@@ -99,10 +96,11 @@ public class OracleSqlDialectL3IssuesIT extends CommonOracleIntegrationTestSetup
     }
 
     @ParameterizedTest
-    @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
+    @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL,
+            VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
     void testToChar(final String virtualSchemaName) throws SQLException {
         try (Connection connection = getExasolConnection();
-             Statement statementExasol = connection.createStatement()) {
+                Statement statementExasol = connection.createStatement()) {
             final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT to_char(num10) FROM " + qualifiedTableName;
             assertAll(
@@ -115,7 +113,7 @@ public class OracleSqlDialectL3IssuesIT extends CommonOracleIntegrationTestSetup
     @Test
     void testCurrentTimestamp() throws SQLException {
         try (Connection connection = getExasolConnection();
-             Statement statementExasol = connection.createStatement()) {
+                Statement statementExasol = connection.createStatement()) {
             final String qualifiedTableName = VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT current_timestamp FROM " + qualifiedTableName;
             final Timestamp currentTime = new Timestamp(System.currentTimeMillis());
@@ -127,7 +125,7 @@ public class OracleSqlDialectL3IssuesIT extends CommonOracleIntegrationTestSetup
     @Test
     void testToCharAndCurrentTimestamp() throws SQLException {
         try (Connection connection = getExasolConnection();
-             Statement statementExasol = connection.createStatement()) {
+                Statement statementExasol = connection.createStatement()) {
             final String qualifiedTableName = VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT to_char(num10), to_char(varchar20), current_timestamp FROM " + qualifiedTableName;
             final Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
@@ -146,7 +144,7 @@ public class OracleSqlDialectL3IssuesIT extends CommonOracleIntegrationTestSetup
     @Test
     void testDateAndTimestamp() throws SQLException, ParseException {
         try (Connection connection = getExasolConnection();
-             Statement statementExasol = connection.createStatement()) {
+                Statement statementExasol = connection.createStatement()) {
             final String qualifiedTableName = VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT dates, timestamps FROM " + qualifiedTableName;
 
@@ -157,16 +155,16 @@ public class OracleSqlDialectL3IssuesIT extends CommonOracleIntegrationTestSetup
                     + " FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES;
 
             // Oracle TO_DATE('12/06/2025 08:05:44', 'DD/MM/YYYY HH24:MI:SS')
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-            java.util.Date parsedDate = dateFormat.parse("12/06/2025 08:05:44");
-            Timestamp timestamp1 = new Timestamp(parsedDate.getTime());
+            final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+            final java.util.Date parsedDate = dateFormat.parse("12/06/2025 08:05:44");
+            final Timestamp timestamp1 = new Timestamp(parsedDate.getTime());
 
             // Oracle TO_TIMESTAMP('12/06/2025 08:07:09,576581','DD/MM/YYYY HH24:MI:SS,FF')
-            String oracleTimestampString = "12/06/2025 08:07:09.576581";
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss.SSSSSS");
+            final String oracleTimestampString = "12/06/2025 08:07:09.576581";
+            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss.SSSSSS");
 
-            LocalDateTime localDateTime = LocalDateTime.parse(oracleTimestampString, formatter);
-            Timestamp timestamp2 = Timestamp.valueOf(localDateTime);
+            final LocalDateTime localDateTime = LocalDateTime.parse(oracleTimestampString, formatter);
+            final Timestamp timestamp2 = Timestamp.valueOf(localDateTime);
 
             assertAll(
                     () -> assertTimestampResults(statementExasol, query, timestamp1, timestamp2),
@@ -175,11 +173,11 @@ public class OracleSqlDialectL3IssuesIT extends CommonOracleIntegrationTestSetup
         }
     }
 
-    protected static void assertTimestampAndStringResults(Statement statementExasol,
-                                                          final String query,
-                                                          Timestamp expectedTimestamp,
-                                                          final String expectedString1,
-                                                          final String expectedString2)
+    protected static void assertTimestampAndStringResults(final Statement statementExasol,
+            final String query,
+            final Timestamp expectedTimestamp,
+            final String expectedString1,
+            final String expectedString2)
             throws SQLException {
         final ResultSet result = statementExasol.executeQuery(query);
         result.next();

@@ -48,7 +48,7 @@ The SQL statement below creates the adapter script, defines the Java class that 
 ```sql
 CREATE JAVA ADAPTER SCRIPT ADAPTER.JDBC_ADAPTER AS
   %scriptclass com.exasol.adapter.RequestDispatcher;
-  %jar /buckets/<BFS service>/<bucket>/virtual-schema-dist-13.0.0-oracle-3.0.8.jar;
+  %jar /buckets/<BFS service>/<bucket>/virtual-schema-dist-13.0.1-oracle-4.0.0.jar;
   %jar /buckets/<BFS service>/<bucket>/ojdbc<JDBC driver version>.jar;
 /
 ;
@@ -86,7 +86,7 @@ CREATE VIRTUAL SCHEMA <virtual schema name>
 
 See also [Adapter Properties for JDBC-Based Virtual Schemas](https://github.com/exasol/virtual-schema-common-jdbc#adapter-properties-for-jdbc-based-virtual-schemas).
 
-## Using IMPORT FROM ORA Instead of IMPORT FROM JDBC
+## Using `IMPORT FROM ORA` Instead of `IMPORT FROM JDBC`
 
 Exasol provides the `IMPORT FROM ORA` command for loading data from Oracle. It is possible to create a virtual schema that uses `IMPORT FROM ORA` instead of JDBC to communicate with Oracle. Both options are intended to support the same features. `IMPORT FROM ORA` almost always offers better performance since it is implemented natively.
 
@@ -94,7 +94,7 @@ This behavior is toggled by the boolean `IMPORT_FROM_ORA` variable. Note that a 
 
 ### Deploying the Oracle Instant Client
 
-To be able to communicate with Oracle, you first need to supply Exasol with the Oracle Instant Client, which can be obtained [directly from Oracle](http://www.oracle.com/technetwork/database/database-technologies/instant-client/overview/index.html). Open EXAoperation, visit Software -> "Upload Oracle Instant Client" and select the downloaded package. The latest version of Oracle Instant Client we tested is `instantclient-basic-linux.x64-12.1.0.2.0`.
+To be able to communicate with Oracle, you first need to supply Exasol with the Oracle Instant Client, which can be obtained [directly from Oracle](http://www.oracle.com/technetwork/database/database-technologies/instant-client/overview/index.html). Open EXAoperation, visit Software -> "Upload Oracle Instant Client" and select the downloaded package. The latest version of Oracle Instant Client we tested is `instantclient-basic-linux.x64-23.5.0.24.07`.
 
 ### Creating an Oracle Connection
 
@@ -155,11 +155,15 @@ Example:
 
 Before
 
-`IMPORT FROM ORA AT ORACLE_CON STATEMENT ...`
+```sql
+IMPORT FROM ORA AT ORACLE_CON STATEMENT ...
+```
 
 After setting `GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI` to `true`
 
-`IMPORT INTO(c1 DECIMAL(36,1), c2 .... )   FROM ORA AT ORACLE_CON STATEMENT ...`
+```sql
+IMPORT INTO(c1 DECIMAL(36,1), c2 .... ) FROM ORA AT ORACLE_CON STATEMENT ...
+```
 
 ## Supported Capabilities
 
@@ -198,12 +202,12 @@ The Oracle dialect does not support all capabilities. A complete list can be fou
 
 `NUMBER` and `NUMBER with precision > 36` are casted to `VARCHAR` to prevent a loss of precision.
 
-If you want to return a DECIMAL type for these types you can set the property `ORACLE_CAST_NUMBER_TO_DECIMAL_WITH_PRECISION_AND_SCALE` to `<precision>,<scale>`.
+If you want to return a `DECIMAL` type for these types you can set the property `ORACLE_CAST_NUMBER_TO_DECIMAL_WITH_PRECISION_AND_SCALE` to `<precision>,<scale>`.
 This will cast values of such types to `DECIMAL(<precision>,<scale>)`.
 
 For example:
 
-```java
+```sql
 CREATE VIRTUAL SCHEMA <virtual schema name>
     USING ADAPTER.JDBC_ADAPTER
     WITH
@@ -214,15 +218,17 @@ CREATE VIRTUAL SCHEMA <virtual schema name>
     ORA_CONNECTION_NAME = 'ORA_CONNECTION';
 ```
 
-Keep in mind that this will yield errors if the data in the Oracle database does not fit into the specified DECIMAL type.
+Keep in mind that this will yield errors if the data in the Oracle database does not fit into the specified `DECIMAL` type.
 
 ## Testing information
 
 In the following matrix you find combinations of JDBC driver and dialect version that we tested.
 
-| Virtual Schema Version | Oracle Version     | Driver Name               | Driver Version |
-|------------------------|--------------------|---------------------------|----------------|
-| 2.0.0                  | Oracle XE 11g      | ojdbc8                    | 19.3.0.0       |
-| 2.0.0                  | Oracle XE 11g      | instantclient-basic-linux | x64-12.1.0.2.0 |
-| 2.4.2                  | Oracle XE 21c      | ojdbc8                    | 23.3.0.23.09   |
-| 2.4.2                  | Oracle XE 21c      | instantclient-basic-linux | x64-12.1.0.2.0 |
+| Virtual Schema Version | Oracle Version     | Driver Name               | Driver Version   |
+|------------------------|--------------------|---------------------------|------------------|
+| 2.0.0                  | Oracle XE 11g      | ojdbc8                    | 19.3.0.0         |
+| 2.0.0                  | Oracle XE 11g      | instantclient-basic-linux | x64-12.1.0.2.0   |
+| 2.4.2                  | Oracle XE 21c      | ojdbc8                    | 23.3.0.23.09     |
+| 2.4.2                  | Oracle XE 21c      | instantclient-basic-linux | x64-12.1.0.2.0   |
+| 4.0.0                  | Oracle XE 21c      | ojdbc8                    | 23.26.0.0.0      |
+| 4.0.0                  | Oracle XE 21c      | instantclient-basic-linux | x64-23.5.0.24.07 |

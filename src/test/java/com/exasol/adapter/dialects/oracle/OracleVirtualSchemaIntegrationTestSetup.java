@@ -5,17 +5,11 @@ import static com.exasol.dbbuilder.dialects.exasol.AdapterScript.Language.JAVA;
 
 import java.io.Closeable;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.nio.file.Path;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+import java.sql.*;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
 
 import org.testcontainers.containers.GenericContainer;
@@ -36,11 +30,11 @@ import com.github.dockerjava.api.model.ContainerNetwork;
 public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
     private static final String SCHEMA_EXASOL = "SCHEMA_EXASOL";
     private static final String ADAPTER_SCRIPT_EXASOL = "ADAPTER_SCRIPT_EXASOL";
-    private static final String ORACLE_CONTAINER_NAME = IntegrationTestConstants.ORACLE_CONTAINER_NAME;
     private static final String ORACLE_JDBC_DRIVER_NAME = "ojdbc8.jar";
 
     private final Statement oracleStatement;
-    private final OracleContainerDBA oracleContainer = new OracleContainerDBA(ORACLE_CONTAINER_NAME);
+    private final OracleContainerDBA oracleContainer = OracleContainerDBA.startDbaContainer();
+    @SuppressWarnings("resource") // Will be closed in close()
     private final ExasolContainer<? extends ExasolContainer<?>> exasolContainer = new ExasolContainer<>(EXASOL_VERSION)
             .withRequiredServices(ExasolService.BUCKETFS, ExasolService.UDF).withReuse(true);
     private final Connection exasolConnection;
@@ -119,7 +113,7 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
     }
 
     public VirtualSchema createVirtualSchema(final String forOracleSchema,
-                                             final Map<String, String> additionalProperties) {
+            final Map<String, String> additionalProperties) {
 
         final Map<String, String> properties = new HashMap<>(Map.of("SCHEMA_NAME", forOracleSchema));
         properties.putAll(additionalProperties);
@@ -133,7 +127,7 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         try {
             this.exasolStatement.close();
             this.exasolConnection.close();
@@ -156,17 +150,17 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
      * <p>
      * This method supports two environments:
      * <ul>
-     *     <li><b>CI environments (e.g., GitHub Actions):</b> It retrieves the Docker gateway IP address
-     *         from the Exasol container's network settings.</li>
-     *     <li><b>Local macOS environments:</b> If the environment variable {@code LOCAL_MACOS_ENV=true}
-     *         is set, it attempts to find the first available non-loopback IPv4 address of the local machine.</li>
+     * <li><b>CI environments (e.g., GitHub Actions):</b> It retrieves the Docker gateway IP address
+     * from the Exasol container's network settings.</li>
+     * <li><b>Local macOS environments:</b> If the environment variable {@code LOCAL_MACOS_ENV=true}
+     * is set, it attempts to find the first available non-loopback IPv4 address of the local machine.</li>
      * </ul>
      *
      * @param container the running Exasol container used to access network configuration
      * @return the IP address as seen from inside the Exasol container, or {@code null} if it cannot be determined
      */
-    public static String getTestHostIpFromInsideExasol(GenericContainer<?> container) {
-        String localMacosEnv = System.getenv("LOCAL_MACOS_ENV");
+    public static String getTestHostIpFromInsideExasol(final GenericContainer<?> container) {
+        final String localMacosEnv = System.getenv("LOCAL_MACOS_ENV");
 
         if (localMacosEnv == null || !localMacosEnv.equalsIgnoreCase("true")) {
             // This works inside GitHub Actions container environment
@@ -178,18 +172,18 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
         } else {
             // Fallback for local machine: find a non-loopback IPv4 address
             try {
-                Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
-                for (NetworkInterface netint : Collections.list(nets)) {
+                final Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
+                for (final NetworkInterface netint : Collections.list(nets)) {
                     if (netint.isUp() && !netint.isLoopback()) {
-                        Enumeration<InetAddress> inetAddresses = netint.getInetAddresses();
-                        for (InetAddress inetAddress : Collections.list(inetAddresses)) {
+                        final Enumeration<InetAddress> inetAddresses = netint.getInetAddresses();
+                        for (final InetAddress inetAddress : Collections.list(inetAddresses)) {
                             if (!inetAddress.isLoopbackAddress() && inetAddress instanceof java.net.Inet4Address) {
                                 return inetAddress.getHostAddress();
                             }
                         }
                     }
                 }
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 throw new IllegalStateException("Failed to determine local host IP address in macOS environment", e);
             }
             // If everything fails, return null or throw

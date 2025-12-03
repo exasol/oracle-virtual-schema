@@ -8,16 +8,12 @@ import static org.hamcrest.Matchers.containsString;
 import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.*;
 
 import com.exasol.adapter.RequestDispatcher;
 import com.exasol.adapter.dialects.oracle.IntegrationTestConstants;
@@ -53,7 +49,7 @@ class ExtensionIT extends AbstractVirtualSchemaExtensionIT {
     @BeforeAll
     static void setup() throws FileNotFoundException, BucketAccessException, TimeoutException {
         if (System.getProperty("com.exasol.dockerdb.image") == null) {
-            System.setProperty("com.exasol.dockerdb.image", "8.26.0");
+            System.setProperty("com.exasol.dockerdb.image", "2025.1.3");
         }
         exasolTestSetup = new ExasolTestSetupFactory(Path.of("no-cloud-setup")).getTestSetup();
         ExasolVersionCheck.assumeExasolVersion8(exasolTestSetup);
