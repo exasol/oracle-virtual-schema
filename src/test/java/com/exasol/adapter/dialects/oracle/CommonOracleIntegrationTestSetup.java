@@ -25,9 +25,7 @@ import com.exasol.adapter.dialects.oracle.helper.ThrowsSqlConsumer;
 import com.exasol.adapter.dialects.oracle.release.ExasolDbVersion;
 import com.exasol.bucketfs.Bucket;
 import com.exasol.bucketfs.BucketAccessException;
-import com.exasol.containers.ExasolContainer;
-import com.exasol.containers.ExasolDockerImageReference;
-import com.exasol.containers.ExasolService;
+import com.exasol.containers.*;
 import com.exasol.dbbuilder.dialects.exasol.*;
 import com.exasol.udfdebugging.UdfTestSetup;
 
@@ -38,24 +36,25 @@ import com.exasol.udfdebugging.UdfTestSetup;
  * initialize schemas, connections, and virtual schemas for integration testing of the Oracle Virtual Schema adapter.
  * It sets up:
  * <ul>
- *     <li>Test schemas and tables on an Oracle container</li>
- *     <li>JDBC and OCI connections in Exasol</li>
- *     <li>Virtual schemas using JDBC and Oracle native connectivity</li>
- *     <li>Exasol adapter scripts and dependencies in BucketFS</li>
+ * <li>Test schemas and tables on an Oracle container</li>
+ * <li>JDBC and OCI connections in Exasol</li>
+ * <li>Virtual schemas using JDBC and Oracle native connectivity</li>
+ * <li>Exasol adapter scripts and dependencies in BucketFS</li>
  * </ul>
  *
  * <p>
  * This setup supports various test scenarios, including:
  * <ul>
- *     <li>Basic connectivity via JDBC and Oracle OCI</li>
- *     <li>Oracle NUMBER-to-DECIMAL handling in Exasol</li>
- *     <li>Pushdown capabilities for timestamps, functions, and joins</li>
+ * <li>Basic connectivity via JDBC and Oracle OCI</li>
+ * <li>Oracle NUMBER-to-DECIMAL handling in Exasol</li>
+ * <li>Pushdown capabilities for timestamps, functions, and joins</li>
  * </ul>
  *
  * <p>
  * Subclasses should call initialization methods, similar to {@link #initAllTables()} in {@code @BeforeAll}
  *
- * <p><strong>Note:</strong> This class assumes that Docker is available on the test machine.
+ * <p>
+ * <strong>Note:</strong> This class assumes that Docker is available on the test machine.
  *
  */
 abstract class CommonOracleIntegrationTestSetup {
@@ -81,7 +80,7 @@ abstract class CommonOracleIntegrationTestSetup {
     private static final ExasolContainer<? extends ExasolContainer<?>> exasolContainer = new ExasolContainer<>(
             EXASOL_VERSION).withRequiredServices(ExasolService.BUCKETFS, ExasolService.UDF).withReuse(true);
     @Container
-    protected static final OracleContainerDBA oracleContainer = new OracleContainerDBA(ORACLE_CONTAINER_NAME);
+    protected static final OracleContainerDBA oracleContainer = OracleContainerDBA.startDbaContainer();
 
     /**
      * Initializes the Oracle and Exasol database containers with test schemas and data.
@@ -119,7 +118,7 @@ abstract class CommonOracleIntegrationTestSetup {
      * @throws TimeoutException      if the upload operation times out
      * @throws IOException           if reading or downloading the zip fails
      */
-    private static Bucket uploadInstantClientToBucket(Bucket bucket)
+    private static Bucket uploadInstantClientToBucket(final Bucket bucket)
             throws BucketAccessException, TimeoutException, IOException {
         if (is832OrLater()) {
             return uploadInstantClient23(bucket);
@@ -133,11 +132,11 @@ abstract class CommonOracleIntegrationTestSetup {
      *
      * @param bucket the BucketFS bucket to upload to
      * @return the same bucket instance, after upload
-     * @throws BucketAccessException     if the upload fails
-     * @throws TimeoutException          if the upload operation times out
-     * @throws FileNotFoundException     if the Instant Client file is not found
+     * @throws BucketAccessException if the upload fails
+     * @throws TimeoutException      if the upload operation times out
+     * @throws FileNotFoundException if the Instant Client file is not found
      */
-    private static Bucket uploadInstantClient12(Bucket bucket)
+    private static Bucket uploadInstantClient12(final Bucket bucket)
             throws BucketAccessException, TimeoutException, FileNotFoundException {
         final String instantClientName = "instantclient-basic-linux.x64-12.1.0.2.0.zip";
         final String instantClientPath = "src/test/resources/integration/driver/oracle";
@@ -154,7 +153,7 @@ abstract class CommonOracleIntegrationTestSetup {
      * @throws TimeoutException      if the upload operation times out
      * @throws IOException           if the file cannot be downloaded or written
      */
-    private static Bucket uploadInstantClient23(Bucket bucket)
+    private static Bucket uploadInstantClient23(final Bucket bucket)
             throws BucketAccessException, TimeoutException, IOException {
         final String fileName = "instantclient-basic-linux.x64-23.5.0.24.07.zip";
         final String downloadUrl = "https://download.oracle.com/otn_software/linux/instantclient/2350000/" + fileName;
@@ -164,7 +163,7 @@ abstract class CommonOracleIntegrationTestSetup {
         tempFile.deleteOnExit();
 
         try (BufferedInputStream in = new BufferedInputStream(new URL(downloadUrl).openStream());
-             FileOutputStream fileOutputStream = new FileOutputStream(tempFile)) {
+                FileOutputStream fileOutputStream = new FileOutputStream(tempFile)) {
             in.transferTo(fileOutputStream);
         }
 
@@ -188,7 +187,7 @@ abstract class CommonOracleIntegrationTestSetup {
         final Connection exasolConnection = exasolContainer.createConnectionForUser(exasolContainer.getUsername(),
                 exasolContainer.getPassword());
         assumeExasolVersion834OrLater(exasolContainer);
-        Bucket bucket = uploadInstantClientToBucket(exasolContainer.getDefaultBucket());
+        final Bucket bucket = uploadInstantClientToBucket(exasolContainer.getDefaultBucket());
         uploadOracleJDBCDriverToBucket(exasolContainer);
         uploadAdapterToBucket(bucket);
 
@@ -213,14 +212,14 @@ abstract class CommonOracleIntegrationTestSetup {
     /**
      * Creates an Oracle OCI connection definition in Exasol using the given credentials.
      *
-     * @param exasolFactory   factory for creating Exasol database objects
-     * @param mappedPort      mapped port of the Oracle container
-     * @param oracleUsername  Oracle username
-     * @param oraclePassword  Oracle password
+     * @param exasolFactory  factory for creating Exasol database objects
+     * @param mappedPort     mapped port of the Oracle container
+     * @param oracleUsername Oracle username
+     * @param oraclePassword Oracle password
      * @return a connection definition object for the OCI connection
      */
     private static ConnectionDefinition createOracleOCIConnection(final ExasolObjectFactory exasolFactory,
-                                                                  final Integer mappedPort, final String oracleUsername, final String oraclePassword) {
+            final Integer mappedPort, final String oracleUsername, final String oraclePassword) {
         final String hostIp = getTestHostIpFromInsideExasol(exasolContainer);
         final String oraConnectionString = "(DESCRIPTION =" //
                 + "(ADDRESS_LIST = (ADDRESS = (PROTOCOL = TCP)" //
@@ -235,13 +234,13 @@ abstract class CommonOracleIntegrationTestSetup {
     /**
      * Creates a JDBC connection definition in Exasol pointing to the Oracle container.
      *
-     * @param oracleUsername     Oracle username
-     * @param oraclePassword     Oracle password
-     * @param exasolFactory      factory for creating Exasol database objects
+     * @param oracleUsername Oracle username
+     * @param oraclePassword Oracle password
+     * @param exasolFactory  factory for creating Exasol database objects
      * @return JDBC connection definition
      */
     private static ConnectionDefinition createOracleJDBCConnection(final String oracleUsername,
-                                                                   final String oraclePassword, final ExasolObjectFactory exasolFactory) {
+            final String oraclePassword, final ExasolObjectFactory exasolFactory) {
         final String hostIp = getTestHostIpFromInsideExasol(exasolContainer);
         final String jdbcConnectionString = "jdbc:oracle:thin:@" + hostIp + ":"
                 + oracleContainer.getOraclePort() + "/" + oracleContainer.getDatabaseName();
@@ -260,7 +259,7 @@ abstract class CommonOracleIntegrationTestSetup {
      * @param jdbcConnectionDefinition JDBC connection to Oracle
      */
     private static void createVirtualSchemasOnExasolDbContainer(final ExasolObjectFactory exasolFactory,
-                                                                final AdapterScript adapterScript, final ConnectionDefinition jdbcConnectionDefinition) {
+            final AdapterScript adapterScript, final ConnectionDefinition jdbcConnectionDefinition) {
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_JDBC).adapterScript(adapterScript)
                 .connectionDefinition(jdbcConnectionDefinition).properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE))
                 .build();
@@ -299,9 +298,9 @@ abstract class CommonOracleIntegrationTestSetup {
      * @param tableCreator a function that accepts a {@link Statement} to create Oracle tables or other setup
      * @throws SQLException if executing SQL statements fails
      */
-    protected static void setupOracle(ThrowsSqlConsumer<Statement> tableCreator) throws SQLException {
+    protected static void setupOracle(final ThrowsSqlConsumer<Statement> tableCreator) throws SQLException {
         try (Connection oracleConnection = oracleContainer.createConnectionDBA("");
-             Statement statementOracle = oracleConnection.createStatement()) {
+                Statement statementOracle = oracleConnection.createStatement()) {
             createOracleUser(statementOracle);
             grantAdditionalRights(statementOracle);
             tableCreator.accept(statementOracle);
@@ -315,7 +314,7 @@ abstract class CommonOracleIntegrationTestSetup {
      */
     private static void setupOracleAllTables() throws SQLException {
         try (Connection oracleConnection = oracleContainer.createConnectionDBA("");
-             Statement statementOracle = oracleConnection.createStatement()) {
+                Statement statementOracle = oracleConnection.createStatement()) {
             createOracleUser(statementOracle);
             grantAdditionalRights(statementOracle);
             createOracleTableAllDataTypes(statementOracle);
@@ -445,7 +444,7 @@ abstract class CommonOracleIntegrationTestSetup {
         statementOracle.execute("INSERT INTO " + schemaName + "." + TABLE_JOIN_2 + " VALUES (3,'ccc')");
     }
 
-    protected ResultSet getExpectedResultSet(Statement statementExasol, final List<String> expectedColumns, final List<String> expectedRows)
+    protected ResultSet getExpectedResultSet(final Statement statementExasol, final List<String> expectedColumns, final List<String> expectedRows)
             throws SQLException {
         final String expectedValues = expectedRows.stream().map(row -> "(" + row + ")")
                 .collect(Collectors.joining(","));
@@ -456,7 +455,7 @@ abstract class CommonOracleIntegrationTestSetup {
         return statementExasol.executeQuery("SELECT * FROM " + qualifiedExpectedTableName);
     }
 
-    protected ResultSet getExpectedResultSet(Statement statementExasol, final String expectedColumnTypes, final String expectedValues)
+    protected ResultSet getExpectedResultSet(final Statement statementExasol, final String expectedColumnTypes, final String expectedValues)
             throws SQLException {
         final String qualifiedExpectedTableName = SCHEMA_EXASOL + "." + "EXPECTED";
         statementExasol.execute("CREATE OR REPLACE TABLE " + qualifiedExpectedTableName + expectedColumnTypes);
@@ -464,7 +463,7 @@ abstract class CommonOracleIntegrationTestSetup {
         return statementExasol.executeQuery("SELECT * FROM " + qualifiedExpectedTableName);
     }
 
-    protected ResultSet getActualResultSet(Statement statementExasol, final String query) throws SQLException {
+    protected ResultSet getActualResultSet(final Statement statementExasol, final String query) throws SQLException {
         return statementExasol.executeQuery(query);
     }
 
@@ -488,11 +487,11 @@ abstract class CommonOracleIntegrationTestSetup {
         return false;
     }
 
-    protected static String getColumnTypesOfTable(Statement statementExasol, final String tableName, final String columnName) throws SQLException {
+    protected static String getColumnTypesOfTable(final Statement statementExasol, final String tableName, final String columnName) throws SQLException {
         final ResultSet result = statementExasol.executeQuery("DESCRIBE " + tableName);
         while (result.next()) {
-            String resultSetColumnName = result.getString("COLUMN_NAME").toUpperCase();
-            String resultSetType = result.getString("SQL_TYPE").toUpperCase();
+            final String resultSetColumnName = result.getString("COLUMN_NAME").toUpperCase();
+            final String resultSetType = result.getString("SQL_TYPE").toUpperCase();
             if (resultSetColumnName.equals(columnName)) {
                 return resultSetType;
             }
@@ -500,7 +499,7 @@ abstract class CommonOracleIntegrationTestSetup {
         throw new IllegalArgumentException("Type for column " + columnName + " not found");
     }
 
-    protected static void assertExpressionExecutionBigDecimalResult(Statement statementExasol, final String query, final BigDecimal expectedValue)
+    protected static void assertExpressionExecutionBigDecimalResult(final Statement statementExasol, final String query, final BigDecimal expectedValue)
             throws SQLException {
         final ResultSet result = statementExasol.executeQuery(query);
         result.next();
@@ -508,55 +507,55 @@ abstract class CommonOracleIntegrationTestSetup {
         assertThat(actualResult.stripTrailingZeros(), equalTo(expectedValue));
     }
 
-    protected static void assertBigDecimalResults(Statement statementExasol, final String query, final BigDecimal... expectedValues)
+    protected static void assertBigDecimalResults(final Statement statementExasol, final String query, final BigDecimal... expectedValues)
             throws SQLException {
         final ResultSet result = statementExasol.executeQuery(query);
         int i = 1;
         result.next();
-        for (BigDecimal expectedValue: expectedValues) {
+        for (final BigDecimal expectedValue : expectedValues) {
             final BigDecimal actualResult = result.getBigDecimal(i);
             assertThat(actualResult.compareTo(expectedValue), equalTo(0));
             i++;
         }
     }
 
-    protected static void assertStringResults(Statement statementExasol, final String query, final String... expectedValues)
+    protected static void assertStringResults(final Statement statementExasol, final String query, final String... expectedValues)
             throws SQLException {
         final ResultSet result = statementExasol.executeQuery(query);
         int i = 1;
         result.next();
-        for (String expectedValue: expectedValues) {
+        for (final String expectedValue : expectedValues) {
             final String actualResult = result.getString(i);
             assertThat(actualResult, equalTo(expectedValue));
             i++;
         }
     }
 
-    protected static void assertTimestampResultsLater(Statement statementExasol, final String query, final Timestamp... expectedValues)
+    protected static void assertTimestampResultsLater(final Statement statementExasol, final String query, final Timestamp... expectedValues)
             throws SQLException {
         final ResultSet result = statementExasol.executeQuery(query);
         int i = 1;
         result.next();
-        for (Timestamp expectedValue: expectedValues) {
+        for (final Timestamp expectedValue : expectedValues) {
             final Timestamp actualResult = result.getTimestamp(i);
             assertThat(actualResult.compareTo(expectedValue), greaterThan(0));
             i++;
         }
     }
 
-    protected static void assertTimestampResults(Statement statementExasol, final String query, final Timestamp... expectedValues)
+    protected static void assertTimestampResults(final Statement statementExasol, final String query, final Timestamp... expectedValues)
             throws SQLException {
         final ResultSet result = statementExasol.executeQuery(query);
         int i = 1;
         result.next();
-        for (Timestamp expectedValue: expectedValues) {
+        for (final Timestamp expectedValue : expectedValues) {
             final Timestamp actualResult = result.getTimestamp(i);
             assertThat(actualResult, equalTo(expectedValue));
             i++;
         }
     }
 
-    protected static void assertExplainVirtual(Statement statementExasol, final String query, final String expected) throws SQLException {
+    protected static void assertExplainVirtual(final Statement statementExasol, final String query, final String expected) throws SQLException {
         final ResultSet explainVirtual = statementExasol.executeQuery("EXPLAIN VIRTUAL " + query);
         explainVirtual.next();
         final String explainVirtualStringActual = explainVirtual.getString("PUSHDOWN_SQL");

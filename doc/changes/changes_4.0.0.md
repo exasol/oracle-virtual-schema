@@ -1,4 +1,4 @@
-# Oracle Virtual Schema 3.0.9, released 2025-12-03
+# Oracle Virtual Schema 4.0.0, released 2025-12-03
 
 Code name: Fix literal pushdown for `IMPORT FROM ORA`
 
