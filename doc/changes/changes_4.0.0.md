@@ -1,12 +1,38 @@
-# Oracle Virtual Schema 3.0.9, released 2025-??-??
+# Oracle Virtual Schema 3.0.9, released 2025-12-03
 
-Code name:
+Code name: Fix literal pushdown for `IMPORT FROM ORA`
 
 ## Summary
 
-## Features
+This release fixes literal pushdown with `IMPORT FROM ORA`. Recent Exasol versions introduced strict type checks which caused issues with pushdown of literals. This query
 
-* ISSUE_NUMBER: description
+```sql
+select 0 as c1 from oravs.t1;
+```
+
+failed with the following error message:
+
+```
+[Code: 0, SQL State: 42636] ETL-1299: Failed to create transformator for column=0 (starting from 0 for selected columns) [ETL-1202: Not implemented - Transformation for this combination of column types is not possible in this version.
+```
+
+Similar queries also fail with a different error message:
+
+```sql
+select null from oravs.t1;
+```
+
+```
+[Code: 0, SQL State: 04000]  Adapter generated invalid pushdown query for virtual table A: Data type mismatch in column number 1 (1-indexed). Expected BOOLEAN, but got VARCHAR(2000000) UTF8
+```
+
+The root cause was that the VS adapter rendered literal decimals and doubles using a cast to varchar: `CAST(TO_CHAR($LITERAL) AS VARCHAR(4000))`. This version no longer adds this cast, fixing the incompatible data types.
+
+**Breaking change:** Please note that removal of the cast potentially impacts the behaviour of the virtual schema. That's why we incremented the major version to 4.0.0.
+
+## Bugfixes
+
+* #75: Fixed literal pushdown for `IMPORT FROM ORA`
 
 ## Security
 
