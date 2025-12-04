@@ -134,10 +134,23 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
         for (final SqlNode node : selectList.getExpressions()) {
             selectListElements.add(node.accept(this));
         }
-        if (this.requiresSelectListAliasesForLimit) {
+        if (this.requiresSelectListAliasesForLimit || hasDuplicates(selectListElements)) {
             addColumnAliases(selectListElements);
         }
         return String.join(", ", selectListElements);
+    }
+
+    /**
+     * Pushdown fails with duplicate literals in the select list:
+     * <code>[Code: 0, SQL State: 42636]  ETL-4300: Oracle tool failed with error code '918' and message 'ORA-00918: column ambiguously defined
+    Help: https://docs.oracle.com/error-help/db/ora-00918/'</code>. Adding column aliases avoids this problem.
+     * 
+     * @param selectListElements list of select list elements
+     * @return {@code true} if there are duplicates
+     */
+    private boolean hasDuplicates(final List<String> selectListElements) {
+        final Set<String> set = new HashSet<>(selectListElements);
+        return set.size() < selectListElements.size();
     }
 
     /**

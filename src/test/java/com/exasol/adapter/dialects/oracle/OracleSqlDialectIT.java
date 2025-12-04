@@ -63,6 +63,32 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         }
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE,
+            VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
+    void testDuplicateDecimalLiterals(final String schema) throws SQLException {
+        try (Connection connection = getExasolConnection();
+                Statement statementExasol = connection.createStatement()) {
+            final String qualifiedTableName = schema + "." + TABLE_ORACLE_NUMBER_HANDLING;
+            final String query = "select 1 as a, 1 as b from " + qualifiedTableName;
+            assertThat(getActualResultSet(statementExasol, query),
+                    table("SMALLINT", "SMALLINT").row((short) 1, (short) 1).matches());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE,
+            VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
+    void testDuplicateStringLiterals(final String schema) throws SQLException {
+        try (Connection connection = getExasolConnection();
+                Statement statementExasol = connection.createStatement()) {
+            final String qualifiedTableName = schema + "." + TABLE_ORACLE_NUMBER_HANDLING;
+            final String query = "select 'a' as a, 'a' as b from " + qualifiedTableName;
+            assertThat(getActualResultSet(statementExasol, query),
+                    table("CHAR", "CHAR").row("a", "a").matches());
+        }
+    }
+
     @Nested
     @DisplayName("Number handling test")
     class NumberHandlingTest {

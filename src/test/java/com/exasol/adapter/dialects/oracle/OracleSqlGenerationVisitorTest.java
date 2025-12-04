@@ -97,6 +97,18 @@ class OracleSqlGenerationVisitorTest {
     }
 
     @Test
+    void testVisitSqlStatementSelectWithDuplicateLiteralValuesGeneratesColumnAliases() throws AdapterException {
+        final SqlSelectList selectList = SqlSelectList
+                .createRegularSelectList(List.of(new SqlLiteralExactnumeric(BigDecimal.ONE), new SqlLiteralExactnumeric(BigDecimal.ONE)));
+        final TableMetadata tableMetadata = new TableMetadata("", "", Collections.emptyList(), "");
+        final SqlTable fromClause = new SqlTable("test_table_name", tableMetadata);
+        final SqlStatementSelect sqlStatementSelect = SqlStatementSelect.builder().selectList(selectList)
+                .fromClause(fromClause).build();
+        assertThat(this.visitor.visit(sqlStatementSelect),
+                equalTo("SELECT 1 AS c0, 1 AS c1 FROM \"test_schema\".\"test_table_name\""));
+    }
+
+    @Test
     void testVisitSqlStatementSelectWithLimitRegularSelectListWithoutOffset() throws AdapterException {
         final SqlSelectList selectList = SqlSelectList
                 .createRegularSelectList(Arrays.asList(new SqlLiteralBool(true), new SqlLiteralString("string")));
