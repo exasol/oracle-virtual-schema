@@ -62,8 +62,8 @@ public class OracleSqlDialectL3IssuesIT extends CommonOracleIntegrationTestSetup
             final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
             final String query = "SELECT to_number(num10), to_number(num10) FROM " + qualifiedTableName;
             final String expectedExplainVirtualImport = "IMPORT INTO (c1 DECIMAL(10, 0), c2 DECIMAL(10, 0)) FROM ";
-            final String expectedExplainVirtualSelect = "SELECT TO_NUMBER(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"NUM10\"), "
-                    + "TO_NUMBER(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"NUM10\") FROM \""
+            final String expectedExplainVirtualSelect = "SELECT TO_NUMBER(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"NUM10\") as c0, "
+                    + "TO_NUMBER(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"NUM10\") as c1 FROM \""
                     + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES;
             assertAll(
                     () -> assertBigDecimalResults(statementExasol, query,

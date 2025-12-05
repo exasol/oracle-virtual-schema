@@ -65,11 +65,17 @@ abstract class CommonOracleIntegrationTestSetup {
     protected static final String ORACLE_JDBC_CONNECTION_NAME = "JDBC_CONNECTION";
     protected static final String ORACLE_OCI_CONNECTION_NAME = "ORACLE_CONNECTION";
 
+    /** No properties */
     protected static final String VIRTUAL_SCHEMA_JDBC = "VIRTUAL_SCHEMA_JDBC";
+    /** {@code IMPORT_FROM_ORA=true} */
     protected static final String VIRTUAL_SCHEMA_ORACLE = "VIRTUAL_SCHEMA_ORACLE";
+    /** {@code IMPORT_FROM_ORA=true, GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI=true} */
     protected static final String VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING = "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING";
+    /** {@code ORACLE_CAST_NUMBER_TO_DECIMAL_WITH_PRECISION_AND_SCALE=36,1} */
     protected static final String VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL = "VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL";
+    /** {@code IMPORT_FROM_ORA=true, oracle_cast_number_to_decimal_with_precision_and_scale=36,1} */
     protected static final String VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL = "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL";
+    /** {@code IMPORT_FROM_ORA = true, GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI = true, oracle_cast_number_to_decimal_with_precision_and_scale=36,1 */
     protected static final String VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING = "VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING";
     protected static final String TABLE_ORACLE_ALL_DATA_TYPES = "TABLE_ORACLE_ALL_DATA_TYPES";
     protected static final String TABLE_ORACLE_NUMBER_HANDLING = "TABLE_ORACLE_NUMBER_HANDLING";
@@ -463,8 +469,12 @@ abstract class CommonOracleIntegrationTestSetup {
         return statementExasol.executeQuery("SELECT * FROM " + qualifiedExpectedTableName);
     }
 
-    protected ResultSet getActualResultSet(final Statement statementExasol, final String query) throws SQLException {
-        return statementExasol.executeQuery(query);
+    protected ResultSet getActualResultSet(final Statement statementExasol, final String query) {
+        try {
+            return statementExasol.executeQuery(query);
+        } catch (final SQLException e) {
+            throw new IllegalStateException("Failed to execute query '" + query + "': " + e.getMessage(), e);
+        }
     }
 
     protected Connection getExasolConnection() throws SQLException {

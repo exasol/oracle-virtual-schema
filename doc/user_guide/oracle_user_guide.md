@@ -135,7 +135,12 @@ CREATE VIRTUAL SCHEMA <virtual schema name>
 
 ### Auto generated datatype mapping list while using IMPORT_FROM_ORA.
 
-Using `IMPORT FROM ORA` might lead to some unexpected datatype mappings. Unlike for a JDBC connection there's no explicit data mapping being generated when using `IMPORT FROM ORA`.
+Using `IMPORT FROM ORA` might lead to some unexpected datatype mappings. Unlike for a JDBC connection there's no explicit data mapping being generated when using `IMPORT FROM ORA`. Recent Exasol versions introduced stricter type checks, causing queries like `select 1 from oravs.tab` to fail with error messages like this:
+
+```
+[Code: 0, SQL State: 04000]  Adapter generated invalid pushdown query for virtual table tab: Data type mismatch in column number 1 (1-indexed). Expected DECIMAL(1,0), but got VARCHAR(1024) UTF8. (pushdown query: IMPORT FROM ORA AT ORACLE_CONNECTION STATEMENT 'SELECT LIMIT_SUBSELECT.* FROM ( SELECT 1 FROM "schema"."tab"  ) LIMIT_SUBSELECT WHERE ROWNUM <= 1000') (Session: 1850644277640495104)
+```
+
 As a current stopgap solution for this issue we now (starting from version 2.2.0) also provide a `GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI` switch you can specify and enable when creating the virtual schema.
 
 ```sql
@@ -151,15 +156,13 @@ CREATE VIRTUAL SCHEMA <virtual schema name>
 
 This will add explicit datatype mapping to the generated command when using `IMPORT FROM ORA`.
 
-Example:
-
-Before
+Example: Without this option, the adapter generates pushdown query
 
 ```sql
 IMPORT FROM ORA AT ORACLE_CON STATEMENT ...
 ```
 
-After setting `GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI` to `true`
+After setting `GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI` to `true` the adapter generates pushdown query
 
 ```sql
 IMPORT INTO(c1 DECIMAL(36,1), c2 .... ) FROM ORA AT ORACLE_CON STATEMENT ...
