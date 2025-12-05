@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.exasol</groupId>
     <artifactId>oracle-virtual-schema</artifactId>
-    <version>4.0.0</version>
+    <version>4.0.1</version>
     <name>Virtual Schema for Oracle</name>
     <description>Virtual Schema for Oracle</description>
     <url>https://github.com/exasol/oracle-virtual-schema/</url>
@@ -91,7 +91,7 @@
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>exasol-testcontainers</artifactId>
-            <version>7.2.0</version>
+            <version>7.2.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -326,7 +326,7 @@
     <parent>
         <artifactId>oracle-virtual-schema-generated-parent</artifactId>
         <groupId>com.exasol</groupId>
-        <version>4.0.0</version>
+        <version>4.0.1</version>
         <relativePath>pk_generated_parent.pom</relativePath>
     </parent>
 </project>
