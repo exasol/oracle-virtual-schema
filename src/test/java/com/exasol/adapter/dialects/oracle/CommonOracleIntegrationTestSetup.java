@@ -7,6 +7,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -498,12 +499,13 @@ abstract class CommonOracleIntegrationTestSetup {
     }
 
     protected static String getColumnTypesOfTable(final Statement statementExasol, final String tableName, final String columnName) throws SQLException {
-        final ResultSet result = statementExasol.executeQuery("DESCRIBE " + tableName);
-        while (result.next()) {
-            final String resultSetColumnName = result.getString("COLUMN_NAME").toUpperCase();
-            final String resultSetType = result.getString("SQL_TYPE").toUpperCase();
-            if (resultSetColumnName.equals(columnName)) {
-                return resultSetType;
+        try (final ResultSet result = statementExasol.executeQuery("DESCRIBE " + tableName)) {
+            while (result.next()) {
+                final String resultSetColumnName = result.getString("COLUMN_NAME").toUpperCase();
+                final String resultSetType = result.getString("SQL_TYPE").toUpperCase();
+                if (resultSetColumnName.equals(columnName)) {
+                    return resultSetType;
+                }
             }
         }
         throw new IllegalArgumentException("Type for column " + columnName + " not found");
@@ -511,65 +513,70 @@ abstract class CommonOracleIntegrationTestSetup {
 
     protected static void assertExpressionExecutionBigDecimalResult(final Statement statementExasol, final String query, final BigDecimal expectedValue)
             throws SQLException {
-        final ResultSet result = statementExasol.executeQuery(query);
-        result.next();
-        final BigDecimal actualResult = result.getBigDecimal(1);
-        assertThat(actualResult.stripTrailingZeros(), equalTo(expectedValue));
+        try (final ResultSet result = statementExasol.executeQuery(query)) {
+            assertTrue(result.next(), "ResultSet has next");
+            final BigDecimal actualResult = result.getBigDecimal(1);
+            assertThat(actualResult.stripTrailingZeros(), equalTo(expectedValue));
+        }
     }
 
     protected static void assertBigDecimalResults(final Statement statementExasol, final String query, final BigDecimal... expectedValues)
             throws SQLException {
-        final ResultSet result = statementExasol.executeQuery(query);
-        int i = 1;
-        result.next();
-        for (final BigDecimal expectedValue : expectedValues) {
-            final BigDecimal actualResult = result.getBigDecimal(i);
-            assertThat(actualResult.compareTo(expectedValue), equalTo(0));
-            i++;
+        try (final ResultSet result = statementExasol.executeQuery(query)) {
+            int i = 1;
+            assertTrue(result.next(), "ResultSet has next");
+            for (final BigDecimal expectedValue : expectedValues) {
+                final BigDecimal actualResult = result.getBigDecimal(i);
+                assertThat(actualResult.compareTo(expectedValue), equalTo(0));
+                i++;
+            }
         }
     }
 
     protected static void assertStringResults(final Statement statementExasol, final String query, final String... expectedValues)
             throws SQLException {
-        final ResultSet result = statementExasol.executeQuery(query);
-        int i = 1;
-        result.next();
-        for (final String expectedValue : expectedValues) {
-            final String actualResult = result.getString(i);
-            assertThat(actualResult, equalTo(expectedValue));
-            i++;
+        try (final ResultSet result = statementExasol.executeQuery(query)) {
+            int i = 1;
+            assertTrue(result.next(), "ResultSet has next");
+            for (final String expectedValue : expectedValues) {
+                final String actualResult = result.getString(i);
+                assertThat(actualResult, equalTo(expectedValue));
+                i++;
+            }
         }
     }
 
     protected static void assertTimestampResultsLater(final Statement statementExasol, final String query, final Timestamp... expectedValues)
             throws SQLException {
-        final ResultSet result = statementExasol.executeQuery(query);
-        int i = 1;
-        result.next();
-        for (final Timestamp expectedValue : expectedValues) {
-            final Timestamp actualResult = result.getTimestamp(i);
-            assertThat(actualResult.compareTo(expectedValue), greaterThan(0));
-            i++;
+        try (final ResultSet result = statementExasol.executeQuery(query)) {
+            int i = 1;
+            assertTrue(result.next(), "ResultSet has next");
+            for (final Timestamp expectedValue : expectedValues) {
+                final Timestamp actualResult = result.getTimestamp(i);
+                assertThat(actualResult.compareTo(expectedValue), greaterThan(0));
+                i++;
+            }
         }
     }
 
     protected static void assertTimestampResults(final Statement statementExasol, final String query, final Timestamp... expectedValues)
             throws SQLException {
-        final ResultSet result = statementExasol.executeQuery(query);
-        int i = 1;
-        result.next();
-        for (final Timestamp expectedValue : expectedValues) {
-            final Timestamp actualResult = result.getTimestamp(i);
-            assertThat(actualResult, equalTo(expectedValue));
-            i++;
+        try (final ResultSet result = statementExasol.executeQuery(query)) {
+            int i = 1;
+            assertTrue(result.next(), "ResultSet has next");
+            for (final Timestamp expectedValue : expectedValues) {
+                final Timestamp actualResult = result.getTimestamp(i);
+                assertThat(actualResult, equalTo(expectedValue));
+                i++;
+            }
         }
     }
 
     protected static void assertExplainVirtual(final Statement statementExasol, final String query, final String expected) throws SQLException {
-        final ResultSet explainVirtual = statementExasol.executeQuery("EXPLAIN VIRTUAL " + query);
-        explainVirtual.next();
-        final String explainVirtualStringActual = explainVirtual.getString("PUSHDOWN_SQL");
-        assertThat(explainVirtualStringActual, containsString(expected));
+        try (final ResultSet result = statementExasol.executeQuery("EXPLAIN VIRTUAL " + query)) {
+            assertTrue(result.next(), "ResultSet has next");
+            final String explainVirtualStringActual = result.getString("PUSHDOWN_SQL");
+            assertThat("EXPLAIN VIRTUAL of query '" + query + "'", explainVirtualStringActual, containsString(expected));
+        }
     }
-
 }
