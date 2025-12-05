@@ -12,7 +12,7 @@ sources:
 version:
   fromSource: pom.xml
 build:
-  runnerOs: ubuntu-24.04
+  runnerOs: int-linux-x64-4core-ubuntu24.04-1
   freeDiskSpace: true
   exasolDbVersions:
     - "2025.1.8"
