@@ -2,36 +2,30 @@
 
 [Oracle Database](https://www.oracle.com/database/) is a proprietary multi-model database management system produced and marketed by Oracle Corporation. It is a database commonly used for running online transaction processing (OLTP), data warehousing (DW) and mixed (OLTP & DW) database workloads.
 
-## Registering the JDBC Driver in EXAOperation
+## Uploading the JDBC Driver to Exasol BucketFS
 
-First download the [Oracle JDBC driver](https://www.oracle.com/technetwork/database/application-development/jdbc/downloads/index.html).
+1. Download the [Oracle JDBC driver](https://www.oracle.com/technetwork/database/application-development/jdbc/downloads/index.html).
+2. Upload the driver to BucketFS, see the [BucketFS documentation](https://docs.exasol.com/db/latest/administration/on-premise/bucketfs/accessfiles.htm) for details.
 
-Now register the driver in EXAOperation:
+    Hint: Put the driver into folder `default/drivers/jdbc/` to register it for [ExaLoader](#registering-the-jdbc-driver-for-exaloader), too.
 
-1. Click "Software"
-1. Switch to tab "JDBC Drivers"
-1. Click "Browse..."
-1. Select JDBC driver file
-1. Click "Upload"
-1. Click "Add"
-1. In dialog "Add EXACluster JDBC driver" configure the JDBC driver (see below)
+## Registering the JDBC driver for ExaLoader
 
-You need to specify the following settings when adding the JDBC driver via EXAOperation.
+In order to enable the ExaLoader to fetch data from the external database you must register the driver for ExaLoader as described in the [Installation procedure for JDBC drivers](https://github.com/exasol/docker-db/#installing-custom-jdbc-drivers).
+1. ExaLoader expects the driver in BucketFS folder `default/drivers/jdbc`.
 
-| Parameter | Value                             |
-|-----------|-----------------------------------|
-| Name      | `ORACLE`                          |
-| Main      | `oracle.jdbc.driver.OracleDriver` |
-| Prefix    | `jdbc:oracle:thin:`               |
-| Files     | `ojdbc<JDBC driver version>.jar`  |
+    If you uploaded the driver for UDF to a different folder, then you need to [upload](#uploading-the-jdbc-driver-to-exasol-bucketfs) the driver again.
+2. Additionally you need to create file `settings.cfg` and [upload](#uploading-the-jdbc-driver-to-exasol-bucketfs) it to the same folder in BucketFS:
 
-
-## Uploading the JDBC Driver to BucketFS
-
-1. [Create a bucket in BucketFS](https://docs.exasol.com/administration/on-premise/bucketfs/create_new_bucket_in_bucketfs_service.htm)
-1. Upload the driver to BucketFS
-
-This step is necessary since the UDF container the adapter runs in has no access to the JDBC drivers installed via EXAOperation, but it can access BucketFS.
+```properties
+DRIVERNAME=ORACLE
+JAR=ojdbc<JDBC driver version>.jar
+DRIVERMAIN=oracle.jdbc.driver.OracleDriver
+PREFIX=jdbc:oracle:thin:
+NOSECURITY=YES
+FETCHSIZE=100000
+INSERTSIZE=-1
+```
 
 ## Installing the Adapter Script
 
@@ -141,7 +135,7 @@ Using `IMPORT FROM ORA` might lead to some unexpected datatype mappings. Unlike 
 [Code: 0, SQL State: 04000]  Adapter generated invalid pushdown query for virtual table tab: Data type mismatch in column number 1 (1-indexed). Expected DECIMAL(1,0), but got VARCHAR(1024) UTF8. (pushdown query: IMPORT FROM ORA AT ORACLE_CONNECTION STATEMENT 'SELECT LIMIT_SUBSELECT.* FROM ( SELECT 1 FROM "schema"."tab"  ) LIMIT_SUBSELECT WHERE ROWNUM <= 1000') (Session: 1850644277640495104)
 ```
 
-As a current stopgap solution for this issue we now (starting from version 2.2.0) also provide a `GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI` switch you can specify and enable when creating the virtual schema.
+As a stopgap solution for this issue we provide a `GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI` switch you can specify and enable when creating the virtual schema.
 
 ```sql
 CREATE VIRTUAL SCHEMA <virtual schema name>
