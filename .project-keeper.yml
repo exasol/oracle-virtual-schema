@@ -28,8 +28,7 @@ build:
             name: Fix VM Crash in UDFs
             id: fix-vm-crash
             run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-
 excludes:
-  # Avoid large diff caused by different formatter settings
+  # Avoid large diff caused by different formatter settings, see https://github.com/exasol/project-keeper/issues/702
   - "E-PK-CORE-18: Outdated content: '.settings/org.eclipse.jdt.ui.prefs'"
   - "E-PK-CORE-18: Outdated content: '.settings/org.eclipse.jdt.core.prefs'"
