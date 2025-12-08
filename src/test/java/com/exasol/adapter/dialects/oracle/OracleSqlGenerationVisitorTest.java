@@ -3,9 +3,11 @@ package com.exasol.adapter.dialects.oracle;
 import static com.exasol.adapter.dialects.VisitorAssertions.assertSqlNodeConvertedToOne;
 import static com.exasol.adapter.sql.AggregateFunction.*;
 import static com.exasol.adapter.sql.ScalarFunction.*;
+import static java.util.Collections.emptyMap;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.lenient;
 
@@ -38,11 +40,16 @@ class OracleSqlGenerationVisitorTest {
 
     @BeforeEach
     void beforeEach() throws AdapterException {
+        this.visitor = testee(emptyMap());
+    }
+
+    private OracleSqlGenerationVisitor testee(final Map<String, String> adapterProperties) throws AdapterException {
         final SqlDialect dialect = new OracleSqlDialectFactory().createSqlDialect(null,
-                AdapterProperties.emptyProperties(), null);
+                new AdapterProperties(adapterProperties), null);
         final SqlGenerationContext context = new SqlGenerationContext("test_catalog", "test_schema", false);
-        this.visitor = Mockito.spy(new OracleSqlGenerationVisitor(dialect, context));
-        lenient().doReturn("test").when(this.visitor).getTypeName(Mockito.any());
+        final OracleSqlGenerationVisitor testee = Mockito.spy(new OracleSqlGenerationVisitor(dialect, context));
+        lenient().doReturn("test").when(testee).getTypeName(Mockito.any());
+        return testee;
     }
 
     @Test
@@ -335,6 +342,38 @@ class OracleSqlGenerationVisitorTest {
         testSqlNode.getLimit().setOffset(5);
         final String actualSql = this.visitor.visit(testSqlNode);
         assertEquals(SqlNormalizer.normalizeSql(expectedSql), SqlNormalizer.normalizeSql(actualSql));
+    }
+
+    @ParameterizedTest
+    @CsvSource(nullValues = "NULL", value = { "false", "NULL", "''" })
+    void testNullLiteralWithImportFromJdbcDoesNotGenerateCast(final String value) throws AdapterException {
+        final SqlLiteralNull nullLiteral = new SqlLiteralNull();
+        final Map<String, String> properties = new HashMap<>();
+        properties.put(OracleProperties.ORACLE_IMPORT_PROPERTY, value);
+        assertThat(testee(properties).visit(nullLiteral), equalTo("NULL"));
+    }
+
+    @Test
+    void testNullLiteralWithImportFromOraDoesNotGenerateCastForNullParent() throws AdapterException {
+        final SqlLiteralNull nullLiteral = new SqlLiteralNull();
+        nullLiteral.setParent(null);
+        assertThat(testee(Map.of(OracleProperties.ORACLE_IMPORT_PROPERTY, "true")).visit(nullLiteral), equalTo("NULL"));
+    }
+
+    @Test
+    void testNullLiteralWithImportFromOraDoesNotGenerateCastForOtherParent() throws AdapterException {
+        final SqlLiteralNull nullLiteral = new SqlLiteralNull();
+        final SqlFunctionScalar parent = new SqlFunctionScalar(ScalarFunction.ABS, List.of(nullLiteral));
+        assertThat(nullLiteral.getParent(), sameInstance(parent));
+        assertThat(testee(Map.of(OracleProperties.ORACLE_IMPORT_PROPERTY, "true")).visit(nullLiteral), equalTo("NULL"));
+    }
+
+    @Test
+    void testNullLiteralWithImportFromOraGeneratesCastForSelectListParent() throws AdapterException {
+        final SqlLiteralNull nullLiteral = new SqlLiteralNull();
+        final SqlSelectList parent = SqlSelectList.createRegularSelectList(List.of(nullLiteral));
+        assertThat(nullLiteral.getParent(), sameInstance(parent));
+        assertThat(testee(Map.of(OracleProperties.ORACLE_IMPORT_PROPERTY, "true")).visit(nullLiteral), equalTo("CAST(NULL AS NUMBER)"));
     }
 
     private static SqlNode getTestSqlNode() {

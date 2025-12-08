@@ -511,4 +511,28 @@ public class OracleSqlGenerationVisitor extends SqlGenerationVisitor {
         builder.append(") AS NUMBER(36, 0))");
         return builder.toString();
     }
+
+    @Override
+    public String visit(final SqlLiteralNull literal) {
+        final String renderedLiteral = super.visit(literal);
+        if (nullNeedsNumberCast(literal)) {
+            return cast(renderedLiteral, "NUMBER");
+        }
+        return renderedLiteral;
+    }
+
+    /**
+     * Target type for {@code NULL} literals in select list is {@code BOOLEAN}. However when importing {@code FROM ORA} into an Exasol {@code BOOLEAN}, Exasol
+     * only accepts a {@code NUMBER} from Oracle. In Oracle the data type of {@code NULL} is {@code VARCHAR2}. So we have to cast it to {@code NUMBER}.
+     * 
+     * @param literal the {@code NULL} literal
+     * @return {@code true} if {@code NULL} needs to be casted to {@code NUMBER}
+     */
+    private boolean nullNeedsNumberCast(final SqlLiteralNull literal) {
+        final OracleSqlDialect dialect = (OracleSqlDialect) getDialect();
+        if (dialect.getImportType() == ImportType.ORA) {
+            return literal.getParent() != null && literal.getParent().getType() == SqlNodeType.SELECT_LIST;
+        }
+        return false;
+    }
 }
