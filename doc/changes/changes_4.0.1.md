@@ -37,7 +37,7 @@ The reason for this problem was that the adapter generated the following pushdow
 IMPORT INTO (c1 BOOLEAN) FROM ORA AT ORACLE_CONNECTION STATEMENT 'SELECT NULL FROM "schema"."tab"';
 ```
 
-When importing into an Exasol `BOOLEAN`, Exasol only accepts a `NUMBER` from Oracle. However, the data type of `NULL` in Oracle is However, in Oracle the data type of `NULL` is `VARCHAR2`. We solved this by casting `NULL` to `NUMBER` in the pushdown query:
+When importing into an Exasol `BOOLEAN`, Exasol only accepts a `NUMBER` from Oracle. However, the data type of `NULL` in Oracle is `VARCHAR2`. We solved this by casting `NULL` to `NUMBER` in the pushdown query:
 
 ```sql
 IMPORT INTO (c1 BOOLEAN) FROM ORA AT ORACLE_CONNECTION STATEMENT 'SELECT CAST(NULL AS NUMBER) FROM "schema"."tab"';
