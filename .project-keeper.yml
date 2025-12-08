@@ -12,7 +12,7 @@ sources:
 version:
   fromSource: pom.xml
 build:
-  runnerOs: int-linux-x64-4core-ubuntu24.04-1
+  runnerOs: ubuntu-24.04
   freeDiskSpace: true
   exasolDbVersions:
     - "2025.1.8"
@@ -28,6 +28,25 @@ build:
             name: Fix VM Crash in UDFs
             id: fix-vm-crash
             run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+        - action: INSERT_AFTER
+          job: matrix-build
+          stepId: build-pk-verify
+          content:
+            name: Collect DB Logs on Failure
+            id: collect-db-logs
+            if: ${{ always() }}
+            run: ./collect_db_logs.sh
+        - action: INSERT_AFTER
+          job: matrix-build
+          stepId: collect-db-logs
+          content:
+            name: Upload DB Logs Artifact
+            uses: actions/upload-artifact@v4
+            if: ${{ always() }}
+            with:
+              name: exasol-db-logs-${{ matrix.exasol_db_version }}-${{ github.run_id }}
+              path: ${{ steps.collect-db-logs.outputs.db_log_archive }}
+
 excludes:
   # Avoid large diff caused by different formatter settings
   - "E-PK-CORE-18: Outdated content: '.settings/org.eclipse.jdt.ui.prefs'"
