@@ -91,6 +91,20 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         }
     }
 
+    @ParameterizedTest
+    // This only works for IMPORT_FROM_ORA=true when GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI=true
+    @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL,
+            VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
+    void testNullLiteral(final String schema) throws SQLException {
+        try (Connection connection = getExasolConnection();
+                Statement statementExasol = connection.createStatement()) {
+            final String qualifiedTableName = schema + "." + TABLE_ORACLE_NUMBER_HANDLING;
+            final String query = "select null as a from " + qualifiedTableName;
+            assertThat(getActualResultSet(statementExasol, query),
+                    table("BOOLEAN").row((Object) null).matches());
+        }
+    }
+
     @Nested
     @DisplayName("Number handling test")
     class NumberHandlingTest {
