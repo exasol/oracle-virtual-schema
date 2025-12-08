@@ -33,12 +33,11 @@ jobs:
       fail-fast: false
       matrix:
         exasol_db_version: [
-          2025.1.8,
           8.29.13
         ]
         
     env: {
-      DEFAULT_EXASOL_DB_VERSION: 2025.1.8
+      DEFAULT_EXASOL_DB_VERSION: 8.29.13
     }
     steps:
       - name: Free Disk Space
@@ -94,19 +93,6 @@ jobs:
           OSSINDEX_USERNAME: '${{ secrets.OSSINDEX_USERNAME }}',
           OSSINDEX_API_TOKEN: '${{ secrets.OSSINDEX_API_TOKEN }}',
           EXASOL_DB_VERSION: '${{ matrix.exasol_db_version }}'
-        }
-      - {
-        name: Collect DB Logs on Failure,
-        id: collect-db-logs,
-        if: '${{ always() }}',
-        run: ./collect_db_logs.sh
-      }
-      - name: Upload DB Logs Artifact
-        uses: actions/upload-artifact@v4
-        if: ${{ always() }}
-        with: {
-          name: 'exasol-db-logs-${{ matrix.exasol_db_version }}-${{ github.run_id }}',
-          path: '${{ steps.collect-db-logs.outputs.db_log_archive }}'
         }
       - name: Sonar analysis
         id: sonar-analysis
