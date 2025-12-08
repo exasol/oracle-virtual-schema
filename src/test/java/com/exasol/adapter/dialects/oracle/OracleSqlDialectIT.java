@@ -48,7 +48,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
 
     @ParameterizedTest
     @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL, VIRTUAL_SCHEMA_ORACLE,
-            VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
+            VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL })
     void testLiteralColumns(final String schema) throws SQLException {
         try (Connection connection = getExasolConnection();
                 Statement statementExasol = connection.createStatement()) {
@@ -60,6 +60,34 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                             .row((short) 1, (short) 2, (short) 3, new BigDecimal("1.23"), new BigDecimal("12.3"), "abc", true,
                                     Date.valueOf("2024-01-23"), Timestamp.valueOf("2024-01-01 00:00:00.123456789"), null, "+05 00:00:00.000")
                             .matches());
+        }
+    }
+
+    @ParameterizedTest
+    // This only works for IMPORT_FROM_ORA=true when GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI=true
+    @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL,
+            VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
+    void testDuplicateDecimalLiterals(final String schema) throws SQLException {
+        try (Connection connection = getExasolConnection();
+                Statement statementExasol = connection.createStatement()) {
+            final String qualifiedTableName = schema + "." + TABLE_ORACLE_NUMBER_HANDLING;
+            final String query = "select 1 as a, 1 as b from " + qualifiedTableName;
+            assertThat(getActualResultSet(statementExasol, query),
+                    table("SMALLINT", "SMALLINT").row((short) 1, (short) 1).matches());
+        }
+    }
+
+    @ParameterizedTest
+    // This only works for IMPORT_FROM_ORA=true when GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI=true
+    @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL,
+            VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
+    void testDuplicateStringLiterals(final String schema) throws SQLException {
+        try (Connection connection = getExasolConnection();
+                Statement statementExasol = connection.createStatement()) {
+            final String qualifiedTableName = schema + "." + TABLE_ORACLE_NUMBER_HANDLING;
+            final String query = "select 'a' as a, 'a' as b from " + qualifiedTableName;
+            assertThat(getActualResultSet(statementExasol, query),
+                    table("CHAR", "CHAR").row("a", "a").matches());
         }
     }
 
