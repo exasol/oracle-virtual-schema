@@ -1,4 +1,4 @@
-# Oracle Virtual Schema 4.0.2, released 2026-??-??
+# Oracle Virtual Schema 4.0.2, released 2026-04-07
 
 Code name: Fix dependabot alerts
 
