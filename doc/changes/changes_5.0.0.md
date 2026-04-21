@@ -31,3 +31,20 @@ This release adds anonymous feature-usage telemetry via `telemetry-java`. See th
 * Updated `org.mockito:mockito-junit-jupiter:5.20.0` to `5.23.0`
 * Updated `org.testcontainers:testcontainers-junit-jupiter:2.0.2` to `2.0.5`
 * Updated `org.testcontainers:testcontainers-oracle-xe:2.0.2` to `2.0.5`
+
+### Extension
+
+#### Compile Dependency Updates
+
+* Updated `@exasol/extension-manager-interface:0.4.3` to `0.5.1`
+
+#### Development Dependency Updates
+
+* Updated `eslint:^9.39.4` to `^10.2.1`
+* Updated `@eslint/js:^9.39.4` to `^10.0.1`
+* Updated `ts-jest:^29.2.5` to `^29.4.9`
+* Updated `@types/jest:^29.5.14` to `^30.0.0`
+* Updated `typescript-eslint:^8.58.0` to `^8.59.0`
+* Updated `typescript:^5.9.3` to `^6.0.3`
+* Updated `@typescript-eslint/eslint-plugin:^8.58.0` to `^8.59.0`
+* Updated `jest:29.7.0` to `30.3.0`
