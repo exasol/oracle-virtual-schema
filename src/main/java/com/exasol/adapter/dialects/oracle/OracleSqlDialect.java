@@ -61,8 +61,7 @@ public class OracleSqlDialect extends AbstractSqlDialect {
     /**
      * Create a new instance of the {@link OracleSqlDialect}.
      *
-     * @param connectionFactory factory for the JDBC connection to the remote data source
-     * @param properties        user-defined adapter properties
+     * @param context context with connection factory and adapter properties
      */
     public OracleSqlDialect(final JDBCAdapterContext context) {
         super(context,
