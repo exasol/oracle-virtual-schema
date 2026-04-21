@@ -1,10 +1,6 @@
 package com.exasol.adapter.dialects.oracle;
 
-import com.exasol.ExaMetadata;
-import com.exasol.adapter.AdapterProperties;
-import com.exasol.adapter.dialects.SqlDialect;
-import com.exasol.adapter.dialects.SqlDialectFactory;
-import com.exasol.adapter.jdbc.ConnectionFactory;
+import com.exasol.adapter.dialects.*;
 import com.exasol.logging.VersionCollector;
 
 /**
@@ -17,8 +13,8 @@ public class OracleSqlDialectFactory implements SqlDialectFactory {
     }
 
     @Override
-    public SqlDialect createSqlDialect(final ConnectionFactory connectionFactory, final AdapterProperties properties, final ExaMetadata exaMetadata) {
-        return new OracleSqlDialect(connectionFactory, properties, exaMetadata);
+    public SqlDialect createSqlDialect(final JDBCAdapterContext context) {
+        return new OracleSqlDialect(context);
     }
 
     @Override
@@ -26,5 +22,10 @@ public class OracleSqlDialectFactory implements SqlDialectFactory {
         final VersionCollector versionCollector = new VersionCollector(
                 "META-INF/maven/com.exasol/oracle-virtual-schema/pom.properties");
         return versionCollector.getVersionNumber();
+    }
+
+    @Override
+    public String getAdapterProjectShortTag() {
+        return "VSORA";
     }
 }

@@ -7,6 +7,7 @@ import static com.exasol.adapter.capabilities.MainCapability.*;
 import static com.exasol.adapter.capabilities.PredicateCapability.*;
 import static com.exasol.adapter.capabilities.ScalarFunctionCapability.*;
 import static com.exasol.adapter.dialects.oracle.OracleProperties.ORACLE_IMPORT_PROPERTY;
+import static java.util.Collections.emptyMap;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -35,6 +36,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.exasol.ExaMetadata;
 import com.exasol.adapter.AdapterProperties;
 import com.exasol.adapter.capabilities.Capabilities;
+import com.exasol.adapter.dialects.JDBCAdapterContext;
 import com.exasol.adapter.dialects.SqlDialect;
 import com.exasol.adapter.dialects.rewriting.ImportIntoTemporaryTableQueryRewriter;
 import com.exasol.adapter.jdbc.ConnectionFactory;
@@ -53,7 +55,7 @@ class OracleSqlDialectTest {
     @BeforeEach
     void beforeEach() {
         lenient().when(exaMetadataMock.getDatabaseVersion()).thenReturn("8.34.0");
-        this.dialect = new OracleSqlDialect(this.connectionFactoryMock, AdapterProperties.emptyProperties(), exaMetadataMock);
+        this.dialect = testee(emptyMap());
     }
 
     @Test
@@ -106,24 +108,23 @@ class OracleSqlDialectTest {
             "TRUE, ORA" })
     @ParameterizedTest
     void testGetImportTypeLocal(final String fromOracle, final String expectedImportType) {
-        final OracleSqlDialect dialect = new OracleSqlDialect(null,
-                new AdapterProperties(Map.of(ORACLE_IMPORT_PROPERTY, fromOracle)), null);
-        assertThat(dialect.getImportType().toString(), equalTo(expectedImportType));
+        final OracleSqlDialect sqlDialect = testee(Map.of(ORACLE_IMPORT_PROPERTY, fromOracle));
+        assertThat(sqlDialect.getImportType().toString(), equalTo(expectedImportType));
     }
 
     @Test
     void testCheckOracleSpecificPropertyConsistencyInvalidDialect() {
-        final SqlDialect sqlDialect = new OracleSqlDialect(null,
-                new AdapterProperties(Map.of(CONNECTION_NAME_PROPERTY, "MY_CONN", //
-                        "ORACLE_CAST_NUMBER_TO_DECIMAL_WITH_PRECISION_AND_SCALE", "MY_CONN")), null);
+        final SqlDialect sqlDialect = testee(
+                Map.of(CONNECTION_NAME_PROPERTY, "MY_CONN",
+                        "ORACLE_CAST_NUMBER_TO_DECIMAL_WITH_PRECISION_AND_SCALE", "MY_CONN"));
         assertThrows(PropertyValidationException.class, sqlDialect::validateProperties);
     }
 
     @Test
     void testValidateCatalogProperty() {
-        final SqlDialect sqlDialect = new OracleSqlDialect(null, new AdapterProperties(Map.of( //
-                CONNECTION_NAME_PROPERTY, "MY_CONN", //
-                CATALOG_NAME_PROPERTY, "MY_CATALOG")), null);
+        final SqlDialect sqlDialect = testee(Map.of(
+                CONNECTION_NAME_PROPERTY, "MY_CONN",
+                CATALOG_NAME_PROPERTY, "MY_CATALOG"));
         final PropertyValidationException exception = assertThrows(PropertyValidationException.class,
                 sqlDialect::validateProperties);
         MatcherAssert.assertThat(exception.getMessage(), containsString("E-VSCJDBC-13"));
@@ -131,18 +132,27 @@ class OracleSqlDialectTest {
 
     @Test
     void testValidateSchemaProperty() throws PropertyValidationException {
-        final AdapterProperties adapterProperties = new AdapterProperties(Map.of( //
-                CONNECTION_NAME_PROPERTY, "MY_CONN", //
+        final SqlDialect sqlDialect = testee(Map.of(
+                CONNECTION_NAME_PROPERTY, "MY_CONN",
                 SCHEMA_NAME_PROPERTY, "MY_SCHEMA"));
-        final SqlDialect sqlDialect = new OracleSqlDialect(null, adapterProperties, exaMetadataMock);
         sqlDialect.validateProperties();
     }
 
     @Test
     void testQueryRewriterClassWithImportFromOra() {
-        this.dialect = new OracleSqlDialect(this.connectionFactoryMock,
-                this.getAdapaterPropertiesWithImportFromOracle(), exaMetadataMock);
+        this.dialect = testee(getAdapaterPropertiesWithImportFromOracle());
         assertThat(this.dialect.createQueryRewriter(), instanceOf(OracleQueryRewriter.class));
+    }
+
+    private OracleSqlDialect testee(final Map<String, String> properties) {
+        return testee(new AdapterProperties(properties));
+    }
+
+    private OracleSqlDialect testee(final AdapterProperties properties) {
+        return new OracleSqlDialect(JDBCAdapterContext.builder()
+                .connectionFactory(this.connectionFactoryMock)
+                .properties(properties)
+                .metadata(exaMetadataMock).build());
     }
 
     private AdapterProperties getAdapaterPropertiesWithImportFromOracle() {

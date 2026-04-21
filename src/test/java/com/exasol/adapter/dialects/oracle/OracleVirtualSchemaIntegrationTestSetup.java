@@ -122,7 +122,7 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
                 .createVirtualSchemaBuilder("ORACLE_VIRTUAL_SCHEMA_" + (this.virtualSchemaCounter++)) //
                 .adapterScript(this.adapterScript) //
                 .connectionDefinition(this.connectionDefinition) //
-                .properties(properties) //
+                .addProperties(properties) //
                 .build();
     }
 

@@ -28,6 +28,7 @@ import com.exasol.adapter.AdapterException;
 import com.exasol.adapter.AdapterProperties;
 import com.exasol.adapter.adapternotes.ColumnAdapterNotes;
 import com.exasol.adapter.adapternotes.ColumnAdapterNotesJsonConverter;
+import com.exasol.adapter.dialects.JDBCAdapterContext;
 import com.exasol.adapter.dialects.SqlDialect;
 import com.exasol.adapter.dialects.rewriting.SqlGenerationContext;
 import com.exasol.adapter.metadata.*;
@@ -44,8 +45,8 @@ class OracleSqlGenerationVisitorTest {
     }
 
     private OracleSqlGenerationVisitor testee(final Map<String, String> adapterProperties) throws AdapterException {
-        final SqlDialect dialect = new OracleSqlDialectFactory().createSqlDialect(null,
-                new AdapterProperties(adapterProperties), null);
+        final SqlDialect dialect = new OracleSqlDialectFactory()
+                .createSqlDialect(JDBCAdapterContext.builder().properties(new AdapterProperties(adapterProperties)).build());
         final SqlGenerationContext context = new SqlGenerationContext("test_catalog", "test_schema", false);
         final OracleSqlGenerationVisitor testee = Mockito.spy(new OracleSqlGenerationVisitor(dialect, context));
         lenient().doReturn("test").when(testee).getTypeName(Mockito.any());
