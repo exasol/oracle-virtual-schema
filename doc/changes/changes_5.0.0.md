@@ -8,7 +8,7 @@ This release adds anonymous feature-usage telemetry via `telemetry-java`. See th
 
 ## Features
 
-* #84: Added anonymous feature tracking
+* #84: Add anonymous feature tracking
 
 ## Dependency Updates
 
