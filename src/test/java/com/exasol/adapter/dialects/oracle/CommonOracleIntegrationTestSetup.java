@@ -351,7 +351,7 @@ abstract class CommonOracleIntegrationTestSetup {
     private static void createOracleTableAllDataTypes(final Statement statementOracle) throws SQLException {
         final String qualifiedTableName = SCHEMA_ORACLE + "." + TABLE_ORACLE_ALL_DATA_TYPES;
         statementOracle.execute("CREATE TABLE " + qualifiedTableName + " (" //
-                + "c1 char(50),	" //
+                + "c1 char(50), " //
                 + "c2 nchar(50), " //
                 + "c3 varchar2(50), " //
                 + "c4 nvarchar2(50), " //
