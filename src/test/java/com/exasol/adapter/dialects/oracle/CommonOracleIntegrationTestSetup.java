@@ -118,7 +118,10 @@ abstract class CommonOracleIntegrationTestSetup {
 
     /**
      * Uploads the correct Oracle Instant Client version to the BucketFS based on Exasol version.
-     *
+     * <p>
+     * See <a href="https://docs.exasol.com/db/latest/administration/on-premise/manage_drivers/oracle_instant_client.htm">Exasol documentation</a> for
+     * compatible Instant Client versions.
+     * 
      * @param bucket the BucketFS bucket to upload to
      * @return the same bucket instance, after the Instant Client has been uploaded
      * @throws BucketAccessException if uploading fails
@@ -127,8 +130,12 @@ abstract class CommonOracleIntegrationTestSetup {
      */
     private static Bucket uploadInstantClientToBucket(final Bucket bucket)
             throws BucketAccessException, TimeoutException, IOException {
-        if (is832OrLater()) {
-            return uploadInstantClient23(bucket);
+        if (is20252OrLater()) {
+            return uploadInstantClient(bucket, "https://download.oracle.com/otn_software/linux/instantclient/2390000/",
+                    "instantclient-basic-linux.x64-23.9.0.25.07.zip");
+        } else if (is832OrLater()) {
+            return uploadInstantClient(bucket, "https://download.oracle.com/otn_software/linux/instantclient/2350000/",
+                    "instantclient-basic-linux.x64-23.5.0.24.07.zip");
         } else {
             return uploadInstantClient12(bucket);
         }
@@ -160,11 +167,9 @@ abstract class CommonOracleIntegrationTestSetup {
      * @throws TimeoutException      if the upload operation times out
      * @throws IOException           if the file cannot be downloaded or written
      */
-    private static Bucket uploadInstantClient23(final Bucket bucket)
+    private static Bucket uploadInstantClient(final Bucket bucket, final String baseUrl, final String fileName)
             throws BucketAccessException, TimeoutException, IOException {
-        final String fileName = "instantclient-basic-linux.x64-23.5.0.24.07.zip";
-        final String downloadUrl = "https://download.oracle.com/otn_software/linux/instantclient/2350000/" + fileName;
-
+        final String downloadUrl = baseUrl + fileName;
         // Download to a temporary file
         final File tempFile = File.createTempFile("instantclient", ".zip");
         tempFile.deleteOnExit();
@@ -484,17 +489,25 @@ abstract class CommonOracleIntegrationTestSetup {
         return exasolContainer.createConnection("");
     }
 
+    private static boolean is20252OrLater() {
+        return hasMinimumVersion("2025.2.0");
+    }
+
     private static boolean is832OrLater() {
         return supportTimestampPrecision();
     }
 
     protected static boolean supportTimestampPrecision() {
+        return hasMinimumVersion("8.32.0");
+    }
+
+    private static boolean hasMinimumVersion(final String version) {
         final ExasolDockerImageReference dockerImage = exasolContainer.getDockerImageReference();
         if (!dockerImage.hasMajor() || !dockerImage.hasMinor() || !dockerImage.hasFix()) {
             return false;
         }
         final ExasolDbVersion exasolDbVersion = ExasolDbVersion.of(dockerImage.getMajor(), dockerImage.getMinor(), dockerImage.getFixVersion());
-        if (exasolDbVersion.isGreaterOrEqualThan(ExasolDbVersion.parse("8.32.0"))) {
+        if (exasolDbVersion.isGreaterOrEqualThan(ExasolDbVersion.parse(version))) {
             return true;
         }
         return false;
