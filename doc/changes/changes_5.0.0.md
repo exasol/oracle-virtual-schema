@@ -16,14 +16,14 @@ This release adds anonymous feature-usage telemetry via `telemetry-java`. See th
 
 #### Compile Dependency Updates
 
-* Updated `com.exasol:virtual-schema-common-jdbc:13.0.1` to `14.0.0`
+* Updated `com.exasol:virtual-schema-common-jdbc:13.0.1` to `14.0.1`
 
 #### Test Dependency Updates
 
 * Updated `com.exasol:exasol-testcontainers:7.2.1` to `7.2.3`
 * Updated `com.exasol:extension-manager-integration-test-java:0.5.15` to `0.5.19`
 * Updated `com.exasol:test-db-builder-java:3.6.4` to `4.0.0`
-* Updated `com.exasol:virtual-schema-common-jdbc:13.0.1` to `14.0.0`
+* Updated `com.exasol:virtual-schema-common-jdbc:13.0.1` to `14.0.1`
 * Updated `com.oracle.database.jdbc:ojdbc8:23.26.0.0.0` to `23.26.1.0.0`
 * Removed `org.glassfish.jersey.core:jersey-client:2.47`
 * Updated `org.junit.jupiter:junit-jupiter-api:5.14.1` to `5.14.3`

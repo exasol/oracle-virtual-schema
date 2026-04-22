@@ -8,7 +8,7 @@
     <description>Virtual Schema for Oracle</description>
     <url>https://github.com/exasol/oracle-virtual-schema/</url>
     <properties>
-        <virtual-schema-common-jdbc.version>14.0.0</virtual-schema-common-jdbc.version>
+        <virtual-schema-common-jdbc.version>14.0.1</virtual-schema-common-jdbc.version>
         <!-- Junit 6 requires Java >= 17 -->
         <junit-jupiter.version>5.14.3</junit-jupiter.version>
         <org.testcontainers.version>2.0.5</org.testcontainers.version>
