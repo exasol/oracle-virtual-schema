@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.exasol.adapter.AdapterProperties;
+import com.exasol.adapter.dialects.JDBCAdapterContext;
 
 public class OracleSqlDialectFactoryTest {
     private OracleSqlDialectFactory factory;
@@ -24,7 +25,7 @@ public class OracleSqlDialectFactoryTest {
 
     @Test
     void testCreateDialect() {
-        assertThat(this.factory.createSqlDialect(null, AdapterProperties.emptyProperties(), null),
+        assertThat(this.factory.createSqlDialect(JDBCAdapterContext.builder().properties(AdapterProperties.emptyProperties()).build()),
                 instanceOf(OracleSqlDialect.class));
     }
 }

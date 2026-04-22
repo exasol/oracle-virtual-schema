@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "outDir": "./dist-test",
+    "removeComments": false,
+    "rootDir": "./src/",
+    "sourceMap": true,
+    "strict": true,
+    "target": "es6",
+    "types": ["jest", "node"]
+  },
+  "include": ["src/**/*"]
+}

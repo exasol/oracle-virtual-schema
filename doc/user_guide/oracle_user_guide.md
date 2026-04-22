@@ -2,6 +2,12 @@
 
 [Oracle Database](https://www.oracle.com/database/) is a proprietary multi-model database management system produced and marketed by Oracle Corporation. It is a database commonly used for running online transaction processing (OLTP), data warehousing (DW) and mixed (OLTP & DW) database workloads.
 
+## Telemetry
+
+This virtual schema uses `telemetry-java` to send anonymous feature-usage events.
+
+For details on what is collected and how to disable telemetry, see the [documentation](https://github.com/exasol/telemetry-java/blob/main/doc/app-user-guide.md).
+
 ## Uploading the JDBC Driver to Exasol BucketFS
 
 1. Download the [Oracle JDBC driver](https://www.oracle.com/technetwork/database/application-development/jdbc/downloads/index.html).
@@ -42,7 +48,7 @@ The SQL statement below creates the adapter script, defines the Java class that 
 ```sql
 CREATE JAVA ADAPTER SCRIPT ADAPTER.JDBC_ADAPTER AS
   %scriptclass com.exasol.adapter.RequestDispatcher;
-  %jar /buckets/<BFS service>/<bucket>/virtual-schema-dist-13.0.1-oracle-4.0.2.jar;
+  %jar /buckets/<BFS service>/<bucket>/virtual-schema-dist-14.0.1-oracle-5.0.0.jar;
   %jar /buckets/<BFS service>/<bucket>/ojdbc<JDBC driver version>.jar;
 /
 ;
