@@ -12,7 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.*;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.nio.file.Path;
 import java.sql.*;
 import java.util.List;
 import java.util.Map;
@@ -133,29 +132,10 @@ abstract class CommonOracleIntegrationTestSetup {
         if (is20252OrLater()) {
             return uploadInstantClient(bucket, "https://download.oracle.com/otn_software/linux/instantclient/2390000/",
                     "instantclient-basic-linux.x64-23.9.0.25.07.zip");
-        } else if (is832OrLater()) {
+        } else {
             return uploadInstantClient(bucket, "https://download.oracle.com/otn_software/linux/instantclient/2350000/",
                     "instantclient-basic-linux.x64-23.5.0.24.07.zip");
-        } else {
-            return uploadInstantClient12(bucket);
         }
-    }
-
-    /**
-     * Uploads Oracle Instant Client 12.1.0.2.0 to the given BucketFS path.
-     *
-     * @param bucket the BucketFS bucket to upload to
-     * @return the same bucket instance, after upload
-     * @throws BucketAccessException if the upload fails
-     * @throws TimeoutException      if the upload operation times out
-     * @throws FileNotFoundException if the Instant Client file is not found
-     */
-    private static Bucket uploadInstantClient12(final Bucket bucket)
-            throws BucketAccessException, TimeoutException, FileNotFoundException {
-        final String instantClientName = "instantclient-basic-linux.x64-12.1.0.2.0.zip";
-        final String instantClientPath = "src/test/resources/integration/driver/oracle";
-        bucket.uploadFile(Path.of(instantClientPath, instantClientName), "drivers/oracle/" + instantClientName);
-        return bucket;
     }
 
     /**
@@ -491,14 +471,6 @@ abstract class CommonOracleIntegrationTestSetup {
 
     private static boolean is20252OrLater() {
         return hasMinimumVersion("2025.2.0");
-    }
-
-    private static boolean is832OrLater() {
-        return supportTimestampPrecision();
-    }
-
-    protected static boolean supportTimestampPrecision() {
-        return hasMinimumVersion("8.32.0");
     }
 
     private static boolean hasMinimumVersion(final String version) {
