@@ -133,8 +133,9 @@ abstract class CommonOracleIntegrationTestSetup {
             return uploadInstantClient(bucket, "https://download.oracle.com/otn_software/linux/instantclient/2390000/",
                     "instantclient-basic-linux.x64-23.9.0.25.07.zip");
         } else {
-            return uploadInstantClient(bucket, "https://download.oracle.com/otn_software/linux/instantclient/2350000/",
-                    "instantclient-basic-linux.x64-23.5.0.24.07.zip");
+            // 2025.1.9 <= version < 2025.2
+            return uploadInstantClient(bucket, "https://download.oracle.com/otn_software/linux/instantclient/2390000/",
+                    "instantclient-basic-linux.x64-23.9.0.25.07.zip");
         }
     }
 
@@ -377,11 +378,11 @@ abstract class CommonOracleIntegrationTestSetup {
                 + "1234.1241723, " // C_BINFLOAT
                 + "1234987.120871234, " // C_BINDOUBLE
                 + "TO_DATE('2016-08-19', 'YYYY-MM-DD'), " // C10
-                + "TO_TIMESTAMP('2013-03-11 17:30:15.123', 'YYYY-MM-DD HH24:MI:SS.FF'), " // C11
-                + "TO_TIMESTAMP('2013-03-11 17:30:15.123456', 'YYYY-MM-DD HH24:MI:SS.FF'), " // C12
-                + "TO_TIMESTAMP('2013-03-11 17:30:15.123456789', 'YYYY-MM-DD HH24:MI:SS.FF'), " // C13
-                + "TO_TIMESTAMP_TZ('2016-08-19 11:28:05 -08:00', 'YYYY-MM-DD HH24:MI:SS TZH:TZM'), " // C14
-                + "TO_TIMESTAMP_TZ('2018-04-30 10:00:05 -08:00', 'YYYY-MM-DD HH24:MI:SS TZH:TZM'), " // C15
+                + "TO_TIMESTAMP('2013-03-11 17:30:15.123', 'YYYY-MM-DD HH24:MI:SS.FF'), " // C11: timestamp(3)
+                + "TO_TIMESTAMP('2013-03-11 17:30:15.123456', 'YYYY-MM-DD HH24:MI:SS.FF'), " // C12: timestamp
+                + "TO_TIMESTAMP('2013-03-11 17:30:15.123456789', 'YYYY-MM-DD HH24:MI:SS.FF'), " // C13: timestamp(9)
+                + "TO_TIMESTAMP_TZ('2016-08-19 11:28:05 -08:00', 'YYYY-MM-DD HH24:MI:SS TZH:TZM'), " // C14: timestamp with time zone
+                + "TO_TIMESTAMP_TZ('2018-04-30 10:00:05 -08:00', 'YYYY-MM-DD HH24:MI:SS TZH:TZM'), " // C15: timestamp with local time zone
                 + "'54-2', " // C16
                 + "'1 11:12:10.123', " // C17
                 + "'0102030405060708090a0b0c0d0e0f', " // C18
