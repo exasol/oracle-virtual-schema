@@ -55,10 +55,11 @@ Starting with this release, the Oracle Virtual Schema does not support Exasol ve
 #### Development Dependency Updates
 
 * Updated `eslint:^9.39.4` to `^10.2.1`
+* Updated `@types/eslint__js:^8.42.3` to `^9.14.0`
 * Updated `@eslint/js:^9.39.4` to `^10.0.1`
 * Updated `ts-jest:^29.2.5` to `^29.4.9`
 * Updated `@types/jest:^29.5.14` to `^30.0.0`
-* Updated `typescript-eslint:^8.58.0` to `^8.59.0`
+* Updated `typescript-eslint:^8.58.0` to `^8.59.1`
 * Updated `typescript:^5.9.3` to `^6.0.3`
-* Updated `@typescript-eslint/eslint-plugin:^8.58.0` to `^8.59.0`
+* Updated `@typescript-eslint/eslint-plugin:^8.58.0` to `^8.59.1`
 * Updated `jest:29.7.0` to `30.3.0`
