@@ -49,3 +49,4 @@ pom.xml.versionsBackup
 /extension/src/extension-config.ts
 /extension-test.properties
 /.serena/
+/.codex
