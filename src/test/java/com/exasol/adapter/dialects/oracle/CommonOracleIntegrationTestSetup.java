@@ -133,7 +133,7 @@ abstract class CommonOracleIntegrationTestSetup {
             return uploadInstantClient(bucket, "https://download.oracle.com/otn_software/linux/instantclient/2390000/",
                     "instantclient-basic-linux.x64-23.9.0.25.07.zip");
         } else {
-            // 2025.1.9 <= version < 2025.2
+            // 2025.1.9 <= version < 2025.2 uses the same version
             return uploadInstantClient(bucket, "https://download.oracle.com/otn_software/linux/instantclient/2390000/",
                     "instantclient-basic-linux.x64-23.9.0.25.07.zip");
         }

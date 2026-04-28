@@ -94,7 +94,7 @@ This behavior is toggled by the boolean `IMPORT_FROM_ORA` variable. Note that a 
 
 ### Deploying the Oracle Instant Client
 
-To be able to communicate with Oracle, you first need to supply Exasol with the Oracle Instant Client, which can be obtained [directly from Oracle](http://www.oracle.com/technetwork/database/database-technologies/instant-client/overview/index.html). Open EXAoperation, visit Software -> "Upload Oracle Instant Client" and select the downloaded package. The latest version of Oracle Instant Client we tested is `instantclient-basic-linux.x64-23.5.0.24.07`.
+To be able to communicate with Oracle, you first need to supply Exasol with the Oracle Instant Client, which can be obtained directly from Oracle. The required version depends on the Exasol version. See the [Exasol documentation](https://docs.exasol.com/db/latest/administration/on-premise/manage_drivers/oracle_instant_client.htm) for instructions to find the required version, download and install it.
 
 ### Creating an Oracle Connection
 
@@ -223,9 +223,9 @@ CREATE VIRTUAL SCHEMA <virtual schema name>
 
 Keep in mind that this will yield errors if the data in the Oracle database does not fit into the specified `DECIMAL` type.
 
-## Testing information
+## Testing Information
 
-In the following matrix you find combinations of JDBC driver and dialect version that we tested.
+In the following matrix you find combinations of driver and dialect version that we tested. Please note that the actual Instant Client version depends on the Exasol version. See the [Exasol documentation](https://docs.exasol.com/db/latest/administration/on-premise/manage_drivers/oracle_instant_client.htm) for details.
 
 | Virtual Schema Version | Oracle Version     | Driver Name               | Driver Version   |
 |------------------------|--------------------|---------------------------|------------------|
@@ -235,3 +235,5 @@ In the following matrix you find combinations of JDBC driver and dialect version
 | 2.4.2                  | Oracle XE 21c      | instantclient-basic-linux | x64-12.1.0.2.0   |
 | 4.0.0                  | Oracle XE 21c      | ojdbc8                    | 23.26.0.0.0      |
 | 4.0.0                  | Oracle XE 21c      | instantclient-basic-linux | x64-23.5.0.24.07 |
+| 5.0.0                  | Oracle XE 21c      | ojdbc8                    | 23.26.1.0.0      |
+| 5.0.0                  | Oracle XE 21c      | instantclient-basic-linux | x64-23.9.0.25.07 |
