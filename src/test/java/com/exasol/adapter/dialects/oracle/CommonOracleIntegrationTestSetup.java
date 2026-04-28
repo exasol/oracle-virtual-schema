@@ -1,6 +1,5 @@
 package com.exasol.adapter.dialects.oracle;
 
-import static com.exasol.adapter.dialects.oracle.ExasolVersionCheck.assumeExasolVersion834OrLater;
 import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.*;
 import static com.exasol.adapter.dialects.oracle.OracleVirtualSchemaIntegrationTestSetup.*;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -18,7 +17,6 @@ import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.AfterAll;
 import org.testcontainers.junit.jupiter.Container;
 
 import com.exasol.adapter.dialects.oracle.helper.ThrowsSqlConsumer;
@@ -106,16 +104,6 @@ abstract class CommonOracleIntegrationTestSetup {
     }
 
     /**
-     * Cleans up the Exasol container after all tests have run.
-     * <p>
-     * This removes all database objects and ensures a clean state.
-     */
-    @AfterAll
-    static void afterAll() {
-        exasolContainer.purgeDatabase();
-    }
-
-    /**
      * Uploads the correct Oracle Instant Client version to the BucketFS based on Exasol version.
      * <p>
      * See <a href="https://docs.exasol.com/db/latest/administration/on-premise/manage_drivers/oracle_instant_client.htm">Exasol documentation</a> for
@@ -179,7 +167,7 @@ abstract class CommonOracleIntegrationTestSetup {
             throws BucketAccessException, TimeoutException, SQLException, IOException {
         final Connection exasolConnection = exasolContainer.createConnectionForUser(exasolContainer.getUsername(),
                 exasolContainer.getPassword());
-        assumeExasolVersion834OrLater(exasolContainer);
+        exasolContainer.purgeDatabase();
         final Bucket bucket = uploadInstantClientToBucket(exasolContainer.getDefaultBucket());
         uploadOracleJDBCDriverToBucket(exasolContainer);
         uploadAdapterToBucket(bucket);
