@@ -13,6 +13,7 @@ Starting with this release, the Oracle Virtual Schema does not support Exasol ve
 ## Features
 
 * #84: Add anonymous feature tracking
+* #79: Re-enable tests with Exasol 2025.1.x
 
 ## Dependency Updates
 
