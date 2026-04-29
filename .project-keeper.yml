@@ -15,9 +15,8 @@ build:
   runnerOs: ubuntu-24.04
   freeDiskSpace: true
   exasolDbVersions:
-    # - "2025.1.8" # see https://github.com/exasol/oracle-virtual-schema/issues/79
-    - "8.29.13" # Added to test support for TIMESTAMP without nano precision. Remove if/when 7.1 is re-enabled
-  # - "7.1.30" # Exasol 7.1.x does not yet support the latest Ubuntu version
+   - "2025.2.1"
+   - "2025.1.10"
   workflows:
     - name: ci-build.yml
       stepCustomizations:
@@ -28,7 +27,3 @@ build:
             name: Fix VM Crash in UDFs
             id: fix-vm-crash
             run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-excludes:
-  # Avoid large diff caused by different formatter settings, see https://github.com/exasol/project-keeper/issues/702
-  - "E-PK-CORE-18: Outdated content: '.settings/org.eclipse.jdt.ui.prefs'"
-  - "E-PK-CORE-18: Outdated content: '.settings/org.eclipse.jdt.core.prefs'"

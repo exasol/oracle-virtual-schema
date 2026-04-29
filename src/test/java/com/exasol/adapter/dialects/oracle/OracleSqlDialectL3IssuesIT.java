@@ -24,7 +24,7 @@ import com.exasol.bucketfs.BucketAccessException;
 
 @Tag("integration")
 @Testcontainers
-public class OracleSqlDialectL3IssuesIT extends CommonOracleIntegrationTestSetup {
+class OracleSqlDialectL3IssuesIT extends CommonOracleIntegrationTestSetup {
 
     @BeforeAll
     static void beforeAll() throws SQLException, BucketAccessException, TimeoutException, IOException {

@@ -1,6 +1,5 @@
 package com.exasol.adapter.dialects.oracle;
 
-import static com.exasol.adapter.dialects.oracle.ExasolVersionCheck.assumeExasolVersion834OrLater;
 import static com.exasol.adapter.dialects.oracle.IntegrationTestConstants.*;
 import static com.exasol.adapter.dialects.oracle.OracleVirtualSchemaIntegrationTestSetup.*;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -12,14 +11,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.*;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.nio.file.Path;
 import java.sql.*;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.AfterAll;
 import org.testcontainers.junit.jupiter.Container;
 
 import com.exasol.adapter.dialects.oracle.helper.ThrowsSqlConsumer;
@@ -107,18 +104,11 @@ abstract class CommonOracleIntegrationTestSetup {
     }
 
     /**
-     * Cleans up the Exasol container after all tests have run.
-     * <p>
-     * This removes all database objects and ensures a clean state.
-     */
-    @AfterAll
-    static void afterAll() {
-        exasolContainer.purgeDatabase();
-    }
-
-    /**
      * Uploads the correct Oracle Instant Client version to the BucketFS based on Exasol version.
-     *
+     * <p>
+     * See <a href="https://docs.exasol.com/db/latest/administration/on-premise/manage_drivers/oracle_instant_client.htm">Exasol documentation</a> for
+     * compatible Instant Client versions.
+     * 
      * @param bucket the BucketFS bucket to upload to
      * @return the same bucket instance, after the Instant Client has been uploaded
      * @throws BucketAccessException if uploading fails
@@ -127,28 +117,9 @@ abstract class CommonOracleIntegrationTestSetup {
      */
     private static Bucket uploadInstantClientToBucket(final Bucket bucket)
             throws BucketAccessException, TimeoutException, IOException {
-        if (is832OrLater()) {
-            return uploadInstantClient23(bucket);
-        } else {
-            return uploadInstantClient12(bucket);
-        }
-    }
-
-    /**
-     * Uploads Oracle Instant Client 12.1.0.2.0 to the given BucketFS path.
-     *
-     * @param bucket the BucketFS bucket to upload to
-     * @return the same bucket instance, after upload
-     * @throws BucketAccessException if the upload fails
-     * @throws TimeoutException      if the upload operation times out
-     * @throws FileNotFoundException if the Instant Client file is not found
-     */
-    private static Bucket uploadInstantClient12(final Bucket bucket)
-            throws BucketAccessException, TimeoutException, FileNotFoundException {
-        final String instantClientName = "instantclient-basic-linux.x64-12.1.0.2.0.zip";
-        final String instantClientPath = "src/test/resources/integration/driver/oracle";
-        bucket.uploadFile(Path.of(instantClientPath, instantClientName), "drivers/oracle/" + instantClientName);
-        return bucket;
+        // Exasol 2025.2.x and >= 2025.1.9 use the same version
+        return uploadInstantClient(bucket, "https://download.oracle.com/otn_software/linux/instantclient/2390000/",
+                "instantclient-basic-linux.x64-23.9.0.25.07.zip");
     }
 
     /**
@@ -160,11 +131,9 @@ abstract class CommonOracleIntegrationTestSetup {
      * @throws TimeoutException      if the upload operation times out
      * @throws IOException           if the file cannot be downloaded or written
      */
-    private static Bucket uploadInstantClient23(final Bucket bucket)
+    private static Bucket uploadInstantClient(final Bucket bucket, final String baseUrl, final String fileName)
             throws BucketAccessException, TimeoutException, IOException {
-        final String fileName = "instantclient-basic-linux.x64-23.5.0.24.07.zip";
-        final String downloadUrl = "https://download.oracle.com/otn_software/linux/instantclient/2350000/" + fileName;
-
+        final String downloadUrl = baseUrl + fileName;
         // Download to a temporary file
         final File tempFile = File.createTempFile("instantclient", ".zip");
         tempFile.deleteOnExit();
@@ -193,7 +162,7 @@ abstract class CommonOracleIntegrationTestSetup {
             throws BucketAccessException, TimeoutException, SQLException, IOException {
         final Connection exasolConnection = exasolContainer.createConnectionForUser(exasolContainer.getUsername(),
                 exasolContainer.getPassword());
-        assumeExasolVersion834OrLater(exasolContainer);
+        exasolContainer.purgeDatabase();
         final Bucket bucket = uploadInstantClientToBucket(exasolContainer.getDefaultBucket());
         uploadOracleJDBCDriverToBucket(exasolContainer);
         uploadAdapterToBucket(bucket);
@@ -268,31 +237,33 @@ abstract class CommonOracleIntegrationTestSetup {
     private static void createVirtualSchemasOnExasolDbContainer(final ExasolObjectFactory exasolFactory,
             final AdapterScript adapterScript, final ConnectionDefinition jdbcConnectionDefinition) {
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_JDBC).adapterScript(adapterScript)
-                .connectionDefinition(jdbcConnectionDefinition).properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE))
+                .connectionDefinition(jdbcConnectionDefinition)
+                .addProperties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE))
                 .build();
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL).adapterScript(adapterScript)
-                .connectionDefinition(jdbcConnectionDefinition).properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE))
-                .properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE,
+                .connectionDefinition(jdbcConnectionDefinition)
+                .addProperties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE,
                         "ORACLE_CAST_NUMBER_TO_DECIMAL_WITH_PRECISION_AND_SCALE", "36,1"))
                 .build();
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_ORACLE).adapterScript(adapterScript)
-                .connectionDefinition(jdbcConnectionDefinition).properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE,
+                .connectionDefinition(jdbcConnectionDefinition)
+                .addProperties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE,
                         "IMPORT_FROM_ORA", "true", "ORA_CONNECTION_NAME", ORACLE_OCI_CONNECTION_NAME))
                 .build();
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING).adapterScript(adapterScript)
                 .connectionDefinition(jdbcConnectionDefinition)
-                .properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE, "IMPORT_FROM_ORA", "true", "ORA_CONNECTION_NAME",
+                .addProperties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE, "IMPORT_FROM_ORA", "true", "ORA_CONNECTION_NAME",
                         ORACLE_OCI_CONNECTION_NAME, "GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI", "true"))
                 .build();
 
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL).adapterScript(adapterScript)
                 .connectionDefinition(jdbcConnectionDefinition)
-                .properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE, "IMPORT_FROM_ORA", "true", "ORA_CONNECTION_NAME",
+                .addProperties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE, "IMPORT_FROM_ORA", "true", "ORA_CONNECTION_NAME",
                         ORACLE_OCI_CONNECTION_NAME, "oracle_cast_number_to_decimal_with_precision_and_scale", "36,1"))
                 .build();
         exasolFactory.createVirtualSchemaBuilder(VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING)
                 .adapterScript(adapterScript).connectionDefinition(jdbcConnectionDefinition)
-                .properties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE, "IMPORT_FROM_ORA", "true",
+                .addProperties(Map.of("SCHEMA_NAME", SCHEMA_ORACLE, "IMPORT_FROM_ORA", "true",
                         "GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI", "true", "ORA_CONNECTION_NAME",
                         ORACLE_OCI_CONNECTION_NAME, "oracle_cast_number_to_decimal_with_precision_and_scale", "36,1"))
                 .build();
@@ -349,7 +320,7 @@ abstract class CommonOracleIntegrationTestSetup {
     private static void createOracleTableAllDataTypes(final Statement statementOracle) throws SQLException {
         final String qualifiedTableName = SCHEMA_ORACLE + "." + TABLE_ORACLE_ALL_DATA_TYPES;
         statementOracle.execute("CREATE TABLE " + qualifiedTableName + " (" //
-                + "c1 char(50),	" //
+                + "c1 char(50), " //
                 + "c2 nchar(50), " //
                 + "c3 varchar2(50), " //
                 + "c4 nvarchar2(50), " //
@@ -390,11 +361,11 @@ abstract class CommonOracleIntegrationTestSetup {
                 + "1234.1241723, " // C_BINFLOAT
                 + "1234987.120871234, " // C_BINDOUBLE
                 + "TO_DATE('2016-08-19', 'YYYY-MM-DD'), " // C10
-                + "TO_TIMESTAMP('2013-03-11 17:30:15.123', 'YYYY-MM-DD HH24:MI:SS.FF'), " // C11
-                + "TO_TIMESTAMP('2013-03-11 17:30:15.123456', 'YYYY-MM-DD HH24:MI:SS.FF'), " // C12
-                + "TO_TIMESTAMP('2013-03-11 17:30:15.123456789', 'YYYY-MM-DD HH24:MI:SS.FF'), " // C13
-                + "TO_TIMESTAMP_TZ('2016-08-19 11:28:05 -08:00', 'YYYY-MM-DD HH24:MI:SS TZH:TZM'), " // C14
-                + "TO_TIMESTAMP_TZ('2018-04-30 10:00:05 -08:00', 'YYYY-MM-DD HH24:MI:SS TZH:TZM'), " // C15
+                + "TO_TIMESTAMP('2013-03-11 17:30:15.123', 'YYYY-MM-DD HH24:MI:SS.FF'), " // C11: timestamp(3)
+                + "TO_TIMESTAMP('2013-03-11 17:30:15.123456', 'YYYY-MM-DD HH24:MI:SS.FF'), " // C12: timestamp
+                + "TO_TIMESTAMP('2013-03-11 17:30:15.123456789', 'YYYY-MM-DD HH24:MI:SS.FF'), " // C13: timestamp(9)
+                + "TO_TIMESTAMP_TZ('2016-08-19 11:28:05 -08:00', 'YYYY-MM-DD HH24:MI:SS TZH:TZM'), " // C14: timestamp with time zone
+                + "TO_TIMESTAMP_TZ('2018-04-30 10:00:05 -08:00', 'YYYY-MM-DD HH24:MI:SS TZH:TZM'), " // C15: timestamp with local time zone
                 + "'54-2', " // C16
                 + "'1 11:12:10.123', " // C17
                 + "'0102030405060708090a0b0c0d0e0f', " // C18
@@ -482,17 +453,17 @@ abstract class CommonOracleIntegrationTestSetup {
         return exasolContainer.createConnection("");
     }
 
-    private static boolean is832OrLater() {
-        return supportTimestampPrecision();
+    private static boolean is20252OrLater() {
+        return hasMinimumVersion("2025.2.0");
     }
 
-    protected static boolean supportTimestampPrecision() {
+    private static boolean hasMinimumVersion(final String version) {
         final ExasolDockerImageReference dockerImage = exasolContainer.getDockerImageReference();
         if (!dockerImage.hasMajor() || !dockerImage.hasMinor() || !dockerImage.hasFix()) {
             return false;
         }
         final ExasolDbVersion exasolDbVersion = ExasolDbVersion.of(dockerImage.getMajor(), dockerImage.getMinor(), dockerImage.getFixVersion());
-        if (exasolDbVersion.isGreaterOrEqualThan(ExasolDbVersion.parse("8.32.0"))) {
+        if (exasolDbVersion.isGreaterOrEqualThan(ExasolDbVersion.parse(version))) {
             return true;
         }
         return false;

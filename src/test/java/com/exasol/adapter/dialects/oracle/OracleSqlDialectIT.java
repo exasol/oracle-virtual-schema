@@ -7,8 +7,6 @@ import static com.exasol.matcher.ResultSetStructureMatcher.table;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -56,10 +54,14 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
             final String query = "select 1 as column_name, 2, to_number(3), 1.23, 1.23e1, 'abc', true, DATE '2024-01-23', TIMESTAMP '2024-01-01 00:00:00.123456789', null, INTERVAL '5' DAY from "
                     + qualifiedTableName;
             assertThat(getActualResultSet(statementExasol, query),
-                    table("SMALLINT", "SMALLINT", "SMALLINT", "DECIMAL", "DECIMAL", "CHAR", "BOOLEAN", "DATE", "TIMESTAMP", "BOOLEAN", "INTERVAL DAY TO SECOND")
-                            .row((short) 1, (short) 2, (short) 3, new BigDecimal("1.23"), new BigDecimal("12.3"), "abc", true,
-                                    Date.valueOf("2024-01-23"), Timestamp.valueOf("2024-01-01 00:00:00.123456789"), null, "+05 00:00:00.000")
-                            .matches());
+                    table("SMALLINT", "SMALLINT", "SMALLINT", "DECIMAL", "DECIMAL", "CHAR", "BOOLEAN", "DATE", "TIMESTAMP", "BOOLEAN",
+                            "INTERVAL DAY TO SECOND")
+                                    .row((short) 1, (short) 2, (short) 3, new BigDecimal("1.23"), new BigDecimal("12.3"),
+                                            "abc", true,
+                                            Date.valueOf("2024-01-23"),
+                                            Timestamp.valueOf("2024-01-01 00:00:00.123456789"), null,
+                                            "+05 00:00:00.000")
+                                    .matches());
         }
     }
 
@@ -376,7 +378,8 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
             MatcherAssert.assertThat(actual, containsString(expected));
         }
 
-        private void assertExpressionExecutionStringResults(final Statement statementExasol, final String query, final String expected1, final String expected2)
+        private void assertExpressionExecutionStringResults(final Statement statementExasol, final String query, final String expected1,
+                final String expected2)
                 throws SQLException {
             final ResultSet result = statementExasol.executeQuery(query);
             result.next();
@@ -428,7 +431,8 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                 final String expectedExplainVirtual = "SELECT CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\".\"C5\") AS VARCHAR(4000)), MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") FROM \""
                         + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY CAST(TO_CHAR(\""
-                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\") AS VARCHAR(4000)) ORDER BY CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\") AS VARCHAR(4000)) ORDER BY CAST(TO_CHAR(\""
+                        + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\".\"C5\") AS VARCHAR(4000)) DESC";
                 final ResultSet actual = statementExasol.executeQuery(query);
                 assertAll(
@@ -472,15 +476,18 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                 final String expectedExplainVirtual = "SELECT \""
                         + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C_NUMBER36\", CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\".\"C5\") AS VARCHAR(4000)), MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") FROM \""
-                        + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
-                        + "\".\"C5\") AS VARCHAR(4000)), \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C_NUMBER36\" ORDER BY CAST(TO_CHAR(\""
+                        + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY CAST(TO_CHAR(\""
+                        + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C5\") AS VARCHAR(4000)), \"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + "\".\"C_NUMBER36\" ORDER BY CAST(TO_CHAR(\""
                         + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\".\"C5\") AS VARCHAR(4000)) DESC'";
                 assertAll(
                         () -> assertThat(actual,
                                 table("DECIMAL", "VARCHAR", "DECIMAL")
                                         .row(new BigDecimal("123456789012345678901234567890123456"),
-                                                "123456789012345678901234567890123456", new BigDecimal("12345.12345"))
+                                                "123456789012345678901234567890123456",
+                                                new BigDecimal("12345.12345"))
                                         .row(null, "1234567890.123456789", new BigDecimal("12355.12345")).matches()),
                         () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
             }
@@ -498,7 +505,8 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                 final String expectedExplainVirtual = "SELECT CAST(TO_CHAR(\"" + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\".\"C5\") AS VARCHAR(4000)), MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C7\") FROM \""
                         + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\" GROUP BY CAST(TO_CHAR(\""
-                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\") AS VARCHAR(4000)) HAVING 12350 < MIN(\"" + TABLE_ORACLE_ALL_DATA_TYPES
+                        + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"C5\") AS VARCHAR(4000)) HAVING 12350 < MIN(\""
+                        + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\".\"C7\")";
                 assertAll(
                         () -> assertThat(actual, table("VARCHAR", "DECIMAL")
@@ -736,14 +744,14 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
 
         @ParameterizedTest
         @CsvSource(value = { //
-                "C11, 2013-03-11 17:30:15.123, TIMESTAMP(3)", //
-                "C12, 2013-03-11 17:30:15.123, TIMESTAMP(6)", //
-                "C13, 2013-03-11 17:30:15.123, TIMESTAMP(9)", //
-                "C14, 2016-08-19 11:28:05.0, TIMESTAMP(6) WITH LOCAL TIME ZONE", //
-                "C15, 2018-04-30 19:00:05.0, TIMESTAMP(6) WITH LOCAL TIME ZONE" //
+                "C11, 2013-03-11 17:30:15.123, TIMESTAMP(3)", // Oracle type: timestamp(3)
+                "C12, 2013-03-11 17:30:15.123, TIMESTAMP(6)", // Oracle type: timestamp
+                "C13, 2013-03-11 17:30:15.123, TIMESTAMP(9)", // Oracle type: timestamp(9)
+                "C14, 2016-08-19 11:28:05.0, TIMESTAMP(6) WITH LOCAL TIME ZONE", // Oracle type: timestamp with time zone
+                // Actual value for C15 depends on DST (daylight saving time), see https://github.com/exasol/oracle-virtual-schema/issues/86
+                "C15, 2018-04-30 20:00:05.0, TIMESTAMP(6) WITH LOCAL TIME ZONE" // Oracle type: timestamp with local time zone
         })
         void testTimestampsJdbc(final String columnName, final String expectedColumnValue, final String expectedColumnType) throws SQLException {
-            assumeTrue(supportTimestampPrecision());
             try (Connection connection = getExasolConnection();
                     Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
@@ -753,21 +761,23 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                         + "''YYYY-MM-DD HH24:MI:SS.FF3'') FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\"";
                 assertAll(() -> assertExpressionExecutionTimestampResult(statementExasol, query, Timestamp.valueOf(expectedColumnValue)),
-                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, columnName), equalTo(expectedColumnType)),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, columnName),
+                                equalTo(expectedColumnType)),
                         () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
             }
         }
 
         @ParameterizedTest
         @CsvSource(value = { //
-                "C11, 2013-03-11 17:30:15.123", //
-                "C12, 2013-03-11 17:30:15.123", //
-                "C13, 2013-03-11 17:30:15.123", //
-                "C14, 2016-08-19 11:28:05.0", //
-                "C15, 2018-04-30 19:00:05.0" //
+                "C11, 2013-03-11 17:30:15.123, TIMESTAMP(3)", //
+                "C12, 2013-03-11 17:30:15.123, TIMESTAMP(6)", //
+                "C13, 2013-03-11 17:30:15.123, TIMESTAMP(9)", //
+                "C14, 2016-08-19 11:28:05.0, TIMESTAMP(6) WITH LOCAL TIME ZONE", //
+                // Actual value for C15 depends on DST (daylight saving time), see https://github.com/exasol/oracle-virtual-schema/issues/86
+                "C15, 2018-04-30 20:00:05.0, TIMESTAMP(6) WITH LOCAL TIME ZONE" //
         })
-        void testTimestampsJdbcWithoutTimestampPrecision(final String columnName, final String expectedColumnValue) throws SQLException {
-            assumeFalse(supportTimestampPrecision());
+        void testTimestampsJdbcWithoutTimestampPrecision(final String columnName, final String expectedColumnValue, final String expectedType)
+                throws SQLException {
             try (Connection connection = getExasolConnection();
                     Statement statementExasol = connection.createStatement()) {
                 final String qualifiedTableName = VIRTUAL_SCHEMA_JDBC + "." + TABLE_ORACLE_ALL_DATA_TYPES;
@@ -777,7 +787,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                         + "''YYYY-MM-DD HH24:MI:SS.FF3'') FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES
                         + "\"";
                 assertAll(() -> assertExpressionExecutionTimestampResult(statementExasol, query, Timestamp.valueOf(expectedColumnValue)),
-                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, columnName), equalTo("TIMESTAMP")),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, columnName), equalTo(expectedType)),
                         () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
             }
         }
@@ -791,7 +801,6 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                 "C15, 2018-04-30 18:00:05.0, TIMESTAMP(6) WITH LOCAL TIME ZONE" //
         })
         void testTimestampOra(final String columnName, final String expectedColumnValue, final String expectedColumnType) throws SQLException {
-            assumeTrue(supportTimestampPrecision());
             try (Connection connection = getExasolConnection();
                     Statement statementExasol = connection.createStatement()) {
                 statementExasol.execute("ALTER SESSION SET TIME_ZONE = 'UTC'");
@@ -800,30 +809,8 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                 final String expectedExplainVirtual = "SELECT \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"" + columnName
                         + "\" FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\"";
                 assertAll(() -> assertExpressionExecutionTimestampResult(statementExasol, query, Timestamp.valueOf(expectedColumnValue)),
-                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, columnName), equalTo(expectedColumnType)),
-                        () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
-            }
-        }
-
-        @ParameterizedTest
-        @CsvSource(value = { //
-                "C11, 2013-03-11 17:30:15.123", //
-                "C12, 2013-03-11 17:30:15.123", //
-                "C13, 2013-03-11 17:30:15.123", //
-                "C14, 2016-08-19 19:28:05.0", //
-                "C15, 2018-04-30 18:00:05.0" //
-        })
-        void testTimestampOraWithoutTimestampPrecision(final String columnName, final String expectedColumnValue) throws SQLException {
-            assumeFalse(supportTimestampPrecision());
-            try (Connection connection = getExasolConnection();
-                    Statement statementExasol = connection.createStatement()) {
-                statementExasol.execute("ALTER SESSION SET TIME_ZONE = 'UTC'");
-                final String qualifiedTableName = VIRTUAL_SCHEMA_ORACLE + "." + TABLE_ORACLE_ALL_DATA_TYPES;
-                final String query = "SELECT " + columnName + " FROM " + qualifiedTableName;
-                final String expectedExplainVirtual = "SELECT \"" + TABLE_ORACLE_ALL_DATA_TYPES + "\".\"" + columnName
-                        + "\" FROM \"" + SCHEMA_ORACLE + "\".\"" + TABLE_ORACLE_ALL_DATA_TYPES + "\"";
-                assertAll(() -> assertExpressionExecutionTimestampResult(statementExasol, query, Timestamp.valueOf(expectedColumnValue)),
-                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, columnName), equalTo("TIMESTAMP")),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, columnName),
+                                equalTo(expectedColumnType)),
                         () -> assertExplainVirtual(statementExasol, query, expectedExplainVirtual));
             }
         }
@@ -871,9 +858,14 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
             }
         }
 
+        // Oracle data types:
+        // - Col a: timestamp
+        // - Col b: timestamp with local time zone
+        // - Col c: timestamp with time zone
         @ParameterizedTest
         @CsvSource(value = {
-                "VIRTUAL_SCHEMA_JDBC ! ('2018-01-01 11:00:00.0', '2018-01-01 11:00:00.0', '2018-01-01 11:00:00.000')", //
+                // Actual value for column b depends on DST (daylight saving time), see https://github.com/exasol/oracle-virtual-schema/issues/86
+                "VIRTUAL_SCHEMA_JDBC ! ('2018-01-01 11:00:00.0', '2018-01-01 12:00:00.0', '2018-01-01 11:00:00.000')", //
                 "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING ! ('2018-01-01 11:00:00.0', '2018-01-01 10:00:00.0', '2018-01-01 10:00:00.000')" }, //
                 delimiter = '!')
         void testSelectAllTimestampColumns(final String virtualSchemaName, final String expectedColumnValue)
@@ -882,14 +874,16 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                     Statement statementExasol = connection.createStatement()) {
                 statementExasol.execute("ALTER SESSION SET TIME_ZONE = 'UTC'");
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_TIMESTAMPS;
-                final String query = "SELECT * FROM " + qualifiedTableName;
+                final String query = "SELECT a,b,c FROM " + qualifiedTableName;
                 final ResultSet expected = getExpectedResultSet(statementExasol, "(A TIMESTAMP, B TIMESTAMP, C TIMESTAMP)",
                         expectedColumnValue);
                 final ResultSet actual = statementExasol.executeQuery(query);
                 assertAll(() -> assertThat(actual, matchesResultSet(expected)),
                         () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "A"), equalTo("TIMESTAMP(6)")),
-                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "B"), equalTo("TIMESTAMP(6) WITH LOCAL TIME ZONE")),
-                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "C"), equalTo("TIMESTAMP(6) WITH LOCAL TIME ZONE")));
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "B"),
+                                equalTo("TIMESTAMP(6) WITH LOCAL TIME ZONE")),
+                        () -> assertThat(getColumnTypesOfTable(statementExasol, qualifiedTableName, "C"),
+                                equalTo("TIMESTAMP(6) WITH LOCAL TIME ZONE")));
             }
         }
     }

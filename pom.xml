@@ -3,15 +3,15 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.exasol</groupId>
     <artifactId>oracle-virtual-schema</artifactId>
-    <version>4.0.2</version>
+    <version>5.0.0</version>
     <name>Virtual Schema for Oracle</name>
     <description>Virtual Schema for Oracle</description>
     <url>https://github.com/exasol/oracle-virtual-schema/</url>
     <properties>
-        <virtual-schema-common-jdbc.version>13.0.1</virtual-schema-common-jdbc.version>
+        <virtual-schema-common-jdbc.version>14.0.1</virtual-schema-common-jdbc.version>
         <!-- Junit 6 requires Java >= 17 -->
-        <junit-jupiter.version>5.14.1</junit-jupiter.version>
-        <org.testcontainers.version>2.0.2</org.testcontainers.version>
+        <junit-jupiter.version>5.14.3</junit-jupiter.version>
+        <org.testcontainers.version>2.0.5</org.testcontainers.version>
         <!-- Additional sonar configuration for analyzing TypeScript extension -->
         <sonar.sources>src/main/,extension/src/</sonar.sources>
         <sonar.exclusions>extension/src/*.test.ts</sonar.exclusions>
@@ -71,7 +71,7 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
-            <version>5.20.0</version>
+            <version>5.23.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -91,7 +91,7 @@
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>exasol-testcontainers</artifactId>
-            <version>7.2.1</version>
+            <version>7.2.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -109,14 +109,14 @@
         <dependency>
             <groupId>com.oracle.database.jdbc</groupId>
             <artifactId>ojdbc8</artifactId>
-            <version>23.26.0.0.0</version>
+            <version>23.26.1.0.0</version>
             <!-- This must be in test scope to avoid including the driver in the built JAR. -->
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>test-db-builder-java</artifactId>
-            <version>3.6.4</version>
+            <version>4.0.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -148,15 +148,7 @@
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>extension-manager-integration-test-java</artifactId>
-            <!-- Can't upgrade extension dependencies because of https://github.com/exasol/project-keeper/issues/701 -->
-            <version>0.5.15</version>
-            <scope>test</scope>
-        </dependency>
-        <!-- Update transitive dependency of extension-manager-integration-test-java to fix CVE-2025-12383, see https://github.com/exasol/extension-manager/issues/195 -->
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-client</artifactId>
-            <version>2.47</version>
+            <version>0.5.19</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -176,19 +168,9 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.sonatype.ossindex.maven</groupId>
-                <artifactId>ossindex-maven-plugin</artifactId>
-                <configuration>
-                    <excludeVulnerabilityIds>
-                        <!-- Exasol's JDBC driver was fixed in version 24.2.1, but OSSIndex does not reflect that yet -->
-                        <exclude>CVE-2024-55551</exclude>
-                    </excludeVulnerabilityIds>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>com.exasol</groupId>
                 <artifactId>project-keeper-maven-plugin</artifactId>
-                <version>5.4.6</version>
+                <version>5.5.1</version>
                 <executions>
                     <execution>
                         <goals>
@@ -232,7 +214,6 @@
             </plugin>
             <plugin>
                 <artifactId>maven-clean-plugin</artifactId>
-                <version>3.5.0</version>
                 <configuration>
                     <filesets>
                         <fileset>
@@ -326,7 +307,7 @@
     <parent>
         <artifactId>oracle-virtual-schema-generated-parent</artifactId>
         <groupId>com.exasol</groupId>
-        <version>4.0.2</version>
+        <version>5.0.0</version>
         <relativePath>pk_generated_parent.pom</relativePath>
     </parent>
 </project>

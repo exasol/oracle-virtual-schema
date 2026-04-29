@@ -52,7 +52,7 @@ class ExtensionIT extends AbstractVirtualSchemaExtensionIT {
             System.setProperty("com.exasol.dockerdb.image", IntegrationTestConstants.EXASOL_VERSION);
         }
         exasolTestSetup = new ExasolTestSetupFactory(Path.of("no-cloud-setup")).getTestSetup();
-        ExasolVersionCheck.assumeExasolVersion8(exasolTestSetup);
+        ExasolVersionCheck.assumeSupportedExasolVersion(exasolTestSetup);
         setup = ExtensionManagerSetup.create(exasolTestSetup, ExtensionBuilder.createDefaultNpmBuilder(
                 EXTENSION_SOURCE_DIR, EXTENSION_SOURCE_DIR.resolve("dist").resolve(EXTENSION_ID)));
         installJdbcDriver(exasolTestSetup.getDefaultBucket());

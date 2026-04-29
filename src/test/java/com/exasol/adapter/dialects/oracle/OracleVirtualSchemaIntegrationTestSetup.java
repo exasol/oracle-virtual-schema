@@ -79,12 +79,14 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
                 + this.oracleContainer.getOraclePort() + "/" + this.oracleContainer.getDatabaseName();
     }
 
-    public static void uploadOracleJDBCDriverToBucket(final ExasolContainer<? extends ExasolContainer<?>> container)
-            throws BucketAccessException, TimeoutException, FileNotFoundException {
+    public static void uploadOracleJDBCDriverToBucket(final ExasolContainer<? extends ExasolContainer<?>> container) {
         container.getDriverManager()
-                .install(JdbcDriver.builder("ORACLE").enableSecurityManager(false).mainClass("oracle.jdbc.OracleDriver")
+                .install(JdbcDriver.builder("ORACLE")
+                        .enableSecurityManager(false)
+                        .mainClass("oracle.jdbc.OracleDriver")
                         .prefix("jdbc:oracle:thin:")
-                        .sourceFile(Path.of("target/oracle-driver", ORACLE_JDBC_DRIVER_NAME)).build());
+                        .sourceFile(Path.of("target/oracle-driver", ORACLE_JDBC_DRIVER_NAME))
+                        .build());
     }
 
     public static void uploadAdapterToBucket(final Bucket bucket)
@@ -122,7 +124,7 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
                 .createVirtualSchemaBuilder("ORACLE_VIRTUAL_SCHEMA_" + (this.virtualSchemaCounter++)) //
                 .adapterScript(this.adapterScript) //
                 .connectionDefinition(this.connectionDefinition) //
-                .properties(properties) //
+                .addProperties(properties) //
                 .build();
     }
 

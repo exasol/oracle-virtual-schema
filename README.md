@@ -35,8 +35,9 @@ If you want to set up a Virtual Schema for a different database system, please h
 
 Find all the documentation in the [Virtual Schemas project][vs-doc].
 
-## Information for Developers 
+## Information for Developers
 
+* [Oracle Dialect Developer Guide](doc/developer_guide/developer_guide.md)
 * [Virtual Schema API Documentation][vs-api]
 
 [virtual-schemas-user-guide]: https://docs.exasol.com/database_concepts/virtual_schemas.htm

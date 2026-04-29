@@ -43,11 +43,16 @@ public class OracleQueryRewriterTest extends AbstractQueryRewriterTestBase {
         final AdapterProperties properties = new AdapterProperties(Map.of( //
                 ORACLE_IMPORT_PROPERTY, "true", //
                 ORACLE_CONNECTION_NAME_PROPERTY, "ora_connection"));
-        final SqlDialectFactory dialectFactory = new OracleSqlDialectFactory();
-        final SqlDialect dialect = dialectFactory.createSqlDialect(connectionFactoryMock, properties, null);
+        final SqlDialect dialect = testee(connectionFactoryMock, properties);
         final QueryRewriter queryRewriter = new OracleQueryRewriter(dialect, null, properties);
         assertThat(queryRewriter.rewrite(this.statement, EMPTY_SELECT_LIST_DATA_TYPES, EXA_METADATA, properties),
                 equalTo("IMPORT FROM ORA AT ora_connection STATEMENT 'SELECT 1 FROM \"DUAL\"'"));
+    }
+
+    private SqlDialect testee(final ConnectionFactory connectionFactory, final AdapterProperties properties) {
+        final SqlDialectFactory dialectFactory = new OracleSqlDialectFactory();
+        final JDBCAdapterContext context = JDBCAdapterContext.builder().connectionFactory(connectionFactory).properties(properties).build();
+        return dialectFactory.createSqlDialect(context);
     }
 
     @Test
@@ -57,8 +62,7 @@ public class OracleQueryRewriterTest extends AbstractQueryRewriterTestBase {
                 ORACLE_IMPORT_PROPERTY, "true", //
                 ORACLE_CONNECTION_NAME_PROPERTY, "ora_connection", GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI_PROPERTY,
                 "true"));
-        final SqlDialectFactory dialectFactory = new OracleSqlDialectFactory();
-        final SqlDialect dialect = dialectFactory.createSqlDialect(connectionFactoryMock, properties, null);
+        final SqlDialect dialect = testee(connectionFactoryMock, properties);
         final var oracleMetadataReader = new OracleMetadataReader(mockConnection(), properties, exaMetadataMock);
         final QueryRewriter queryRewriter = new OracleQueryRewriter(dialect, oracleMetadataReader, properties);
         assertThat(queryRewriter.rewrite(this.statement, List.of(DataType.createDecimal(18, 0)), EXA_METADATA, properties),
@@ -72,8 +76,7 @@ public class OracleQueryRewriterTest extends AbstractQueryRewriterTestBase {
                 ORACLE_IMPORT_PROPERTY, "true",
                 ORACLE_CONNECTION_NAME_PROPERTY, "ora_connection", GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI_PROPERTY,
                 "true"));
-        final SqlDialectFactory dialectFactory = new OracleSqlDialectFactory();
-        final SqlDialect dialect = dialectFactory.createSqlDialect(connectionFactoryMock, properties, null);
+        final SqlDialect dialect = testee(connectionFactoryMock, properties);
         final var oracleMetadataReader = new OracleMetadataReader(mockConnection(), properties, exaMetadataMock);
         final QueryRewriter queryRewriter = new OracleQueryRewriter(dialect, oracleMetadataReader, properties);
         assertThat(queryRewriter.rewrite(this.statement, emptyList(), EXA_METADATA, properties),
