@@ -117,14 +117,9 @@ abstract class CommonOracleIntegrationTestSetup {
      */
     private static Bucket uploadInstantClientToBucket(final Bucket bucket)
             throws BucketAccessException, TimeoutException, IOException {
-        if (is20252OrLater()) {
-            return uploadInstantClient(bucket, "https://download.oracle.com/otn_software/linux/instantclient/2390000/",
-                    "instantclient-basic-linux.x64-23.9.0.25.07.zip");
-        } else {
-            // 2025.1.9 <= version < 2025.2 uses the same version
-            return uploadInstantClient(bucket, "https://download.oracle.com/otn_software/linux/instantclient/2390000/",
-                    "instantclient-basic-linux.x64-23.9.0.25.07.zip");
-        }
+        // Exasol 2025.2.x and >= 2025.1.9 use the same version
+        return uploadInstantClient(bucket, "https://download.oracle.com/otn_software/linux/instantclient/2390000/",
+                "instantclient-basic-linux.x64-23.9.0.25.07.zip");
     }
 
     /**

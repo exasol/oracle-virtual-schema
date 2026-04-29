@@ -1,4 +1,4 @@
-# Oracle Virtual Schema 5.0.0, released 2026-04-28
+# Oracle Virtual Schema 5.0.0, released 2026-04-29
 
 Code name: Anonymous telemetry
 
@@ -8,7 +8,7 @@ This release adds anonymous feature-usage telemetry via `telemetry-java`. See th
 
 ## Breaking Change
 
-Starting with this release, the Oracle Virtual Schema does not support Exasol versions 7.1 any more. Only LTS version 2025.1.x and the current version are supported.
+Starting with this release, the Oracle Virtual Schema does not support Exasol versions 7.1 anymore. Only LTS version 2025.1.x and the current version are supported.
 
 ## Features
 

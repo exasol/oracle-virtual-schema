@@ -4,7 +4,7 @@
 
 ### DST-Sensitive Integration Tests
 
-Some expected values depend on Daylight Saving Time (DST). Until this is fixed in issue [#84](https://github.com/exasol/oracle-virtual-schema/issues/84), adjust the expected values for tests marked with `https://github.com/exasol/oracle-virtual-schema/issues/86` when DST begins and ends.
+Some expected values depend on Daylight Saving Time (DST). Until this is fixed in issue [#86](https://github.com/exasol/oracle-virtual-schema/issues/86), adjust the expected values for tests marked with `https://github.com/exasol/oracle-virtual-schema/issues/86` when DST begins and ends.
 
 ### Oracle Instant Client Version
 
