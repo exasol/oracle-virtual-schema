@@ -17,7 +17,7 @@ on:
     
 jobs:
   matrix-build:
-    runs-on: int-linux-x64-2core-ubuntu24.04-1
+    runs-on: int-linux-x64-8core-ubuntu24.04-1
     defaults:
       run: {
         shell: bash
