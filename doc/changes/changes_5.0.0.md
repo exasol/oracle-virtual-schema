@@ -1,4 +1,4 @@
-# Oracle Virtual Schema 5.0.0, released 2026-04-29
+# Oracle Virtual Schema 5.0.0, released 2026-04-30
 
 Code name: Anonymous telemetry
 
@@ -15,20 +15,24 @@ Starting with this release, the Oracle Virtual Schema does not support Exasol ve
 * #84: Add anonymous feature tracking
 * #79: Re-enable tests with Exasol 2025.1.x
 
+## Bugfixes
+
+* #87: Use correct telemetry endpoint
+
 ## Dependency Updates
 
 ### Virtual Schema for Oracle
 
 #### Compile Dependency Updates
 
-* Updated `com.exasol:virtual-schema-common-jdbc:13.0.1` to `14.0.1`
+* Updated `com.exasol:virtual-schema-common-jdbc:13.0.1` to `14.0.2`
 
 #### Test Dependency Updates
 
 * Updated `com.exasol:exasol-testcontainers:7.2.1` to `7.2.3`
 * Updated `com.exasol:extension-manager-integration-test-java:0.5.15` to `0.5.19`
 * Updated `com.exasol:test-db-builder-java:3.6.4` to `4.0.0`
-* Updated `com.exasol:virtual-schema-common-jdbc:13.0.1` to `14.0.1`
+* Updated `com.exasol:virtual-schema-common-jdbc:13.0.1` to `14.0.2`
 * Updated `com.oracle.database.jdbc:ojdbc8:23.26.0.0.0` to `23.26.1.0.0`
 * Removed `org.glassfish.jersey.core:jersey-client:2.47`
 * Updated `org.junit.jupiter:junit-jupiter-api:5.14.1` to `5.14.3`
@@ -40,7 +44,7 @@ Starting with this release, the Oracle Virtual Schema does not support Exasol ve
 #### Plugin Dependency Updates
 
 * Updated `com.exasol:error-code-crawler-maven-plugin:2.0.6` to `2.0.7`
-* Updated `com.exasol:project-keeper-maven-plugin:5.4.6` to `5.5.1`
+* Updated `com.exasol:project-keeper-maven-plugin:5.4.6` to `5.5.2`
 * Updated `io.github.git-commit-id:git-commit-id-maven-plugin:9.0.2` to `10.0.0`
 * Updated `org.apache.maven.plugins:maven-failsafe-plugin:3.5.4` to `3.5.5`
 * Updated `org.apache.maven.plugins:maven-resources-plugin:3.4.0` to `3.5.0`
