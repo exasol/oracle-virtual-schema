@@ -12,6 +12,9 @@ sources:
 version:
   fromSource: pom.xml
 build:
+  # Using large runner to avoid out-of-memory errors during integration tests:
+  # - ETL-4101: Inserting data failed with error 'Query terminated because system running out of memory.'
+  # - Connection lost after system running out of memory
   runnerOs: int-linux-x64-2core-ubuntu24.04-1
   freeDiskSpace: true
   exasolDbVersions:
