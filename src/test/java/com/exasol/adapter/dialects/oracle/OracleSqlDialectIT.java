@@ -83,7 +83,6 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
     // This only works for IMPORT_FROM_ORA=true when GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI=true
     @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL,
             VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
-    @Disabled("Investigate out-of-memory error")
     void testDuplicateStringLiterals(final String schema) throws SQLException {
         try (Connection connection = getExasolConnection();
                 Statement statementExasol = connection.createStatement()) {
