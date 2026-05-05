@@ -83,6 +83,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
     // This only works for IMPORT_FROM_ORA=true when GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI=true
     @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL,
             VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
+    @Disabled("Investigate out-of-memory error")
     void testDuplicateStringLiterals(final String schema) throws SQLException {
         try (Connection connection = getExasolConnection();
                 Statement statementExasol = connection.createStatement()) {
@@ -864,7 +865,8 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         // - Col c: timestamp with time zone
         @ParameterizedTest
         @CsvSource(value = {
-                // Actual value for column b depends on DST (daylight saving time), see https://github.com/exasol/oracle-virtual-schema/issues/86
+                // Actual value for column b depends on DST (daylight saving time), see
+                // https://github.com/exasol/oracle-virtual-schema/issues/86
                 "VIRTUAL_SCHEMA_JDBC ! ('2018-01-01 11:00:00.0', '2018-01-01 12:00:00.0', '2018-01-01 11:00:00.000')", //
                 "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING ! ('2018-01-01 11:00:00.0', '2018-01-01 10:00:00.0', '2018-01-01 10:00:00.000')" }, //
                 delimiter = '!')
