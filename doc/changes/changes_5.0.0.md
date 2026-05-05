@@ -1,4 +1,4 @@
-# Oracle Virtual Schema 5.0.0, released 2026-04-30
+# Oracle Virtual Schema 5.0.0, released 2026-05-05
 
 Code name: Anonymous telemetry
 
