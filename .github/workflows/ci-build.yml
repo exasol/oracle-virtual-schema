@@ -95,6 +95,25 @@ jobs:
           OSSINDEX_API_TOKEN: '${{ secrets.OSSINDEX_API_TOKEN }}',
           EXASOL_DB_VERSION: '${{ matrix.exasol_db_version }}'
         }
+      - name: Collect DB logs
+        if: ${{ always() }}
+        id: collect-db-logs
+        run: |
+          df -h
+          docker ps
+          CONTAINER_NAME=$(docker ps --filter "ancestor=exasol/docker-db:${{ matrix.exasol_db_version }}" --format "{{.Names}}")
+          mkdir -p /tmp/db-log/
+          docker cp "$CONTAINER_NAME:/exa/logs/" /tmp/db-log/
+      - name: Upload DB logs
+        if: ${{ always() }}
+        id: upload-db-logs
+        uses: actions/upload-artifact@v7
+        with: {
+          path: /tmp/db-log/,
+          name: 'exasol-db-log-${{ matrix.exasol_db_version }}',
+          retention-days: 3,
+          if-no-files-found: error
+        }
       - name: Sonar analysis
         id: sonar-analysis
         if: ${{ env.SONAR_TOKEN != null && matrix.exasol_db_version == env.DEFAULT_EXASOL_DB_VERSION }}
