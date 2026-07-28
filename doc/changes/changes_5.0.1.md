@@ -1,12 +1,23 @@
-# Oracle Virtual Schema 5.0.1, released 2026-??-??
+# Oracle Virtual Schema 5.0.1, released 2026-07-28
 
-Code name:
+Code name: Fixed vulnerabilities CVE-2026-59889, CVE-2026-59888, CVE-2026-54518, CVE-2026-54517, CVE-2026-54516, CVE-2026-54515, CVE-2026-54514, CVE-2026-54513, CVE-2026-54512, CVE-2026-9563
 
 ## Summary
 
-## Features
+This release fixes 10 vulnerabilities in test dependencies.
 
-* ISSUE_NUMBER: description
+## Security
+
+* #100: Fixed CVE-2026-59889 in `com.fasterxml.jackson.core:jackson-databind:jar:2.21.2:test`
+* #99: Fixed CVE-2026-59888 in `com.fasterxml.jackson.core:jackson-databind:jar:2.21.2:test`
+* #98: Fixed CVE-2026-54518 in `com.fasterxml.jackson.core:jackson-databind:jar:2.21.2:test`
+* #97: Fixed CVE-2026-54517 in `com.fasterxml.jackson.core:jackson-databind:jar:2.21.2:test`
+* #96: Fixed CVE-2026-54516 in `com.fasterxml.jackson.core:jackson-databind:jar:2.21.2:test`
+* #95: Fixed CVE-2026-54515 in `com.fasterxml.jackson.core:jackson-databind:jar:2.21.2:test`
+* #94: Fixed CVE-2026-54514 in `com.fasterxml.jackson.core:jackson-databind:jar:2.21.2:test`
+* #93: Fixed CVE-2026-54513 in `com.fasterxml.jackson.core:jackson-databind:jar:2.21.2:test`
+* #92: Fixed CVE-2026-54512 in `com.fasterxml.jackson.core:jackson-databind:jar:2.21.2:test`
+* #91: Fixed CVE-2026-9563 in `org.eclipse.parsson:parsson:jar:1.1.7:test`
 
 ## Dependency Updates
 
