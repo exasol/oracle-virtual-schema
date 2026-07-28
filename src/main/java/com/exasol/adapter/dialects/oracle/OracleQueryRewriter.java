@@ -13,9 +13,7 @@ import com.exasol.adapter.dialects.SqlGenerator;
 import com.exasol.adapter.dialects.rewriting.*;
 import com.exasol.adapter.jdbc.RemoteMetadataReader;
 import com.exasol.adapter.metadata.DataType;
-import com.exasol.adapter.properties.DataTypeDetection;
 import com.exasol.adapter.sql.SqlStatement;
-import com.exasol.errorreporting.ExaError;
 
 /**
  * This class implements an Oracle-specific query rewriter.
@@ -32,7 +30,7 @@ public class OracleQueryRewriter extends AbstractQueryRewriter {
      * @param remoteMetadataReader reader for metadata from the remote data source
      * @param properties           adapter properties
      */
-    public OracleQueryRewriter(final SqlDialect dialect, final RemoteMetadataReader remoteMetadataReader, AdapterProperties properties) {
+    public OracleQueryRewriter(final SqlDialect dialect, final RemoteMetadataReader remoteMetadataReader, final AdapterProperties properties) {
         super(dialect, remoteMetadataReader, new OracleConnectionDefinitionBuilder());
         this.properties = properties;
     }
@@ -42,7 +40,7 @@ public class OracleQueryRewriter extends AbstractQueryRewriter {
     }
 
     @Override
-    protected String generateImportStatement(String connectionDefinition, String pushdownQuery) throws SQLException {
+    protected String generateImportStatement(final String connectionDefinition, final String pushdownQuery) throws SQLException {
         return generateImportStatement(connectionDefinition, null, pushdownQuery);
     }
 
@@ -67,17 +65,10 @@ public class OracleQueryRewriter extends AbstractQueryRewriter {
         final String connectionDefinition = this.connectionDefinitionBuilder
                 .buildConnectionDefinition(properties, exaConnectionInformation);
 
-        if (DataTypeDetection.from(properties).getStrategy() == DataTypeDetection.Strategy.EXASOL_CALCULATED) {
-            String importStatement = generateImportStatement(connectionDefinition, selectListDataTypes,
-                    pushdownQuery);
-            LOGGER.finer(() -> "Import push-down statement:\n" + importStatement);
-            return importStatement;
-        } else {
-            throw new AdapterException(ExaError.messageBuilder("E-VSORA-10").message(
-                    "Property `IMPORT_DATA_TYPES` value 'FROM_RESULT_SET' is no longer supported.")
-                    .mitigation("Please remove the `IMPORT_DATA_TYPES` property from the virtual schema so the default value 'EXASOL_CALCULATED' is used.")
-                    .toString());
-        }
+        final String importStatement = generateImportStatement(connectionDefinition, selectListDataTypes,
+                pushdownQuery);
+        LOGGER.finer(() -> "Import push-down statement:\n" + importStatement);
+        return importStatement;
     }
 
     private String buildPushdownQuery(final SqlStatement statement, final AdapterProperties properties)
@@ -91,7 +82,7 @@ public class OracleQueryRewriter extends AbstractQueryRewriter {
         return pushdownQuery;
     }
 
-    private String createImportColumnsDescription(List<DataType> selectListDataTypes) {
+    private String createImportColumnsDescription(final List<DataType> selectListDataTypes) {
         final String columnsDescription = SqlGenerationHelper.createColumnsDescriptionFromDataTypes(selectListDataTypes);
         LOGGER.finer(() -> "columndescription: " + columnsDescription);
         return columnsDescription;
