@@ -339,8 +339,7 @@ class OracleSqlGenerationVisitorTest {
                 "      ORDER BY \"USER_ID\"" + //
                 "  ) LIMIT_SUBSELECT WHERE ROWNUM <= 15 " + //
                 ") WHERE ROWNUM_SUB > 5";
-        final SqlStatementSelect testSqlNode = (SqlStatementSelect) getTestSqlNode();
-        testSqlNode.getLimit().setOffset(5);
+        final SqlStatementSelect testSqlNode = (SqlStatementSelect) getTestSqlNode(5);
         final String actualSql = this.visitor.visit(testSqlNode);
         assertEquals(SqlNormalizer.normalizeSql(expectedSql), SqlNormalizer.normalizeSql(actualSql));
     }
@@ -378,11 +377,15 @@ class OracleSqlGenerationVisitorTest {
     }
 
     private static SqlNode getTestSqlNode() {
-        return new DialectTestData().getTestSqlNode();
+        return getTestSqlNode(0);
+    }
+
+    private static SqlNode getTestSqlNode(final int offset) {
+        return new DialectTestData().getTestSqlNode(offset);
     }
 
     private static class DialectTestData {
-        private SqlNode getTestSqlNode() {
+        private SqlNode getTestSqlNode(final int offset) {
             // SELECT USER_ID, count(URL) FROM CLICKS
             // WHERE 1 < USER_ID
             // GROUP BY USER_ID
@@ -402,7 +405,7 @@ class OracleSqlGenerationVisitorTest {
             final SqlNode having = new SqlPredicateLess(new SqlLiteralExactnumeric(BigDecimal.ONE), countUrl);
             final SqlOrderBy orderBy = new SqlOrderBy(List.of(new SqlColumn(0, clicksMeta.getColumns().get(0))),
                     List.of(true), List.of(true));
-            final SqlLimit limit = new SqlLimit(10);
+            final SqlLimit limit = new SqlLimit(10, offset);
             return SqlStatementSelect.builder().selectList(selectList).fromClause(fromClause).whereClause(whereClause)
                     .groupBy(groupBy).having(having).orderBy(orderBy).limit(limit).build();
         }
