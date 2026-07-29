@@ -5,10 +5,6 @@ sources:
       - integration_tests
       - udf_coverage
       - jar_artifact
-  - type: npm
-    path: extension/package.json
-    artifacts:
-      - dist/oracle-vs-extension.js
 version:
   fromSource: pom.xml
 build:
@@ -18,8 +14,8 @@ build:
   runnerOs: int-linux-x64-8core-ubuntu24.04-1
   freeDiskSpace: true
   exasolDbVersions:
-   - "2025.2.1"
-   - "2025.1.10"
+   - "2026.1.0"
+   - "2025.1.13"
   workflows:
     - name: ci-build.yml
       stepCustomizations:

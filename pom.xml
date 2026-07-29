@@ -3,21 +3,15 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.exasol</groupId>
     <artifactId>oracle-virtual-schema</artifactId>
-    <version>5.0.0</version>
+    <version>5.0.1</version>
     <name>Virtual Schema for Oracle</name>
     <description>Virtual Schema for Oracle</description>
     <url>https://github.com/exasol/oracle-virtual-schema/</url>
     <properties>
-        <virtual-schema-common-jdbc.version>14.0.2</virtual-schema-common-jdbc.version>
+        <virtual-schema-common-jdbc.version>14.0.4</virtual-schema-common-jdbc.version>
         <!-- Junit 6 requires Java >= 17 -->
         <junit-jupiter.version>5.14.3</junit-jupiter.version>
         <org.testcontainers.version>2.0.5</org.testcontainers.version>
-        <!-- Additional sonar configuration for analyzing TypeScript extension -->
-        <sonar.sources>src/main/,extension/src/</sonar.sources>
-        <sonar.exclusions>extension/src/*.test.ts</sonar.exclusions>
-        <sonar.tests>src/test/,extension/src</sonar.tests>
-        <sonar.test.inclusions>src/test/,*.test.ts</sonar.test.inclusions>
-        <sonar.javascript.lcov.reportPaths>extension/coverage/lcov.info</sonar.javascript.lcov.reportPaths>
     </properties>
     <dependencies>
         <dependency>
@@ -85,13 +79,13 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-jdk14</artifactId>
-            <version>2.0.17</version>
+            <version>2.0.18</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>exasol-testcontainers</artifactId>
-            <version>7.2.3</version>
+            <version>8.0.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -109,26 +103,26 @@
         <dependency>
             <groupId>com.oracle.database.jdbc</groupId>
             <artifactId>ojdbc8</artifactId>
-            <version>23.26.1.0.0</version>
+            <version>23.26.3.0.0</version>
             <!-- This must be in test scope to avoid including the driver in the built JAR. -->
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>test-db-builder-java</artifactId>
-            <version>4.0.0</version>
+            <version>4.0.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>udf-debugging-java</artifactId>
-            <version>0.6.18</version>
+            <version>0.6.20</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>hamcrest-resultset-matcher</artifactId>
-            <version>1.7.2</version>
+            <version>1.7.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -144,12 +138,6 @@
             <version>2.0.1</version>
             <classifier>module</classifier>
             <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.exasol</groupId>
-            <artifactId>extension-manager-integration-test-java</artifactId>
-            <version>0.5.19</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>
@@ -170,7 +158,7 @@
             <plugin>
                 <groupId>com.exasol</groupId>
                 <artifactId>project-keeper-maven-plugin</artifactId>
-                <version>5.6.1</version>
+                <version>5.7.4</version>
                 <executions>
                     <execution>
                         <goals>
@@ -212,102 +200,12 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <artifactId>maven-clean-plugin</artifactId>
-                <configuration>
-                    <filesets>
-                        <fileset>
-                            <directory>extension/coverage</directory>
-                            <includes>
-                                <include>**</include>
-                            </includes>
-                        </fileset>
-                        <fileset>
-                            <directory>extension/dist</directory>
-                            <includes>
-                                <include>**</include>
-                            </includes>
-                        </fileset>
-                        <fileset>
-                            <directory>extension/node_modules</directory>
-                            <includes>
-                                <include>**</include>
-                            </includes>
-                        </fileset>
-                        <fileset>
-                            <directory>extension/src</directory>
-                            <includes>
-                                <include>extension-config.ts</include>
-                            </includes>
-                        </fileset>
-                    </filesets>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.5.1</version>
-                <executions>
-                    <execution>
-                        <id>npm-ci</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <workingDirectory>extension/</workingDirectory>
-                            <executable>npm</executable>
-                            <commandlineArgs>ci</commandlineArgs>
-                            <useMavenLogger>false</useMavenLogger>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>build-extension</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <workingDirectory>extension/</workingDirectory>
-                            <executable>npm</executable>
-                            <commandlineArgs>run build</commandlineArgs>
-                            <useMavenLogger>false</useMavenLogger>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>unit-test-extension</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <workingDirectory>extension/</workingDirectory>
-                            <executable>npm</executable>
-                            <commandlineArgs>test</commandlineArgs>
-                            <useMavenLogger>false</useMavenLogger>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>lint-extension</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <workingDirectory>extension/</workingDirectory>
-                            <executable>npm</executable>
-                            <commandlineArgs>run lint</commandlineArgs>
-                            <useMavenLogger>false</useMavenLogger>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
     <parent>
         <artifactId>oracle-virtual-schema-generated-parent</artifactId>
         <groupId>com.exasol</groupId>
-        <version>5.0.0</version>
+        <version>5.0.1</version>
         <relativePath>pk_generated_parent.pom</relativePath>
     </parent>
 </project>

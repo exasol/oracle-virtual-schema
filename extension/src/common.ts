@@ -1,2 +1,0 @@
-
-export const ADAPTER_SCRIPT_NAME = "ORACLE_VS_ADAPTER";
