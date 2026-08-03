@@ -48,7 +48,7 @@ The SQL statement below creates the adapter script, defines the Java class that 
 ```sql
 CREATE JAVA ADAPTER SCRIPT ADAPTER.JDBC_ADAPTER AS
   %scriptclass com.exasol.adapter.RequestDispatcher;
-  %jar /buckets/<BFS service>/<bucket>/virtual-schema-dist-14.0.4-oracle-5.0.1.jar;
+  %jar /buckets/<BFS service>/<bucket>/virtual-schema-dist-14.0.5-oracle-5.0.2.jar;
   %jar /buckets/<BFS service>/<bucket>/ojdbc<JDBC driver version>.jar;
 /
 ;
@@ -237,5 +237,5 @@ In the following matrix you find combinations of driver and dialect version that
 | 4.0.0                  | Oracle XE 21c      | instantclient-basic-linux | x64-23.5.0.24.07 |
 | 5.0.0                  | Oracle XE 21c      | ojdbc8                    | 23.26.1.0.0      |
 | 5.0.0                  | Oracle XE 21c      | instantclient-basic-linux | x64-23.9.0.25.07 |
-| 5.0.1                  | Oracle XE 21c      | ojdbc8                    | 23.26.3.0.0      |
-| 5.0.1                  | Oracle XE 21c      | instantclient-basic-linux | x64-23.9.0.25.07 |
+| 5.0.2                  | Oracle XE 21c      | ojdbc8                    | 23.26.3.0.0      |
+| 5.0.2                  | Oracle XE 21c      | instantclient-basic-linux | x64-23.9.0.25.07 |
