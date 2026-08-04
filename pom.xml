@@ -3,12 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.exasol</groupId>
     <artifactId>oracle-virtual-schema</artifactId>
-    <version>5.0.1</version>
+    <version>5.0.2</version>
     <name>Virtual Schema for Oracle</name>
     <description>Virtual Schema for Oracle</description>
     <url>https://github.com/exasol/oracle-virtual-schema/</url>
     <properties>
-        <virtual-schema-common-jdbc.version>14.0.4</virtual-schema-common-jdbc.version>
+        <virtual-schema-common-jdbc.version>14.0.5</virtual-schema-common-jdbc.version>
         <!-- Junit 6 requires Java >= 17 -->
         <junit-jupiter.version>5.14.3</junit-jupiter.version>
         <org.testcontainers.version>2.0.5</org.testcontainers.version>
@@ -110,7 +110,7 @@
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>test-db-builder-java</artifactId>
-            <version>4.0.1</version>
+            <version>4.0.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -128,7 +128,7 @@
         <dependency>
             <groupId>com.exasol</groupId>
             <artifactId>virtual-schema-shared-integration-tests</artifactId>
-            <version>3.0.2</version>
+            <version>3.0.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -205,7 +205,7 @@
     <parent>
         <artifactId>oracle-virtual-schema-generated-parent</artifactId>
         <groupId>com.exasol</groupId>
-        <version>5.0.1</version>
+        <version>5.0.2</version>
         <relativePath>pk_generated_parent.pom</relativePath>
     </parent>
 </project>

@@ -154,12 +154,12 @@ class OracleScalarFunctionsIT extends ScalarFunctionsTestBase {
     }
     //This is an abstract method, it has to to be implemented in the subclass.
     @Override
-    protected void beforeAllSetup() throws SQLException {
+    protected void beforeAllSetup() {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
     //This is an abstract method, it has to to be implemented in the subclass.
     @Override
-    protected void afterAllTeardown() throws SQLException {
+    protected void afterAllTeardown() {
 
     }
 }
