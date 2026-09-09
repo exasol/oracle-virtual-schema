@@ -110,6 +110,18 @@ class OracleSqlDialectL3IssuesIT extends CommonOracleIntegrationTestSetup {
         }
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL,
+            VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
+    void testDuplicateToCharWithLimit(final String virtualSchemaName) throws SQLException {
+        try (Connection connection = getExasolConnection();
+                Statement statementExasol = connection.createStatement()) {
+            final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
+            final String query = "SELECT to_char(num10) AS c1, to_char(num10) AS c2 FROM " + qualifiedTableName + " LIMIT 1";
+            assertStringResults(statementExasol, query, "10", "10");
+        }
+    }
+
     @Test
     void testCurrentTimestamp() throws SQLException {
         try (Connection connection = getExasolConnection();

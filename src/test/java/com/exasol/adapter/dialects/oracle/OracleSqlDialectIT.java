@@ -79,6 +79,20 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         }
     }
 
+    @ParameterizedTest
+    // This only works for IMPORT_FROM_ORA=true when GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI=true
+    @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL,
+            VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
+    void testDuplicateDecimalLiteralsWithLimit(final String schema) throws SQLException {
+        try (Connection connection = getExasolConnection();
+                Statement statementExasol = connection.createStatement()) {
+            final String qualifiedTableName = schema + "." + TABLE_ORACLE_NUMBER_HANDLING;
+            final String query = "select 1 as a, 1 as b from " + qualifiedTableName + " limit 1";
+            assertThat(getActualResultSet(statementExasol, query),
+                    table("SMALLINT", "SMALLINT").row((short) 1, (short) 1).matches());
+        }
+    }
+
     @Disabled("Tests will be reactivated in https://github.com/exasol/oracle-virtual-schema/issues/89")
     @ParameterizedTest
     // This only works for IMPORT_FROM_ORA=true when GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI=true
@@ -89,6 +103,21 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                 Statement statementExasol = connection.createStatement()) {
             final String qualifiedTableName = schema + "." + TABLE_ORACLE_NUMBER_HANDLING;
             final String query = "select 'a' as a, 'a' as b from " + qualifiedTableName;
+            assertThat(getActualResultSet(statementExasol, query),
+                    table("CHAR", "CHAR").row("a", "a").matches());
+        }
+    }
+
+    @Disabled("Tests will be reactivated in https://github.com/exasol/oracle-virtual-schema/issues/89")
+    @ParameterizedTest
+    // This only works for IMPORT_FROM_ORA=true when GENERATE_JDBC_DATATYPE_MAPPING_FOR_OCI=true
+    @ValueSource(strings = { VIRTUAL_SCHEMA_JDBC, VIRTUAL_SCHEMA_JDBC_NUMBER_TO_DECIMAL,
+            VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING, VIRTUAL_SCHEMA_ORACLE_NUMBER_TO_DECIMAL_JDBC_MAPPING })
+    void testDuplicateStringLiteralsWithLimit(final String schema) throws SQLException {
+        try (Connection connection = getExasolConnection();
+                Statement statementExasol = connection.createStatement()) {
+            final String qualifiedTableName = schema + "." + TABLE_ORACLE_NUMBER_HANDLING;
+            final String query = "select 'a' as a, 'a' as b from " + qualifiedTableName + " limit 1";
             assertThat(getActualResultSet(statementExasol, query),
                     table("CHAR", "CHAR").row("a", "a").matches());
         }
