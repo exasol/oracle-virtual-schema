@@ -4,9 +4,9 @@ Code name:
 
 ## Summary
 
-## Features
+## Refactoring
 
-* ISSUE_NUMBER: description
+* #72: Added integration tests to ensure pushdown of duplicate expressions with `LIMIT` works
 
 ## Dependency Updates
 
