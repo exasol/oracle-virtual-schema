@@ -11,6 +11,8 @@ For details on what is collected and how to disable telemetry, see the [document
 ## Uploading the JDBC Driver to Exasol BucketFS
 
 1. Download the [Oracle JDBC driver](https://www.oracle.com/technetwork/database/application-development/jdbc/downloads/index.html).
+
+   We recommend using the latest version of `ojdbc17` instead of `ojdbc8`.
 2. Upload the driver to BucketFS, see the [BucketFS documentation](https://docs.exasol.com/db/latest/administration/on-premise/bucketfs/accessfiles.htm) for details.
 
     Hint: Put the driver into folder `default/drivers/jdbc/` to register it for [ExaLoader](#registering-the-jdbc-driver-for-exaloader), too.
