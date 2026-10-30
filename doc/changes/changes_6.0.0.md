@@ -45,8 +45,9 @@ Fixed vulnerabilities in the test dependencies Objenesis and ASM.
 * Removed `com.oracle.database.jdbc:ojdbc8:23.26.3.0.0`
 * Updated `nl.jqno.equalsverifier:equalsverifier:3.19.4` to `4.5.2`
 * Updated `org.jacoco:org.jacoco.agent:0.8.15` to `0.8.16`
-* Updated `org.junit.jupiter:junit-jupiter-api:5.14.3` to `6.1.3`
-* Updated `org.junit.jupiter:junit-jupiter-params:5.14.3` to `6.1.3`
+* Removed `org.junit.jupiter:junit-jupiter-api:5.14.3`
+* Removed `org.junit.jupiter:junit-jupiter-params:5.14.3`
+* Added `org.junit.jupiter:junit-jupiter:6.1.3`
 * Updated `org.mockito:mockito-junit-jupiter:5.23.0` to `5.24.0`
 * Updated `org.slf4j:slf4j-jdk14:2.0.18` to `2.0.20`
 * Added `org.testcontainers:testcontainers-oracle-free:2.0.5`
