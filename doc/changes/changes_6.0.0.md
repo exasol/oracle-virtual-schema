@@ -11,16 +11,6 @@ Fixed vulnerabilities in the test dependencies Objenesis and ASM.
 * This project now requires Java 17 for building and running and does not support Exasol v8 anymore.
 * The virtual schema now useses Oracle JDBC driver `ojdbc17` instead of `ojdbc8`. Please upgrade the driver.
 
-- Fixes #105
-- Fixes #106
-- Fixes #107
-- Fixes #108
-- Fixes #109
-- Fixes #110
-- Fixes #111
-- Fixes #112
-
-
 ## Security
 
 * Fixed CVE-2026-116486 (class loader type confusion) in dependency `org.objenesis:objenesis:3.4`
