@@ -5,6 +5,7 @@ sources:
       - integration_tests
       - udf_coverage
       - jar_artifact
+      - mockito_agent
 version:
   fromSource: pom.xml
 build:
