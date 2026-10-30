@@ -252,12 +252,12 @@ class OracleSqlGenerationVisitorTest {
         assertThat(this.visitor.visit(sqlFunctionScalar), equalTo("TRIM('ab' FROM 'ab cdef')"));
     }
 
-    @CsvSource({ "ADD_DAYS, '10' DAY", //
+    @CsvSource(value = { "ADD_DAYS, '10' DAY", //
             "ADD_HOURS,  '10' HOUR", //
             "ADD_MINUTES,  '10' MINUTE", //
             "ADD_SECONDS,  '10' SECOND", //
             "ADD_YEARS,  '10' YEAR", //
-            "ADD_WEEKS, '70' DAY" })
+            "ADD_WEEKS, '70' DAY" }, quoteCharacter = '"')
     @ParameterizedTest
     void testVisitSqlFunctionScalarAddDateValues(final ScalarFunction scalarFunction, final String expected)
             throws AdapterException {
