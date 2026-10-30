@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.*;
 import java.math.BigDecimal;
-import java.net.URL;
+import java.net.URI;
 import java.sql.*;
 import java.util.List;
 import java.util.Map;
@@ -108,7 +108,7 @@ abstract class CommonOracleIntegrationTestSetup {
      * <p>
      * See <a href="https://docs.exasol.com/db/latest/administration/on-premise/manage_drivers/oracle_instant_client.htm">Exasol documentation</a> for
      * compatible Instant Client versions.
-     * 
+     *
      * @param bucket the BucketFS bucket to upload to
      * @return the same bucket instance, after the Instant Client has been uploaded
      * @throws BucketAccessException if uploading fails
@@ -138,7 +138,7 @@ abstract class CommonOracleIntegrationTestSetup {
         final File tempFile = File.createTempFile("instantclient", ".zip");
         tempFile.deleteOnExit();
 
-        try (BufferedInputStream in = new BufferedInputStream(new URL(downloadUrl).openStream());
+        try (BufferedInputStream in = new BufferedInputStream(URI.create(downloadUrl).toURL().openStream());
                 FileOutputStream fileOutputStream = new FileOutputStream(tempFile)) {
             in.transferTo(fileOutputStream);
         }
