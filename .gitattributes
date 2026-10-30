@@ -16,6 +16,7 @@ pk_generated_parent.pom                    linguist-generated=true
 .settings/org.eclipse.jdt.core.prefs       linguist-generated=true
 .settings/org.eclipse.jdt.ui.prefs         linguist-generated=true
 src/assembly/all-dependencies.xml linguist-generated=true
+src/test/resources/integration/scalarFunctionsParameterCache.yml linguist-generated=true
 
 /mvnw linguist-generated=true
 /mvnw.cmd linguist-generated=true
