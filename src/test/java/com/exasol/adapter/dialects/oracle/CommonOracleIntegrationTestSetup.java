@@ -291,6 +291,7 @@ abstract class CommonOracleIntegrationTestSetup {
      * @throws SQLException if any SQL execution fails
      */
     private static void setupOracleAllTables() throws SQLException {
+        oracleContainer.setDefaultSessionTimeZone();
         try (Connection oracleConnection = oracleContainer.createConnectionDBA("");
                 Statement statementOracle = oracleConnection.createStatement()) {
             createOracleUser(statementOracle);

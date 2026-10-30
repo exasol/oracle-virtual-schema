@@ -23,6 +23,10 @@ Fixed vulnerabilities in the test dependencies Objenesis and ASM.
 * #105: Fixed CVE-2026-110262 (unbounded memory allocation) in dependency `org.ow2.asm:asm-commons:9.10.1`
 * #106: Fixed CVE-2026-110270 (exponential memory allocation) in dependency `org.ow2.asm:asm-commons:9.10.1`
 
+## Refactoring
+
+* #86: Made Oracle timestamp integration tests DST-aware by setting the session timezone to `Europe/Berlin`
+
 ## Dependency Updates
 
 ### Compile Dependency Updates

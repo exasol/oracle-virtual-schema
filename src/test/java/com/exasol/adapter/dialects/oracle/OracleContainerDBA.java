@@ -30,6 +30,14 @@ public class OracleContainerDBA extends OracleContainer {
         return container;
     }
 
+    public void setDefaultSessionTimeZone() throws SQLException {
+        try (Connection connection = createConnectionDBA(""); Statement statement = connection.createStatement()) {
+            statement.execute("CREATE OR REPLACE TRIGGER SET_TEST_SESSION_TIME_ZONE "
+                    + "AFTER LOGON ON DATABASE BEGIN "
+                    + "EXECUTE IMMEDIATE 'ALTER SESSION SET TIME_ZONE = ''Europe/Berlin'''; END;");
+        }
+    }
+
     // Code smell but also how it's done in the class it's inheriting from.
     // Finding a more novel approach isn't the goal here.
     // The only purpose of this class is delivering a DBA user connection

@@ -50,6 +50,7 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
         try {
             this.exasolContainer.start();
             this.oracleContainer.start();
+            this.oracleContainer.setDefaultSessionTimeZone();
             uploadOracleJDBCDriverToBucket(this.exasolContainer);
             uploadAdapterToBucket(this.exasolContainer.getDefaultBucket());
             this.exasolConnection = this.exasolContainer.createConnection("");
