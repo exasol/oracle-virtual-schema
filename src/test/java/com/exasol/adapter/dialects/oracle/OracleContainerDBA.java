@@ -6,7 +6,7 @@ import java.sql.*;
 import java.time.Duration;
 import java.util.Properties;
 
-import org.testcontainers.containers.OracleContainer;
+import org.testcontainers.oracle.OracleContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /**

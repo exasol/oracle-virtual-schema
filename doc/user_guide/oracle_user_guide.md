@@ -239,3 +239,5 @@ In the following matrix you find combinations of driver and dialect version that
 | 5.0.0                  | Oracle XE 21c      | instantclient-basic-linux | x64-23.9.0.25.07 |
 | 5.0.2                  | Oracle XE 21c      | ojdbc8                    | 23.26.3.0.0      |
 | 5.0.2                  | Oracle XE 21c      | instantclient-basic-linux | x64-23.9.0.25.07 |
+| 6.0.0                  | Oracle Database Free 23ai | ojdbc17                   | 23.26.4.0.0      |
+| 6.0.0                  | Oracle Database Free 23ai | instantclient-basic-linux | x64-23.9.0.25.07 |

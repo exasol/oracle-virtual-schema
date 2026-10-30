@@ -148,8 +148,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT c5 FROM " + qualifiedTableName;
                 final SQLException exception = assertThrows(SQLException.class, () -> statementExasol.execute(query));
-                assertThat(exception.getMessage(),
-                        containsString("value larger than specified precision allowed for this column"));
+                assertThat(exception.getMessage(), containsString("greater than specified precision"));
             }
         }
 
@@ -176,8 +175,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT c6 FROM " + qualifiedTableName;
                 final SQLException exception = assertThrows(SQLException.class, () -> statementExasol.execute(query));
-                assertThat(exception.getMessage(),
-                        containsString("value larger than specified precision allowed for this column"));
+                assertThat(exception.getMessage(), containsString("greater than specified precision"));
             }
         }
 

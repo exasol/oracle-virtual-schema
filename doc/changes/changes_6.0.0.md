@@ -6,6 +6,11 @@ Code name: Secure Dependencies
 
 Fixed vulnerabilities in the test dependencies Objenesis and ASM.
 
+## Breaking Changes
+
+* This project now requires Java 17 for building and running and does not support Exasol v8 anymore.
+* The virtual schema now useses Oracle JDBC driver `ojdbc17` instead of `ojdbc8`. Please upgrade the driver.
+
 - Fixes #105
 - Fixes #106
 - Fixes #107
@@ -42,13 +47,16 @@ Fixed vulnerabilities in the test dependencies Objenesis and ASM.
 * Updated `com.exasol:udf-debugging-java:0.6.20` to `0.6.22`
 * Updated `com.exasol:virtual-schema-common-jdbc:14.0.5` to `14.1.1`
 * Updated `com.exasol:virtual-schema-shared-integration-tests:3.0.3` to `3.1.0`
-* Updated `com.oracle.database.jdbc:ojdbc8:23.26.3.0.0` to `23.26.4.0.0`
+* Added `com.oracle.database.jdbc:ojdbc17:23.26.4.0.0`
+* Removed `com.oracle.database.jdbc:ojdbc8:23.26.3.0.0`
 * Updated `nl.jqno.equalsverifier:equalsverifier:3.19.4` to `4.5.2`
 * Updated `org.jacoco:org.jacoco.agent:0.8.15` to `0.8.16`
 * Updated `org.junit.jupiter:junit-jupiter-api:5.14.3` to `6.1.3`
 * Updated `org.junit.jupiter:junit-jupiter-params:5.14.3` to `6.1.3`
 * Updated `org.mockito:mockito-junit-jupiter:5.23.0` to `5.24.0`
 * Updated `org.slf4j:slf4j-jdk14:2.0.18` to `2.0.20`
+* Added `org.testcontainers:testcontainers-oracle-free:2.0.5`
+* Removed `org.testcontainers:testcontainers-oracle-xe:2.0.5`
 
 ### Plugin Dependency Updates
 
