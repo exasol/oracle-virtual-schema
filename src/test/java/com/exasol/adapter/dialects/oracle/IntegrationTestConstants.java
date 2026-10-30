@@ -3,7 +3,7 @@ package com.exasol.adapter.dialects.oracle;
 import java.nio.file.Path;
 
 public final class IntegrationTestConstants {
-    public static final String VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION = "virtual-schema-dist-14.0.5-oracle-6.0.0.jar";
+    public static final String VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION = "virtual-schema-dist-14.1.1-oracle-6.0.0.jar";
     // We use https://hub.docker.com/r/gvenzl/oracle-xe/tags as docker container to provide the source side of the integration test.
     public static final String ORACLE_CONTAINER_NAME = "gvenzl/oracle-xe:21.3.0-slim-faststart";
     public static final Path VIRTUAL_SCHEMA_JAR = Path.of("target", VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION);

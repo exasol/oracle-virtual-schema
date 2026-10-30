@@ -14,7 +14,7 @@ build:
   runnerOs: int-linux-x64-8core-ubuntu24.04-1
   freeDiskSpace: true
   exasolDbVersions:
-   - "2026.1.1"
+   - "2026.1.2"
    - "2025.1.16"
   workflows:
     - name: ci-build.yml
