@@ -148,8 +148,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT c5 FROM " + qualifiedTableName;
                 final SQLException exception = assertThrows(SQLException.class, () -> statementExasol.execute(query));
-                assertThat(exception.getMessage(),
-                        containsString("value larger than specified precision allowed for this column"));
+                assertThat(exception.getMessage(), containsString("greater than specified precision"));
             }
         }
 
@@ -176,8 +175,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                 final String qualifiedTableName = virtualSchemaName + "." + TABLE_ORACLE_ALL_DATA_TYPES;
                 final String query = "SELECT c6 FROM " + qualifiedTableName;
                 final SQLException exception = assertThrows(SQLException.class, () -> statementExasol.execute(query));
-                assertThat(exception.getMessage(),
-                        containsString("value larger than specified precision allowed for this column"));
+                assertThat(exception.getMessage(), containsString("greater than specified precision"));
             }
         }
 
@@ -778,7 +776,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                 "C12, 2013-03-11 17:30:15.123, TIMESTAMP(6)", // Oracle type: timestamp
                 "C13, 2013-03-11 17:30:15.123, TIMESTAMP(9)", // Oracle type: timestamp(9)
                 "C14, 2016-08-19 11:28:05.0, TIMESTAMP(6) WITH LOCAL TIME ZONE", // Oracle type: timestamp with time zone
-                // Actual value for C15 depends on DST (daylight saving time), see https://github.com/exasol/oracle-virtual-schema/issues/86
+                // Oracle test sessions use Europe/Berlin; the timestamp reflects DST for this date.
                 "C15, 2018-04-30 20:00:05.0, TIMESTAMP(6) WITH LOCAL TIME ZONE" // Oracle type: timestamp with local time zone
         })
         void testTimestampsJdbc(final String columnName, final String expectedColumnValue, final String expectedColumnType) throws SQLException {
@@ -803,7 +801,7 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
                 "C12, 2013-03-11 17:30:15.123, TIMESTAMP(6)", //
                 "C13, 2013-03-11 17:30:15.123, TIMESTAMP(9)", //
                 "C14, 2016-08-19 11:28:05.0, TIMESTAMP(6) WITH LOCAL TIME ZONE", //
-                // Actual value for C15 depends on DST (daylight saving time), see https://github.com/exasol/oracle-virtual-schema/issues/86
+                // Oracle test sessions use Europe/Berlin; the timestamp reflects DST for this date.
                 "C15, 2018-04-30 20:00:05.0, TIMESTAMP(6) WITH LOCAL TIME ZONE" //
         })
         void testTimestampsJdbcWithoutTimestampPrecision(final String columnName, final String expectedColumnValue, final String expectedType)
@@ -894,9 +892,8 @@ class OracleSqlDialectIT extends CommonOracleIntegrationTestSetup {
         // - Col c: timestamp with time zone
         @ParameterizedTest
         @CsvSource(value = {
-                // Actual value for column b depends on DST (daylight saving time), see
-                // https://github.com/exasol/oracle-virtual-schema/issues/86
-                "VIRTUAL_SCHEMA_JDBC ! ('2018-01-01 11:00:00.0', '2018-01-01 12:00:00.0', '2018-01-01 11:00:00.000')", //
+                // Oracle test sessions use Europe/Berlin; the timestamp reflects DST for this date.
+                "VIRTUAL_SCHEMA_JDBC ! ('2018-01-01 11:00:00.0', '2018-01-01 11:00:00.0', '2018-01-01 11:00:00.000')", //
                 "VIRTUAL_SCHEMA_ORACLE_JDBC_MAPPING ! ('2018-01-01 11:00:00.0', '2018-01-01 10:00:00.0', '2018-01-01 10:00:00.000')" }, //
                 delimiter = '!')
         void testSelectAllTimestampColumns(final String virtualSchemaName, final String expectedColumnValue)

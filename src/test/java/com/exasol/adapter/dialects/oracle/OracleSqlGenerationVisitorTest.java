@@ -10,10 +10,10 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.spy;
 
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -45,10 +45,11 @@ class OracleSqlGenerationVisitorTest {
     }
 
     private OracleSqlGenerationVisitor testee(final Map<String, String> adapterProperties) throws AdapterException {
+        @SuppressWarnings("resource") // No need to close mocked resource
         final SqlDialect dialect = new OracleSqlDialectFactory()
                 .createSqlDialect(JDBCAdapterContext.builder().properties(new AdapterProperties(adapterProperties)).build());
         final SqlGenerationContext context = new SqlGenerationContext("test_catalog", "test_schema", false);
-        final OracleSqlGenerationVisitor testee = Mockito.spy(new OracleSqlGenerationVisitor(dialect, context));
+        final OracleSqlGenerationVisitor testee = spy(new OracleSqlGenerationVisitor(dialect, context));
         lenient().doReturn("test").when(testee).getTypeName(Mockito.any());
         return testee;
     }
@@ -198,8 +199,8 @@ class OracleSqlGenerationVisitorTest {
                 .type(DataType.createDouble()).build();
         final List<SqlNode> orderByArguments = List.of(new SqlColumn(1, columnMetadata),
                 new SqlColumn(2, columnMetadata2));
-        final SqlOrderBy orderBy = new SqlOrderBy(orderByArguments, Stream.of(false, true).collect(Collectors.toList()),
-                Stream.of(false, true).collect(Collectors.toList()));
+        final SqlOrderBy orderBy = new SqlOrderBy(orderByArguments, Stream.of(false, true).toList(),
+                Stream.of(false, true).toList());
         final SqlFunctionAggregateGroupConcat aggregateGroupConcat = SqlFunctionAggregateGroupConcat
                 .builder(new SqlLiteralDouble(10.5)).separator(new SqlLiteralString("'")).orderBy(orderBy)
                 .distinct(true).build();
@@ -252,12 +253,12 @@ class OracleSqlGenerationVisitorTest {
         assertThat(this.visitor.visit(sqlFunctionScalar), equalTo("TRIM('ab' FROM 'ab cdef')"));
     }
 
-    @CsvSource({ "ADD_DAYS, '10' DAY", //
+    @CsvSource(value = { "ADD_DAYS, '10' DAY", //
             "ADD_HOURS,  '10' HOUR", //
             "ADD_MINUTES,  '10' MINUTE", //
             "ADD_SECONDS,  '10' SECOND", //
             "ADD_YEARS,  '10' YEAR", //
-            "ADD_WEEKS, '70' DAY" })
+            "ADD_WEEKS, '70' DAY" }, quoteCharacter = '"')
     @ParameterizedTest
     void testVisitSqlFunctionScalarAddDateValues(final ScalarFunction scalarFunction, final String expected)
             throws AdapterException {

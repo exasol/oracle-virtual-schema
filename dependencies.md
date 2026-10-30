@@ -11,25 +11,24 @@
 
 ## Test Dependencies
 
-| Dependency                                      | License                                           |
-| ----------------------------------------------- | ------------------------------------------------- |
-| [Maven Project Version Getter][6]               | [MIT License][7]                                  |
-| [Virtual Schema Common JDBC][0]                 | [MIT License][1]                                  |
-| [Hamcrest][8]                                   | [BSD-3-Clause][9]                                 |
-| [JUnit Jupiter API][10]                         | [Eclipse Public License v2.0][11]                 |
-| [JUnit Jupiter Params][10]                      | [Eclipse Public License v2.0][11]                 |
-| [mockito-junit-jupiter][12]                     | [MIT][13]                                         |
-| [EqualsVerifier \| release normal jar][14]      | [Apache License, Version 2.0][15]                 |
-| [SLF4J JDK14 Provider][16]                      | [MIT][17]                                         |
-| [Test containers for Exasol on Docker][18]      | [MIT License][19]                                 |
-| [Testcontainers :: JUnit Jupiter Extension][20] | [MIT][21]                                         |
-| [Testcontainers :: JDBC :: Oracle XE][20]       | [MIT][21]                                         |
-| [ojdbc8][22]                                    | [Oracle Free Use Terms and Conditions (FUTC)][23] |
-| [Test Database Builder for Java][24]            | [MIT License][25]                                 |
-| [udf-debugging-java][26]                        | [MIT License][27]                                 |
-| [Matcher for SQL Result Sets][28]               | [MIT License][29]                                 |
-| [virtual-schema-shared-integration-tests][30]   | [MIT License][31]                                 |
-| [JaCoCo :: Agent][32]                           | [EPL-2.0][33]                                     |
+| Dependency                                           | License                                           |
+| ---------------------------------------------------- | ------------------------------------------------- |
+| [Maven Project Version Getter][6]                    | [MIT License][7]                                  |
+| [Virtual Schema Common JDBC][0]                      | [MIT License][1]                                  |
+| [Hamcrest][8]                                        | [BSD-3-Clause][9]                                 |
+| [JUnit Jupiter (Aggregator)][10]                     | [Eclipse Public License v2.0][11]                 |
+| [mockito-junit-jupiter][12]                          | [MIT][13]                                         |
+| [EqualsVerifier \| release normal jar][14]           | [Apache License, Version 2.0][15]                 |
+| [SLF4J JDK14 Provider][16]                           | [MIT][17]                                         |
+| [Test containers for Exasol on Docker][18]           | [MIT License][19]                                 |
+| [Testcontainers :: JUnit Jupiter Extension][20]      | [MIT][21]                                         |
+| [Testcontainers :: JDBC :: Oracle Database Free][20] | [MIT][21]                                         |
+| [ojdbc17][22]                                        | [Oracle Free Use Terms and Conditions (FUTC)][23] |
+| [Test Database Builder for Java][24]                 | [MIT License][25]                                 |
+| [udf-debugging-java][26]                             | [MIT License][27]                                 |
+| [Matcher for SQL Result Sets][28]                    | [MIT License][29]                                 |
+| [virtual-schema-shared-integration-tests][30]        | [MIT License][31]                                 |
+| [JaCoCo :: Agent][32]                                | [EPL-2.0][33]                                     |
 
 ## Runtime Dependencies
 

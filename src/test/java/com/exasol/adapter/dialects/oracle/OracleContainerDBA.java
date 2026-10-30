@@ -6,7 +6,7 @@ import java.sql.*;
 import java.time.Duration;
 import java.util.Properties;
 
-import org.testcontainers.containers.OracleContainer;
+import org.testcontainers.oracle.OracleContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /**
@@ -28,6 +28,14 @@ public class OracleContainerDBA extends OracleContainer {
         final OracleContainerDBA container = new OracleContainerDBA(ORACLE_CONTAINER_NAME);
         container.withReuse(true);
         return container;
+    }
+
+    public void setDefaultSessionTimeZone() throws SQLException {
+        try (Connection connection = createConnectionDBA(""); Statement statement = connection.createStatement()) {
+            statement.execute("CREATE OR REPLACE TRIGGER SET_TEST_SESSION_TIME_ZONE "
+                    + "AFTER LOGON ON DATABASE BEGIN "
+                    + "EXECUTE IMMEDIATE 'ALTER SESSION SET TIME_ZONE = ''Europe/Berlin'''; END;");
+        }
     }
 
     // Code smell but also how it's done in the class it's inheriting from.

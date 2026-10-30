@@ -11,6 +11,8 @@ For details on what is collected and how to disable telemetry, see the [document
 ## Uploading the JDBC Driver to Exasol BucketFS
 
 1. Download the [Oracle JDBC driver](https://www.oracle.com/technetwork/database/application-development/jdbc/downloads/index.html).
+
+   We recommend using the latest version of `ojdbc17` instead of `ojdbc8`.
 2. Upload the driver to BucketFS, see the [BucketFS documentation](https://docs.exasol.com/db/latest/administration/on-premise/bucketfs/accessfiles.htm) for details.
 
     Hint: Put the driver into folder `default/drivers/jdbc/` to register it for [ExaLoader](#registering-the-jdbc-driver-for-exaloader), too.
@@ -48,7 +50,7 @@ The SQL statement below creates the adapter script, defines the Java class that 
 ```sql
 CREATE JAVA ADAPTER SCRIPT ADAPTER.JDBC_ADAPTER AS
   %scriptclass com.exasol.adapter.RequestDispatcher;
-  %jar /buckets/<BFS service>/<bucket>/virtual-schema-dist-14.0.5-oracle-5.0.3.jar;
+  %jar /buckets/<BFS service>/<bucket>/virtual-schema-dist-14.1.1-oracle-6.0.0.jar;
   %jar /buckets/<BFS service>/<bucket>/ojdbc<JDBC driver version>.jar;
 /
 ;
@@ -239,3 +241,5 @@ In the following matrix you find combinations of driver and dialect version that
 | 5.0.0                  | Oracle XE 21c      | instantclient-basic-linux | x64-23.9.0.25.07 |
 | 5.0.2                  | Oracle XE 21c      | ojdbc8                    | 23.26.3.0.0      |
 | 5.0.2                  | Oracle XE 21c      | instantclient-basic-linux | x64-23.9.0.25.07 |
+| 6.0.0                  | Oracle Database Free 23ai | ojdbc17                   | 23.26.4.0.0      |
+| 6.0.0                  | Oracle Database Free 23ai | instantclient-basic-linux | x64-23.9.0.25.07 |

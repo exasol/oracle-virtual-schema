@@ -1,9 +1,11 @@
+*.sh text eol=lf
+*.bat text eol=crlf
+
 SECURITY.md                                linguist-generated=true
 .github/workflows/broken_links_checker.yml linguist-generated=true
 .github/workflows/ci-build-next-java.yml   linguist-generated=true
 .github/workflows/ci-build.yml             linguist-generated=true
 .github/workflows/dependencies_check.yml   linguist-generated=true
-.github/workflows/dependencies_update.yml  linguist-generated=true
 .github/workflows/release.yml              linguist-generated=true
 dependencies.md                            linguist-generated=true
 doc/changes/changelog.md                   linguist-generated=true
@@ -13,3 +15,9 @@ pk_generated_parent.pom                    linguist-generated=true
 
 .settings/org.eclipse.jdt.core.prefs       linguist-generated=true
 .settings/org.eclipse.jdt.ui.prefs         linguist-generated=true
+src/assembly/all-dependencies.xml linguist-generated=true
+src/test/resources/integration/scalarFunctionsParameterCache.yml linguist-generated=true
+
+/mvnw linguist-generated=true
+/mvnw.cmd linguist-generated=true
+/.mvn/wrapper/maven-wrapper.properties linguist-generated=true

@@ -30,7 +30,7 @@ import com.github.dockerjava.api.model.ContainerNetwork;
 public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
     private static final String SCHEMA_EXASOL = "SCHEMA_EXASOL";
     private static final String ADAPTER_SCRIPT_EXASOL = "ADAPTER_SCRIPT_EXASOL";
-    private static final String ORACLE_JDBC_DRIVER_NAME = "ojdbc8.jar";
+    private static final String ORACLE_JDBC_DRIVER_NAME = "ojdbc17.jar";
 
     private final Statement oracleStatement;
     private final OracleContainerDBA oracleContainer = OracleContainerDBA.startDbaContainer();
@@ -50,6 +50,7 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
         try {
             this.exasolContainer.start();
             this.oracleContainer.start();
+            this.oracleContainer.setDefaultSessionTimeZone();
             uploadOracleJDBCDriverToBucket(this.exasolContainer);
             uploadAdapterToBucket(this.exasolContainer.getDefaultBucket());
             this.exasolConnection = this.exasolContainer.createConnection("");
@@ -97,7 +98,7 @@ public class OracleVirtualSchemaIntegrationTestSetup implements Closeable {
     public static AdapterScript createAdapterScript(final ExasolSchema schema) {
         final String content = "%scriptclass com.exasol.adapter.RequestDispatcher;\n" //
                 + "%jar /buckets/bfsdefault/default/" + VIRTUAL_SCHEMAS_JAR_NAME_AND_VERSION + ";\n" //
-                + "%jar /buckets/bfsdefault/default/drivers/jdbc/ojdbc8.jar;\n";
+                + "%jar /buckets/bfsdefault/default/drivers/jdbc/ojdbc17.jar;\n";
         return schema.createAdapterScript(ADAPTER_SCRIPT_EXASOL, JAVA, content);
     }
 
